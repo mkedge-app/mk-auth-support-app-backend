@@ -6,7 +6,7 @@ import RequestController from './app/controllers/RequestController';
 const routes = new Router();
 
 routes.post('/sessions', SessionController.store);
-routes.get('/requests', RequestController.show);
+routes.post('/requests', RequestController.show);
 routes.post('/requests/status', RequestController.update);
 
 export default routes;
