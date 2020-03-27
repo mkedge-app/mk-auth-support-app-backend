@@ -9,81 +9,78 @@ class RequestController {
   async show(req, res) {
     const { tecnico, date } = req.body;
 
-    console.log(req.body);
-    return res.json(req.body);
+    const requests = await Request.findAll({
+      where: {
+        tecnico,
+      },
+    });
 
-    // const requests = await Request.findAll({
-    //   where: {
-    //     tecnico,
-    //   },
-    // });
+    // Verifica se exitem chamadas para o técnico informado
+    if (!requests) {
+      return res
+        .status(401)
+        .json({ error: 'No support requests for this user!' });
+    }
 
-    // // Verifica se exitem chamadas para o técnico informado
-    // if (!requests) {
-    //   return res
-    //     .status(401)
-    //     .json({ error: 'No support requests for this user!' });
-    // }
+    const givenDateRequests = [];
 
-    // const givenDateRequests = [];
+    // eslint-disable-next-line array-callback-return
+    requests.map((item, index) => {
+      const dataBaseTime = format(item.visita, "yyyy-MM-dd'T'00:00:00");
+      const apiTime = format(
+        addHours(parseISO(date), 4),
+        "yyyy-MM-dd'T'HH:mm:ss"
+      );
 
-    // // eslint-disable-next-line array-callback-return
-    // requests.map((item, index) => {
-    //   const dataBaseTime = format(item.visita, "yyyy-MM-dd'T'00:00:00");
-    //   const apiTime = format(
-    //     addHours(parseISO(date), 4),
-    //     "yyyy-MM-dd'T'HH:mm:ss"
-    //   );
+      if (dataBaseTime === apiTime) {
+        givenDateRequests.push(requests[index]);
+      }
+    });
 
-    //   if (dataBaseTime === apiTime) {
-    //     givenDateRequests.push(requests[index]);
-    //   }
-    // });
+    // Verifica se existem visitas agendadas para a data informada
+    if (givenDateRequests.length < 1) {
+      return res
+        .status(401)
+        .json({ error: 'No support requests fot this date' });
+    }
 
-    // // Verifica se existem visitas agendadas para a data informada
-    // if (givenDateRequests.length < 1) {
-    //   return res
-    //     .status(401)
-    //     .json({ error: 'No support requests fot this date' });
-    // }
+    let index = givenDateRequests.length - 1;
 
-    // let index = givenDateRequests.length - 1;
+    const response_object = [];
 
-    // const response_object = [];
+    do {
+      const { login, chamado } = givenDateRequests[index];
 
-    // do {
-    //   const { login, chamado } = givenDateRequests[index];
+      // eslint-disable-next-line no-await-in-loop
+      const response = await Client.findOne({
+        where: {
+          login,
+        },
+      });
 
-    //   // eslint-disable-next-line no-await-in-loop
-    //   const response = await Client.findOne({
-    //     where: {
-    //       login,
-    //     },
-    //   });
+      // eslint-disable-next-line no-await-in-loop
+      const msg = await Mensagem.findOne({
+        where: {
+          chamado,
+        },
+      });
 
-    //   // eslint-disable-next-line no-await-in-loop
-    //   const msg = await Mensagem.findOne({
-    //     where: {
-    //       chamado,
-    //     },
-    //   });
+      response_object.push({
+        id: givenDateRequests[index].id,
+        chamado: givenDateRequests[index].chamado,
+        nome: givenDateRequests[index].nome,
+        status: givenDateRequests[index].status,
+        assunto: givenDateRequests[index].assunto,
+        endereco: response.endereco,
+        bairro: response.bairro,
+        coordenadas: response.coordenadas,
+        mensagem: msg.msg,
+      });
 
-    //   response_object.push({
-    //     id: givenDateRequests[index].id,
-    //     chamado: givenDateRequests[index].chamado,
-    //     nome: givenDateRequests[index].nome,
-    //     status: givenDateRequests[index].status,
-    //     assunto: givenDateRequests[index].assunto,
-    //     endereco: response.endereco,
-    //     bairro: response.bairro,
-    //     coordenadas: response.coordenadas,
-    //     mensagem: msg.msg,
-    //   });
+      index -= 1;
+    } while (index >= 0);
 
-    //   index -= 1;
-    // } while (index >= 0);
-
-    // return res.json(response_object);
+    return res.json(response_object);
   }
 
   async update(req, res) {
