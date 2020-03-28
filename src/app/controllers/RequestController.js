@@ -18,8 +18,8 @@ class RequestController {
     // Verifica se exitem chamadas para o técnico informado
     if (!requests) {
       return res
-        .status(401)
-        .json({ error: 'No support requests for this user!' });
+        .status(204)
+        .json({ message: 'No support requests for this user!' });
     }
 
     const givenDateRequests = [];
@@ -40,7 +40,7 @@ class RequestController {
     // Verifica se existem visitas agendadas para a data informada
     if (givenDateRequests.length < 1) {
       return res
-        .status(401)
+        .status(204)
         .json({ error: 'No support requests fot this date' });
     }
 
