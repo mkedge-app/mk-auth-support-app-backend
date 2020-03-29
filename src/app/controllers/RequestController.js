@@ -65,8 +65,6 @@ class RequestController {
         },
       });
 
-      console.log(response);
-
       response_object.push({
         id: givenDateRequests[index].id,
         chamado: givenDateRequests[index].chamado,
