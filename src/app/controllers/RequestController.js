@@ -65,13 +65,17 @@ class RequestController {
         },
       });
 
+      console.log(response);
+
       response_object.push({
         id: givenDateRequests[index].id,
         chamado: givenDateRequests[index].chamado,
+        visita: format(givenDateRequests[index].visita, 'HH:mm'),
         nome: givenDateRequests[index].nome,
         status: givenDateRequests[index].status,
         assunto: givenDateRequests[index].assunto,
         endereco: response.endereco,
+        numero: response.numero,
         bairro: response.bairro,
         coordenadas: response.coordenadas,
         mensagem: msg.msg,
