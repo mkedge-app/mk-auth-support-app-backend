@@ -68,7 +68,7 @@ class RequestController {
       response_object.push({
         id: givenDateRequests[index].id,
         chamado: givenDateRequests[index].chamado,
-        visita: format(givenDateRequests[index].visita, 'HH:mm'),
+        visita: format(addHours(givenDateRequests[index].visita, 4), 'HH:mm'),
         nome: givenDateRequests[index].nome,
         status: givenDateRequests[index].status,
         assunto: givenDateRequests[index].assunto,
@@ -81,6 +81,16 @@ class RequestController {
 
       index -= 1;
     } while (index >= 0);
+
+    // Organizando array em ordem crescente de visita
+    response_object.sort(function(a, b) {
+      var keyA = a.visita,
+        keyB = b.visita;
+
+      if (keyA < keyB) return -1;
+      if (keyA > keyB) return 1;
+      return 0;
+    });
 
     return res.json(response_object);
   }
