@@ -12,6 +12,11 @@ class Client extends Model {
         numero: Sequelize.STRING,
         bairro: Sequelize.STRING,
         coordenadas: Sequelize.STRING,
+        login: Sequelize.STRING,
+        senha: Sequelize.STRING,
+        plano: Sequelize.STRING,
+        tipo: Sequelize.STRING,
+        ip: Sequelize.STRING,
       },
       {
         sequelize,
