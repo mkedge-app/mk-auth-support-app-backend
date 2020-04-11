@@ -18,8 +18,8 @@ class RequestController {
     // Verifica se exitem chamadas para o técnico informado
     if (!requests) {
       return res
-        .status(401)
-        .json({ error: 'No support requests for this user!' });
+        .status(204)
+        .json({ message: 'No support requests for this user!' });
     }
 
     const givenDateRequests = [];
@@ -40,7 +40,7 @@ class RequestController {
     // Verifica se existem visitas agendadas para a data informada
     if (givenDateRequests.length < 1) {
       return res
-        .status(401)
+        .status(204)
         .json({ error: 'No support requests fot this date' });
     }
 
@@ -68,10 +68,17 @@ class RequestController {
       response_object.push({
         id: givenDateRequests[index].id,
         chamado: givenDateRequests[index].chamado,
+        visita: format(addHours(givenDateRequests[index].visita, 4), 'HH:mm'),
         nome: givenDateRequests[index].nome,
+        login: response.login,
+        senha: response.senha,
+        plano: response.plano,
+        tipo: response.tipo,
+        ip: response.ip,
         status: givenDateRequests[index].status,
         assunto: givenDateRequests[index].assunto,
         endereco: response.endereco,
+        numero: response.numero,
         bairro: response.bairro,
         coordenadas: response.coordenadas,
         mensagem: msg.msg,
@@ -79,6 +86,16 @@ class RequestController {
 
       index -= 1;
     } while (index >= 0);
+
+    // Organizando array em ordem crescente de visita
+    response_object.sort(function(a, b) {
+      var keyA = a.visita,
+        keyB = b.visita;
+
+      if (keyA < keyB) return -1;
+      if (keyA > keyB) return 1;
+      return 0;
+    });
 
     return res.json(response_object);
   }
