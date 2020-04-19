@@ -29,7 +29,7 @@ class RequestController {
       const dataBaseTime = format(item.visita, "yyyy-MM-dd'T'00:00:00");
       const apiTime = format(
         addHours(parseISO(date), 4),
-        "yyyy-MM-dd'T'HH:mm:ss"
+        "yyyy-MM-dd'T'00:00:00"
       );
 
       if (dataBaseTime === apiTime) {
