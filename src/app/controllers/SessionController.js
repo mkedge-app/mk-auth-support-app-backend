@@ -27,7 +27,6 @@ class SessionController {
 
     const employee_id = await Employee.findOne({
       where: {
-        // email: 'raimundosilva9124@gmail.com', // aqui deve estar contido a variavel e-mail
         email,
       },
     });
