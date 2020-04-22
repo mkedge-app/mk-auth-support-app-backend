@@ -77,9 +77,9 @@ class RequestController {
         ip: response.ip,
         status: givenDateRequests[index].status,
         assunto: givenDateRequests[index].assunto,
-        endereco: response.endereco,
-        numero: response.numero,
-        bairro: response.bairro,
+        endereco: response.endereco_res,
+        numero: response.numero_res,
+        bairro: response.bairro_res,
         coordenadas: response.coordenadas,
         mensagem: msg.msg,
       });
