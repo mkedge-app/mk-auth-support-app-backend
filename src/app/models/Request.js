@@ -16,6 +16,7 @@ class Request extends Model {
         visita: Sequelize.DATE,
         chamado: Sequelize.STRING,
         fechamento: Sequelize.STRING,
+        motivo_fechar: Sequelize.STRING,
       },
       {
         sequelize,
