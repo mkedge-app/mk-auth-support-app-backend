@@ -70,6 +70,8 @@ class RequestController {
         chamado: givenDateRequests[index].chamado,
         visita: format(addHours(givenDateRequests[index].visita, 4), 'HH:mm'),
         nome: givenDateRequests[index].nome,
+        fechamento: givenDateRequests[index].fechamento,
+        motivo_fechamento: givenDateRequests[index].motivo_fechar,
         login: response.login,
         senha: response.senha,
         plano: response.plano,
