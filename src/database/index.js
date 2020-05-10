@@ -6,10 +6,11 @@ import Employee from '../app/models/Employee';
 import Client from '../app/models/Client';
 import Mensagem from '../app/models/Mensagem';
 import SystemLog from '../app/models/SystemLog';
+import CTO from '../app/models/CTO';
 
 import databaseConfig from '../config/database';
 
-const models = [User, Request, Employee, Client, Mensagem, SystemLog];
+const models = [User, Request, Employee, Client, Mensagem, SystemLog, CTO];
 
 class Database {
   constructor() {
