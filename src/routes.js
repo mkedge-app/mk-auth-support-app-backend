@@ -9,6 +9,6 @@ const routes = new Router();
 routes.post('/sessions', SessionController.store);
 routes.post('/requests', RequestController.show);
 routes.post('/requests/status', RequestController.update);
-routes.get('/cto', CTOController.index);
+routes.get('/cto/:latitude/:longitude', CTOController.index);
 
 export default routes;
