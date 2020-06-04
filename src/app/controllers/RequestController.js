@@ -67,6 +67,7 @@ class RequestController {
 
       response_object.push({
         id: givenDateRequests[index].id,
+        client_id: response.id,
         chamado: givenDateRequests[index].chamado,
         visita: format(addHours(givenDateRequests[index].visita, 4), 'HH:mm'),
         nome: givenDateRequests[index].nome,
