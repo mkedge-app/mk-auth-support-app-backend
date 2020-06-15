@@ -85,6 +85,7 @@ class RequestController {
         bairro: response.bairro_res,
         coordenadas: response.coordenadas,
         mensagem: msg.msg,
+        caixa_hermetica: response.caixa_herm,
       });
 
       index -= 1;
