@@ -72,6 +72,37 @@ class CTOController {
 
     return res.json(newCTO_array);
   }
+
+  async show (req, res) {
+    const cto = await CTO.findOne({
+      where: {
+        nome: req.params.cto_name,
+      }
+    });
+
+    if (!cto) {
+      return res
+        .status(204)
+        .json({ message: 'No CTOs to be listed' });
+    }
+
+    const connection_amount = await Client.findAll({
+      where: {
+        caixa_herm: cto.nome,
+        cli_ativado: 's',
+      }
+    });
+
+    const cto_obj = {
+      id: cto.id,
+      nome: cto.nome,
+      latitude: cto.latitude,
+      longitude: cto.longitude,
+      connection_amount: connection_amount.length,
+    }
+   
+    return res.json(cto_obj); 
+  }
 }
 
 export default new CTOController();
