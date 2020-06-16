@@ -8,9 +8,14 @@ import ClientController from './app/controllers/ClientController';
 const routes = new Router();
 
 routes.post('/sessions', SessionController.store);
+
 routes.post('/requests', RequestController.show);
 routes.post('/requests/status', RequestController.update);
+
+routes.post('/client/:id', ClientController.update);
+routes.get('/client/:id', ClientController.show);
+
 routes.get('/cto/:latitude/:longitude', CTOController.index);
-routes.post('/client/:id/:latitude/:longitude', ClientController.update);
+routes.get('/cto/:cto_name', CTOController.show);
 
 export default routes;
