@@ -35,7 +35,7 @@ class ClientController {
     if (latitude && longitude) {
       client.coordenadas = `${latitude},${longitude}`;
     }
-    await client.save();
+    // await client.save();
     
     return res.json(client);
     return res.sendStatus(200);
