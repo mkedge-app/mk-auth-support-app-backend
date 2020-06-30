@@ -92,9 +92,9 @@ class RequestController {
     } while (index >= 0);
 
     // Organizando array em ordem crescente de visita
-    response_object.sort(function(a, b) {
-      var keyA = a.visita,
-        keyB = b.visita;
+    response_object.sort((a, b) => {
+      const keyA = a.visita;
+      const keyB = b.visita;
 
       if (keyA < keyB) return -1;
       if (keyA > keyB) return 1;
