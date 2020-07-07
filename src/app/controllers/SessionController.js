@@ -23,7 +23,7 @@ class SessionController {
       return res.status(401).json({ error: 'Password does not match' });
     }
 
-    const { idacesso, nome, email } = user;
+    const { idacesso, nome, email, cli_grupos } = user;
 
     const employee_id = await Employee.findOne({
       where: {
@@ -35,11 +35,14 @@ class SessionController {
       return res.status(401).json({ error: 'User is not an employee' });
     }
 
+    const isAdmin = cli_grupos.includes('full_clientes', 0);
+
     return res.json({
       user: {
         idacesso,
         nome,
         employee_id: employee_id.id,
+        isAdmin,
       },
       token: jwt.sign({ idacesso }, authConfig.secret, {
         expiresIn: authConfig.expiresIn,
