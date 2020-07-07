@@ -4,6 +4,7 @@ import Request from '../models/Request';
 import Client from '../models/Client';
 import Mensagem from '../models/Mensagem';
 import SystemLog from '../models/SystemLog';
+import Employee from '../models/Employee';
 
 class RequestController {
   async index(req, res) {
@@ -47,7 +48,7 @@ class RequestController {
     const response_object = [];
 
     do {
-      const { login, chamado } = givenDateRequests[index];
+      const { login, chamado, tecnico } = givenDateRequests[index];
 
       // eslint-disable-next-line no-await-in-loop
       const response = await Client.findOne({
@@ -62,6 +63,9 @@ class RequestController {
           chamado,
         },
       });
+
+      // eslint-disable-next-line no-await-in-loop
+      const employee = await Employee.findByPk(tecnico);
 
       response_object.push({
         id: givenDateRequests[index].id,
@@ -84,6 +88,7 @@ class RequestController {
         coordenadas: response.coordenadas,
         mensagem: msg.msg,
         caixa_hermetica: response.caixa_herm,
+        employee_name: employee === null ? null : employee.nome,
       });
 
       index -= 1;
