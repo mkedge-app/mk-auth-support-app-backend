@@ -4,6 +4,8 @@ import routes from './routes';
 
 import './database';
 
+import DatabaseSubject from './observers/subjects/database/index';
+
 class App {
   constructor() {
     this.server = express();
@@ -19,6 +21,10 @@ class App {
 
   routes() {
     this.server.use(routes);
+  }
+
+  initDataBaseObserver() {
+    DatabaseSubject();
   }
 }
 
