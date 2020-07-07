@@ -14,6 +14,7 @@ class User extends Model {
         nome: Sequelize.STRING,
         ativo: Sequelize.BOOLEAN,
         sha: Sequelize.STRING,
+        cli_grupos: Sequelize.STRING,
       },
       {
         sequelize,
