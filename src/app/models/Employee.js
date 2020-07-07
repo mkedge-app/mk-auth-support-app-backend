@@ -8,6 +8,7 @@ class Employee extends Model {
           type: Sequelize.INTEGER,
           primaryKey: true,
         },
+        nome: Sequelize.STRING,
       },
       {
         sequelize,
