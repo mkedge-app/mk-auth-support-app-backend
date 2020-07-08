@@ -13,8 +13,8 @@ routes.post('/sessions', SessionController.store);
 
 routes.use(authMiddleware);
 
-routes.post('/request', RequestController.index);
-routes.post('/requests', RequestController.show);
+routes.post('/requests', RequestController.index);
+routes.get('/request/:id', RequestController.show);
 routes.post('/requests/status', RequestController.update);
 
 routes.post('/client/:id', ClientController.update);
