@@ -8,9 +8,18 @@ import Employee from '../models/Employee';
 
 class RequestController {
   async index(req, res) {
-    const { date } = req.body;
+    const { date, tecnico: tecnico_id } = req.body;
 
-    const requests = await Request.findAll();
+    let requests = null;
+    if (tecnico_id === null) {
+      requests = await Request.findAll();
+    } else {
+      requests = await Request.findAll({
+        where: {
+          tecnico: tecnico_id,
+        },
+      });
+    }
 
     // Verifica se exitem chamadas para o técnico informado
     if (!requests) {
