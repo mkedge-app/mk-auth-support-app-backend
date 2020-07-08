@@ -8,9 +8,18 @@ import Employee from '../models/Employee';
 
 class RequestController {
   async index(req, res) {
-    const { date } = req.body;
+    const { date, tecnico: tecnico_id } = req.body;
 
-    const requests = await Request.findAll();
+    let requests = null;
+    if (tecnico_id === null) {
+      requests = await Request.findAll();
+    } else {
+      requests = await Request.findAll({
+        where: {
+          tecnico: tecnico_id,
+        },
+      });
+    }
 
     // Verifica se exitem chamadas para o técnico informado
     if (!requests) {
@@ -69,12 +78,8 @@ class RequestController {
 
       response_object.push({
         id: givenDateRequests[index].id,
-        client_id: response.id,
-        chamado: givenDateRequests[index].chamado,
         visita: format(addHours(givenDateRequests[index].visita, 4), 'HH:mm'),
         nome: givenDateRequests[index].nome,
-        fechamento: givenDateRequests[index].fechamento,
-        motivo_fechamento: givenDateRequests[index].motivo_fechar,
         login: response.login,
         senha: response.senha,
         plano: response.plano,
@@ -85,9 +90,7 @@ class RequestController {
         endereco: response.endereco_res,
         numero: response.numero_res,
         bairro: response.bairro_res,
-        coordenadas: response.coordenadas,
         mensagem: msg.msg,
-        caixa_hermetica: response.caixa_herm,
         employee_name: employee === null ? null : employee.nome,
       });
 
@@ -108,101 +111,54 @@ class RequestController {
   }
 
   async show(req, res) {
-    const { tecnico, date } = req.body;
+    const { id: request_id } = req.params;
 
-    const requests = await Request.findAll({
+    const request = await Request.findByPk(request_id);
+
+    // Verifica se exitem chamadas para o técnico informado
+    if (!request) {
+      return res.status(204).json({ message: 'Request ticket does not exist' });
+    }
+
+    const response = await Client.findOne({
       where: {
-        tecnico,
+        login: request.login,
       },
     });
 
-    // Verifica se exitem chamadas para o técnico informado
-    if (!requests) {
-      return res
-        .status(204)
-        .json({ message: 'No support requests for this user!' });
-    }
-
-    const givenDateRequests = [];
-
-    // eslint-disable-next-line array-callback-return
-    requests.map((item, index) => {
-      const dataBaseTime = format(item.visita, "yyyy-MM-dd'T'00:00:00");
-      const apiTime = format(
-        addHours(parseISO(date), 4),
-        "yyyy-MM-dd'T'00:00:00"
-      );
-
-      if (dataBaseTime === apiTime) {
-        givenDateRequests.push(requests[index]);
-      }
+    const msg = await Mensagem.findOne({
+      where: {
+        chamado: request.chamado,
+      },
     });
 
-    // Verifica se existem visitas agendadas para a data informada
-    if (givenDateRequests.length < 1) {
-      return res
-        .status(204)
-        .json({ error: 'No support requests fot this date' });
-    }
+    const employee = await Employee.findByPk(request.tecnico);
 
-    let index = givenDateRequests.length - 1;
+    const obj = {
+      id: request.id,
+      client_id: response.id,
+      chamado: request.chamado,
+      visita: format(addHours(request.visita, 4), 'HH:mm'),
+      nome: request.nome,
+      fechamento: request.fechamento,
+      motivo_fechamento: request.motivo_fechar,
+      login: response.login,
+      senha: response.senha,
+      plano: response.plano,
+      tipo: response.tipo,
+      ip: response.ip,
+      status: request.status,
+      assunto: request.assunto,
+      endereco: response.endereco_res,
+      numero: response.numero_res,
+      bairro: response.bairro_res,
+      coordenadas: response.coordenadas,
+      mensagem: msg.msg,
+      caixa_hermetica: response.caixa_herm,
+      employee_name: employee === null ? null : employee.nome,
+    };
 
-    const response_object = [];
-
-    do {
-      const { login, chamado } = givenDateRequests[index];
-
-      // eslint-disable-next-line no-await-in-loop
-      const response = await Client.findOne({
-        where: {
-          login,
-        },
-      });
-
-      // eslint-disable-next-line no-await-in-loop
-      const msg = await Mensagem.findOne({
-        where: {
-          chamado,
-        },
-      });
-
-      response_object.push({
-        id: givenDateRequests[index].id,
-        client_id: response.id,
-        chamado: givenDateRequests[index].chamado,
-        visita: format(addHours(givenDateRequests[index].visita, 4), 'HH:mm'),
-        nome: givenDateRequests[index].nome,
-        fechamento: givenDateRequests[index].fechamento,
-        motivo_fechamento: givenDateRequests[index].motivo_fechar,
-        login: response.login,
-        senha: response.senha,
-        plano: response.plano,
-        tipo: response.tipo,
-        ip: response.ip,
-        status: givenDateRequests[index].status,
-        assunto: givenDateRequests[index].assunto,
-        endereco: response.endereco_res,
-        numero: response.numero_res,
-        bairro: response.bairro_res,
-        coordenadas: response.coordenadas,
-        mensagem: msg.msg,
-        caixa_hermetica: response.caixa_herm,
-      });
-
-      index -= 1;
-    } while (index >= 0);
-
-    // Organizando array em ordem crescente de visita
-    response_object.sort((a, b) => {
-      const keyA = a.visita;
-      const keyB = b.visita;
-
-      if (keyA < keyB) return -1;
-      if (keyA > keyB) return 1;
-      return 0;
-    });
-
-    return res.json(response_object);
+    return res.json(obj);
   }
 
   async update(req, res) {
