@@ -229,6 +229,23 @@ class RequestController {
         break;
       }
 
+      case 'update_visita_date': {
+        const new_visita_date = format(
+          addHours(parseISO(req.body.new_visita_date), 4),
+          'yyyy-MM-dd'
+        ).toString();
+
+        const current_time = format(request.visita, 'HH:mm:ss').toString();
+
+        const updated_visit = parseISO(`${new_visita_date}T${current_time}`);
+
+        request.visita = updated_visit;
+
+        await request.save();
+
+        break;
+      }
+
       default:
         break;
     }
