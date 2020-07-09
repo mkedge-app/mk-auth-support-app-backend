@@ -139,6 +139,7 @@ class RequestController {
       client_id: response.id,
       chamado: request.chamado,
       visita: format(addHours(request.visita, 4), 'HH:mm'),
+      data_visita: format(addHours(request.visita, 4), 'dd-MM-yyyy'),
       nome: request.nome,
       fechamento: request.fechamento,
       motivo_fechamento: request.motivo_fechar,
@@ -207,6 +208,23 @@ class RequestController {
           tipo: 'app',
           operacao: 'OPERNULL',
         });
+
+        break;
+      }
+
+      case 'update_visita_time': {
+        const new_visita_time = format(
+          parseISO(req.body.new_visita_time),
+          'HH:mm:ss'
+        ).toString();
+
+        const current_date = format(request.visita, 'yyyy-MM-dd').toString();
+
+        const updated_visit = parseISO(`${current_date}T${new_visita_time}`);
+
+        request.visita = updated_visit;
+
+        await request.save();
 
         break;
       }
