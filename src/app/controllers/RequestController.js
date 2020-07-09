@@ -162,40 +162,58 @@ class RequestController {
   }
 
   async update(req, res) {
-    const { id } = req.body;
+    const { id: request_id } = req.params;
 
-    const request = await Request.findByPk(id);
+    const request = await Request.findByPk(request_id);
 
     if (!request) {
       return res.status(400).json({ error: 'This ticket does not exist' });
     }
 
-    if (request.status === 'fechado') {
-      return res.status(405).json({ error: 'Ticket already closed' });
+    let log = null;
+    const { action } = req.body;
+
+    switch (action) {
+      case 'update_employee': {
+        const { employee_id } = req.body;
+
+        request.tecnico = employee_id;
+        await request.save();
+        break;
+      }
+
+      case 'close_request': {
+        if (request.status === 'fechado') {
+          return res.status(405).json({ error: 'Ticket already closed' });
+        }
+
+        const formattedDate = format(new Date(), 'dd-MM-yyyy HH:mm:ss');
+
+        // Request closing
+        request.status = 'fechado';
+        request.fechamento = formattedDate;
+        await request.save();
+
+        // Saving system log
+        const { chamado, nome } = request;
+        const { login } = req.body;
+
+        const logDate = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
+
+        log = await SystemLog.create({
+          registro: `fechou o chamado ${chamado} de: ${nome}`,
+          data: logDate,
+          login,
+          tipo: 'app',
+          operacao: 'OPERNULL',
+        });
+
+        break;
+      }
+
+      default:
+        break;
     }
-
-    const date = new Date();
-
-    const formattedDate = format(date, 'dd-MM-yyyy HH:mm:ss');
-
-    // Request closing
-    request.status = 'fechado';
-    request.fechamento = formattedDate;
-    await request.save();
-
-    // Saving system log
-    const { chamado, nome } = request;
-    const { login } = req.body;
-
-    const logDate = format(date, 'dd/MM/yyyy HH:mm:ss');
-
-    const log = await SystemLog.create({
-      registro: `fechou o chamado ${chamado} de: ${nome}`,
-      data: logDate,
-      login,
-      tipo: 'app',
-      operacao: 'OPERNULL',
-    });
 
     return res.json(log);
   }
