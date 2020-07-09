@@ -15,7 +15,7 @@ routes.use(authMiddleware);
 
 routes.post('/requests', RequestController.index);
 routes.get('/request/:id', RequestController.show);
-routes.post('/requests/status', RequestController.update);
+routes.post('/request/:id', RequestController.update);
 
 routes.post('/client/:id', ClientController.update);
 routes.get('/client/:id', ClientController.show);
