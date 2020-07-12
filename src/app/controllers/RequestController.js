@@ -139,7 +139,7 @@ class RequestController {
       client_id: response.id,
       chamado: request.chamado,
       visita: format(addHours(request.visita, 4), 'HH:mm'),
-      data_visita: format(addHours(request.visita, 4), 'dd-MM-yyyy'),
+      data_visita: format(addHours(request.visita, 4), 'dd/MM/yyyy'),
       nome: request.nome,
       fechamento: request.fechamento,
       motivo_fechamento: request.motivo_fechar,
