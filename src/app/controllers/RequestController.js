@@ -1,4 +1,4 @@
-import { parseISO, addHours, format } from 'date-fns';
+import { parseISO, addHours, subHours, format } from 'date-fns';
 
 import Request from '../models/Request';
 import Client from '../models/Client';
@@ -214,7 +214,7 @@ class RequestController {
 
       case 'update_visita_time': {
         const new_visita_time = format(
-          parseISO(req.body.new_visita_time),
+          subHours(parseISO(req.body.new_visita_time), 4),
           'HH:mm:ss'
         ).toString();
 
