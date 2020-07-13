@@ -231,8 +231,8 @@ class RequestController {
 
       case 'update_visita_date': {
         const new_visita_date = format(
-          addHours(parseISO(req.body.new_visita_date), 4),
-          'yyyy-MM-dd'
+          parseISO(req.body.new_visita_date),
+          'yyyy-MM-dd HH:mm'
         ).toString();
 
         const current_time = format(request.visita, 'HH:mm:ss').toString();
