@@ -21,6 +21,7 @@ class Client extends Model {
         caixa_herm: Sequelize.STRING,
         porta_splitter: Sequelize.STRING,
         cli_ativado: Sequelize.STRING,
+        nome: Sequelize.STRING,
       },
       {
         sequelize,
