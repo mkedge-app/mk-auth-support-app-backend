@@ -19,7 +19,6 @@ routes.post('/requests', RequestController.index);
 routes.get('/request/:id', RequestController.show);
 routes.post('/request/:id', RequestController.update);
 
-routes.get('/clients', ClientController.index);
 routes.post('/client/:id', ClientController.update);
 routes.get('/client/:id', ClientController.show);
 
