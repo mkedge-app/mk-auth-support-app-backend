@@ -22,6 +22,8 @@ class Client extends Model {
         porta_splitter: Sequelize.STRING,
         cli_ativado: Sequelize.STRING,
         nome: Sequelize.STRING,
+        fone: Sequelize.STRING,
+        celular: Sequelize.STRING,
       },
       {
         sequelize,
