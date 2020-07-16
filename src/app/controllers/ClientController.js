@@ -3,46 +3,6 @@
 import Client from '../models/Client';
 
 class ClientController {
-  async index(req, res) {
-    const clients = await Client.findAll({
-      attributes: ['id', 'nome'],
-    });
-
-    // Remove espaço em branco no inicio da string e coloca todos os nomes em Maiusculo
-    clients.map((client, index) => {
-      clients[index].nome = client.nome.toUpperCase();
-
-      if (client.nome[0] === ' ') {
-        clients[index].nome = client.nome.trim();
-      }
-    });
-
-    // Ordena todos os clientes em ordem alfabetica
-    clients.sort((a, b) => {
-      if (a.nome < b.nome) {
-        return -1;
-      }
-      if (a.nome > b.nome) {
-        return 1;
-      }
-      return 0;
-    });
-
-    // Agrupa os nome com base na sua inicial
-    const data = clients.reduce((r, e) => {
-      const group = e.nome[0];
-
-      if (!r[group]) r[group] = { group, children: [e] };
-      else r[group].children.push(e);
-
-      return r;
-    }, {});
-
-    const result = Object.values(data);
-
-    return res.json(result);
-  }
-
   async show(req, res) {
     const { id: client_id } = req.params;
 
