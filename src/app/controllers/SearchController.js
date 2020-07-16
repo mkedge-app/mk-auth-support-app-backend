@@ -15,7 +15,7 @@ class SearchController {
           [Op.like]: `%${term}%`,
         },
       },
-      attributes: ['nome'],
+      attributes: ['id', 'nome'],
     });
 
     return res.json(clients);
