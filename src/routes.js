@@ -26,6 +26,7 @@ routes.get('/cto/:latitude/:longitude', CTOController.index);
 routes.get('/cto/:cto_name', CTOController.show);
 
 routes.get('/employees', EmployeeController.index);
+routes.get('/employee/:id', EmployeeController.show);
 
 routes.get('/search', SearchController.index);
 
