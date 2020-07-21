@@ -24,6 +24,7 @@ class Client extends Model {
         nome: Sequelize.STRING,
         fone: Sequelize.STRING,
         celular: Sequelize.STRING,
+        equipamento: Sequelize.STRING,
       },
       {
         sequelize,

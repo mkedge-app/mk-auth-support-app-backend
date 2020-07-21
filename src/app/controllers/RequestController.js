@@ -153,6 +153,7 @@ class RequestController {
       endereco: response.endereco_res,
       numero: response.numero_res,
       bairro: response.bairro_res,
+      equipamento: response.equipamento,
       coordenadas: response.coordenadas,
       mensagem: msg.msg,
       caixa_hermetica: response.caixa_herm,
