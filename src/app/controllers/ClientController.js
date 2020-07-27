@@ -83,7 +83,7 @@ class ClientController {
       },
       limit: 1,
       order: [['acctstarttime', 'DESC']],
-      attributes: ['acctstarttime'],
+      attributes: ['acctstarttime', 'acctstoptime'],
     });
 
     const response = {
@@ -92,6 +92,8 @@ class ClientController {
       second_to_last_data_usage: secondToLastDataUsage / 1024 / 1024 / 1024,
       third_to_last_data_usage: thirdToLastDataUsage / 1024 / 1024 / 1024,
       current_user_connection: current_user_connection[0].acctstarttime,
+      equipment_status:
+        current_user_connection[0].acctstoptime === null ? 'Online' : 'Offline',
     };
 
     return res.json(response);
