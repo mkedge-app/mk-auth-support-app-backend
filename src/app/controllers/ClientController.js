@@ -1,5 +1,3 @@
-/* eslint-disable array-callback-return */
-/* eslint-disable no-unused-vars */
 import Client from '../models/Client';
 
 class ClientController {
@@ -27,14 +25,7 @@ class ClientController {
     }
 
     if (new_cto) {
-      // const [, cto_number] = new_cto.split('-');
-
-      // const porta_olt = cto_number[0];
-      // const porta_splitter = cto_number.slice(-1)[0];
-
       client.caixa_herm = new_cto;
-      // client.porta_olt = porta_olt;
-      // client.porta_splitter = porta_splitter;
     }
 
     if (latitude && longitude) {
