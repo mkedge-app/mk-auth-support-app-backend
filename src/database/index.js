@@ -7,10 +7,20 @@ import Client from '../app/models/Client';
 import Mensagem from '../app/models/Mensagem';
 import SystemLog from '../app/models/SystemLog';
 import CTO from '../app/models/CTO';
+import Radacct from '../app/models/Radacct';
 
 import databaseConfig from '../config/database';
 
-const models = [User, Request, Employee, Client, Mensagem, SystemLog, CTO];
+const models = [
+  User,
+  Request,
+  Employee,
+  Client,
+  Mensagem,
+  SystemLog,
+  CTO,
+  Radacct,
+];
 
 class Database {
   constructor() {
