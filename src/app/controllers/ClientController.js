@@ -1,5 +1,5 @@
 import { Op } from 'sequelize';
-import { subMonths, format, parseISO } from 'date-fns';
+import { subMonths, format } from 'date-fns';
 
 import Client from '../models/Client';
 import Radacct from '../models/Radacct';
