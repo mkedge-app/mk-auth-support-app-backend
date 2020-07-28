@@ -1,5 +1,5 @@
 import { Op } from 'sequelize';
-import { subMonths, format } from 'date-fns';
+import { subMonths, format, getDate, getDaysInMonth } from 'date-fns';
 
 import Client from '../models/Client';
 import Radacct from '../models/Radacct';
@@ -96,9 +96,21 @@ class ClientController {
       'HH:mm'
     );
 
+    const days_in_current_month = getDate(new Date());
+
+    const consuption_average = (
+      dataUsage /
+      1024 /
+      1024 /
+      1024 /
+      days_in_current_month
+    ).toFixed(2);
+
     const response = {
       ...client.dataValues,
-      current_data_usage: dataUsage / 1024 / 1024 / 1024,
+      current_data_usage: (dataUsage / 1024 / 1024 / 1024).toFixed(2),
+      consuption_average,
+      expected_consuption: consuption_average * getDaysInMonth(new Date()),
       second_to_last_data_usage: secondToLastDataUsage / 1024 / 1024 / 1024,
       third_to_last_data_usage: thirdToLastDataUsage / 1024 / 1024 / 1024,
       current_user_connection: `${parsedDate} às ${parsedTime}`,
