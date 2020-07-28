@@ -1,5 +1,5 @@
 import { Op } from 'sequelize';
-import { subMonths, format } from 'date-fns';
+import { subMonths, format, parseISO } from 'date-fns';
 
 import Client from '../models/Client';
 import Radacct from '../models/Radacct';
@@ -86,12 +86,22 @@ class ClientController {
       attributes: ['acctstarttime', 'acctstoptime'],
     });
 
+    const parsedDate = format(
+      current_user_connection[0].acctstarttime,
+      'dd/MM/yyyy'
+    );
+
+    const parsedTime = format(
+      current_user_connection[0].acctstarttime,
+      'HH:mm'
+    );
+
     const response = {
       ...client.dataValues,
       current_data_usage: dataUsage / 1024 / 1024 / 1024,
       second_to_last_data_usage: secondToLastDataUsage / 1024 / 1024 / 1024,
       third_to_last_data_usage: thirdToLastDataUsage / 1024 / 1024 / 1024,
-      current_user_connection: current_user_connection[0].acctstarttime,
+      current_user_connection: `${parsedDate} às ${parsedTime}`,
       equipment_status:
         current_user_connection[0].acctstoptime === null ? 'Online' : 'Offline',
     };
