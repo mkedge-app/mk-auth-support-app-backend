@@ -77,6 +77,48 @@ class ClientController {
         thirdToLastDataUsage + item.acctinputoctets + item.acctoutputoctets;
     });
 
+    const forth_to_last_month = format(
+      subMonths(new Date(), 3),
+      'yyyy-MM-01 00:00:00'
+    );
+
+    const forth_to_last_month_connections = await Radacct.findAll({
+      where: {
+        username: client.login,
+        acctstarttime: {
+          [Op.between]: [forth_to_last_month, third_to_last_month],
+        },
+      },
+    });
+
+    let forthToLastDataUsage = 0;
+    // eslint-disable-next-line array-callback-return
+    forth_to_last_month_connections.map(item => {
+      forthToLastDataUsage =
+        forthToLastDataUsage + item.acctinputoctets + item.acctoutputoctets;
+    });
+
+    const fifith_to_last_month = format(
+      subMonths(new Date(), 3),
+      'yyyy-MM-01 00:00:00'
+    );
+
+    const fifith_to_last_month_connections = await Radacct.findAll({
+      where: {
+        username: client.login,
+        acctstarttime: {
+          [Op.between]: [fifith_to_last_month, third_to_last_month],
+        },
+      },
+    });
+
+    let fifithToLastDataUsage = 0;
+    // eslint-disable-next-line array-callback-return
+    fifith_to_last_month_connections.map(item => {
+      fifithToLastDataUsage =
+        fifithToLastDataUsage + item.acctinputoctets + item.acctoutputoctets;
+    });
+
     const current_user_connection = await Radacct.findAll({
       where: {
         username: client.login,
@@ -106,6 +148,27 @@ class ClientController {
       days_in_current_month
     ).toFixed(2);
 
+    const graph_obj = {
+      labels: [
+        format(subMonths(new Date(), 4), 'MMM'),
+        format(subMonths(new Date(), 3), 'MMM'),
+        format(subMonths(new Date(), 2), 'MMM'),
+        format(subMonths(new Date(), 1), 'MMM'),
+        format(new Date(), 'MMM'),
+      ],
+      datasets: [
+        {
+          data: [
+            (fifithToLastDataUsage / 1024 / 1024 / 1024).toFixed(2),
+            (forthToLastDataUsage / 1024 / 1024 / 1024).toFixed(2),
+            (thirdToLastDataUsage / 1024 / 1024 / 1024).toFixed(2),
+            (secondToLastDataUsage / 1024 / 1024 / 1024).toFixed(2),
+            (dataUsage / 1024 / 1024 / 1024).toFixed(2),
+          ],
+        },
+      ],
+    };
+
     const response = {
       ...client.dataValues,
       current_data_usage: (dataUsage / 1024 / 1024 / 1024).toFixed(2),
@@ -116,6 +179,7 @@ class ClientController {
       current_user_connection: `${parsedDate} às ${parsedTime}`,
       equipment_status:
         current_user_connection[0].acctstoptime === null ? 'Online' : 'Offline',
+      graph_obj,
     };
 
     return res.json(response);
