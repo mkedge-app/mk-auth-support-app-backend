@@ -1,5 +1,6 @@
 import { Op } from 'sequelize';
-import { subMonths, format, getDate, getDaysInMonth } from 'date-fns';
+import { subMonths, format, getDate, getDaysInMonth, addHours } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 import Client from '../models/Client';
 import Radacct from '../models/Radacct';
@@ -24,10 +25,6 @@ class ClientController {
         },
       },
     });
-
-    if (!client_connections) {
-      return res.status(400).json({ message: 'No connection data available' });
-    }
 
     let dataUsage = 0;
     // eslint-disable-next-line array-callback-return
@@ -107,7 +104,7 @@ class ClientController {
       where: {
         username: client.login,
         acctstarttime: {
-          [Op.between]: [fifith_to_last_month, third_to_last_month],
+          [Op.between]: [fifith_to_last_month, forth_to_last_month],
         },
       },
     });
@@ -128,15 +125,14 @@ class ClientController {
       attributes: ['acctstarttime', 'acctstoptime'],
     });
 
-    const parsedDate = format(
+    const parsedAcctStartTime = addHours(
       current_user_connection[0].acctstarttime,
-      'dd/MM/yyyy'
+      4
     );
 
-    const parsedTime = format(
-      current_user_connection[0].acctstarttime,
-      'HH:mm'
-    );
+    const parsedDate = format(parsedAcctStartTime, 'dd/MM/yyyy');
+
+    const parsedTime = format(parsedAcctStartTime, 'HH:mm');
 
     const days_in_current_month = getDate(new Date());
 
@@ -150,11 +146,22 @@ class ClientController {
 
     const graph_obj = {
       labels: [
-        format(subMonths(new Date(), 4), 'MMM'),
-        format(subMonths(new Date(), 3), 'MMM'),
-        format(subMonths(new Date(), 2), 'MMM'),
-        format(subMonths(new Date(), 1), 'MMM'),
-        format(new Date(), 'MMM'),
+        format(subMonths(new Date(), 4), 'MMM', { locale: ptBR })
+          .charAt(0)
+          .toUpperCase() +
+          format(subMonths(new Date(), 4), 'MMM', { locale: ptBR }).slice(1),
+        format(subMonths(new Date(), 3), 'MMM', { locale: ptBR })
+          .charAt(0)
+          .toUpperCase() +
+          format(subMonths(new Date(), 3), 'MMM', { locale: ptBR }).slice(1),
+        format(subMonths(new Date(), 2), 'MMM', { locale: ptBR })
+          .charAt(0)
+          .toUpperCase() +
+          format(subMonths(new Date(), 2), 'MMM', { locale: ptBR }).slice(1),
+        format(subMonths(new Date(), 1), 'MMM', { locale: ptBR })
+          .charAt(0)
+          .toUpperCase() +
+          format(subMonths(new Date(), 1), 'MMM', { locale: ptBR }).slice(1),
       ],
       datasets: [
         {
@@ -163,7 +170,6 @@ class ClientController {
             (forthToLastDataUsage / 1024 / 1024 / 1024).toFixed(2),
             (thirdToLastDataUsage / 1024 / 1024 / 1024).toFixed(2),
             (secondToLastDataUsage / 1024 / 1024 / 1024).toFixed(2),
-            (dataUsage / 1024 / 1024 / 1024).toFixed(2),
           ],
         },
       ],
@@ -173,7 +179,9 @@ class ClientController {
       ...client.dataValues,
       current_data_usage: (dataUsage / 1024 / 1024 / 1024).toFixed(2),
       consuption_average,
-      expected_consuption: consuption_average * getDaysInMonth(new Date()),
+      expected_consuption: (
+        consuption_average * getDaysInMonth(new Date())
+      ).toFixed(2),
       second_to_last_data_usage: secondToLastDataUsage / 1024 / 1024 / 1024,
       third_to_last_data_usage: thirdToLastDataUsage / 1024 / 1024 / 1024,
       current_user_connection: `${parsedDate} às ${parsedTime}`,
