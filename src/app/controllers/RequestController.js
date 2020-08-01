@@ -5,6 +5,7 @@ import Client from '../models/Client';
 import Mensagem from '../models/Mensagem';
 import SystemLog from '../models/SystemLog';
 import Employee from '../models/Employee';
+import Radacct from '../models/Radacct';
 
 class RequestController {
   async index(req, res) {
@@ -134,6 +135,15 @@ class RequestController {
 
     const employee = await Employee.findByPk(request.tecnico);
 
+    const current_user_connection = await Radacct.findAll({
+      where: {
+        username: request.login,
+      },
+      limit: 1,
+      order: [['acctstarttime', 'DESC']],
+      attributes: ['acctstarttime', 'acctstoptime'],
+    });
+
     const obj = {
       id: request.id,
       client_id: response.id,
@@ -158,6 +168,8 @@ class RequestController {
       mensagem: msg.msg,
       caixa_hermetica: response.caixa_herm,
       employee_name: employee === null ? null : employee.nome,
+      equipment_status:
+        current_user_connection[0].acctstoptime === null ? 'Online' : 'Offline',
     };
 
     return res.json(obj);
