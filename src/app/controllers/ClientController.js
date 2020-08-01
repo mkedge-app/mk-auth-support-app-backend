@@ -175,8 +175,19 @@ class ClientController {
       ],
     };
 
+    let finance_state = null;
+
+    if (client.bloqueado === 'sim') {
+      finance_state = 'Bloqueado';
+    } else if (client.observacao === 'sim') {
+      finance_state = 'Em observação';
+    } else {
+      finance_state = 'Liberado';
+    }
+
     const response = {
       ...client.dataValues,
+      finance_state,
       current_data_usage: (dataUsage / 1024 / 1024 / 1024).toFixed(2),
       consuption_average,
       expected_consuption: (
