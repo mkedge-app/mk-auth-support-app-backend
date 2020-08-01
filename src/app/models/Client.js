@@ -26,6 +26,7 @@ class Client extends Model {
         celular: Sequelize.STRING,
         equipamento: Sequelize.STRING,
         bloqueado: Sequelize.STRING,
+        observacao: Sequelize.STRING,
       },
       {
         sequelize,
