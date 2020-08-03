@@ -3,7 +3,10 @@ import {
   differenceInHours,
   differenceInMinutes,
   format,
+  endOfYear,
 } from 'date-fns';
+
+import { Op } from 'sequelize';
 
 import Client from '../models/Client';
 import Radacct from '../models/Radacct';
@@ -21,6 +24,9 @@ class UserConnectionsController {
     const client_connections = await Radacct.findAll({
       where: {
         username: client.login,
+        acctstarttime: {
+          [Op.lte]: endOfYear(new Date()),
+        },
       },
       limit: 10,
       order: [['acctstarttime', 'DESC']],
