@@ -1,4 +1,9 @@
-import { differenceInHours, differenceInMinutes, format } from 'date-fns';
+import {
+  differenceInDays,
+  differenceInHours,
+  differenceInMinutes,
+  format,
+} from 'date-fns';
 
 import Client from '../models/Client';
 import Radacct from '../models/Radacct';
@@ -43,10 +48,19 @@ class UserConnectionsController {
 
       let duration = 0;
 
-      duration = `${differenceInHours(
+      duration = `${differenceInDays(
         connection.acctstoptime === null ? new Date() : connection.acctstoptime,
         connection.acctstarttime
-      )}h`;
+      )}d`;
+
+      if (duration === '0d') {
+        duration = `${differenceInHours(
+          connection.acctstoptime === null
+            ? new Date()
+            : connection.acctstoptime,
+          connection.acctstarttime
+        )}h`;
+      }
 
       if (duration === '0h') {
         duration = `${differenceInMinutes(
