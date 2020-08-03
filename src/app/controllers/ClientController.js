@@ -1,5 +1,12 @@
 import { Op } from 'sequelize';
-import { subMonths, format, getDate, getDaysInMonth, addHours } from 'date-fns';
+import {
+  subMonths,
+  format,
+  getDate,
+  getDaysInMonth,
+  addHours,
+  endOfYear,
+} from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 import Client from '../models/Client';
@@ -140,6 +147,9 @@ class ClientController {
     const current_user_connection = await Radacct.findAll({
       where: {
         username: client.login,
+        acctstarttime: {
+          [Op.lte]: endOfYear(new Date()),
+        },
       },
       limit: 1,
       order: [['acctstarttime', 'DESC']],
