@@ -116,6 +116,27 @@ class ClientController {
         fifithToLastDataUsage + item.acctinputoctets + item.acctoutputoctets;
     });
 
+    const sixth_to_last_month = format(
+      subMonths(new Date(), 5),
+      'yyyy-MM-01 00:00:00'
+    );
+
+    const sixth_to_last_month_connections = await Radacct.findAll({
+      where: {
+        username: client.login,
+        acctstarttime: {
+          [Op.between]: [sixth_to_last_month, fifith_to_last_month],
+        },
+      },
+    });
+
+    let sixthToLastDataUsage = 0;
+    // eslint-disable-next-line array-callback-return
+    sixth_to_last_month_connections.map(item => {
+      sixthToLastDataUsage =
+        sixthToLastDataUsage + item.acctinputoctets + item.acctoutputoctets;
+    });
+
     const current_user_connection = await Radacct.findAll({
       where: {
         username: client.login,
@@ -151,6 +172,10 @@ class ClientController {
 
     const graph_obj = {
       labels: [
+        format(subMonths(new Date(), 5), 'MMM', { locale: ptBR })
+          .charAt(0)
+          .toUpperCase() +
+          format(subMonths(new Date(), 5), 'MMM', { locale: ptBR }).slice(1),
         format(subMonths(new Date(), 4), 'MMM', { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
@@ -171,6 +196,7 @@ class ClientController {
       datasets: [
         {
           data: [
+            (sixthToLastDataUsage / 1024 / 1024 / 1024).toFixed(2),
             (fifithToLastDataUsage / 1024 / 1024 / 1024).toFixed(2),
             (forthToLastDataUsage / 1024 / 1024 / 1024).toFixed(2),
             (thirdToLastDataUsage / 1024 / 1024 / 1024).toFixed(2),
