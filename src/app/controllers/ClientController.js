@@ -96,7 +96,7 @@ class ClientController {
     });
 
     const fifith_to_last_month = format(
-      subMonths(new Date(), 3),
+      subMonths(new Date(), 4),
       'yyyy-MM-01 00:00:00'
     );
 
