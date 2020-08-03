@@ -1,4 +1,5 @@
-import { parseISO, addHours, subHours, format } from 'date-fns';
+import { parseISO, addHours, subHours, format, endOfYear } from 'date-fns';
+import { Op } from 'sequelize';
 
 import Request from '../models/Request';
 import Client from '../models/Client';
@@ -138,6 +139,9 @@ class RequestController {
     const current_user_connection = await Radacct.findAll({
       where: {
         username: request.login,
+        acctstarttime: {
+          [Op.lte]: endOfYear(new Date()),
+        },
       },
       limit: 1,
       order: [['acctstarttime', 'DESC']],

@@ -1,4 +1,13 @@
-import { differenceInHours, differenceInMinutes, format } from 'date-fns';
+import {
+  differenceInDays,
+  differenceInHours,
+  differenceInMinutes,
+  format,
+  endOfYear,
+  addHours,
+} from 'date-fns';
+
+import { Op } from 'sequelize';
 
 import Client from '../models/Client';
 import Radacct from '../models/Radacct';
@@ -16,6 +25,9 @@ class UserConnectionsController {
     const client_connections = await Radacct.findAll({
       where: {
         username: client.login,
+        acctstarttime: {
+          [Op.lte]: endOfYear(new Date()),
+        },
       },
       limit: 10,
       order: [['acctstarttime', 'DESC']],
@@ -28,25 +40,37 @@ class UserConnectionsController {
     const response_obj = [];
 
     client_connections.forEach(connection => {
-      const start_time = format(connection.acctstarttime, 'HH:mm');
-      const start_date = format(connection.acctstarttime, 'dd/MM/yyyy');
+      const start_time = format(addHours(connection.acctstarttime, 4), 'HH:mm');
+      const start_date = format(
+        addHours(connection.acctstarttime, 4),
+        'dd/MM/yyyy'
+      );
 
       const end_time =
         connection.acctstoptime !== null
-          ? format(connection.acctstoptime, 'HH:mm')
+          ? format(addHours(connection.acctstoptime, 4), 'HH:mm')
           : null;
 
       const end_date =
         connection.acctstoptime !== null
-          ? format(connection.acctstoptime, 'dd/MM/yyyy')
+          ? format(addHours(connection.acctstoptime, 4), 'dd/MM/yyyy')
           : null;
 
       let duration = 0;
 
-      duration = `${differenceInHours(
+      duration = `${differenceInDays(
         connection.acctstoptime === null ? new Date() : connection.acctstoptime,
         connection.acctstarttime
-      )}h`;
+      )}d`;
+
+      if (duration === '0d') {
+        duration = `${differenceInHours(
+          connection.acctstoptime === null
+            ? new Date()
+            : connection.acctstoptime,
+          connection.acctstarttime
+        )}h`;
+      }
 
       if (duration === '0h') {
         duration = `${differenceInMinutes(
