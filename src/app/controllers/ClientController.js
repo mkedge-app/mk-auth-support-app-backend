@@ -125,14 +125,19 @@ class ClientController {
       attributes: ['acctstarttime', 'acctstoptime'],
     });
 
-    const parsedAcctStartTime = addHours(
-      current_user_connection[0].acctstarttime,
-      4
-    );
+    let parsedDate = null;
+    let parsedTime = null;
 
-    const parsedDate = format(parsedAcctStartTime, 'dd/MM/yyyy');
+    if (current_user_connection.length !== 0) {
+      const parsedAcctStartTime = addHours(
+        current_user_connection[0].acctstarttime,
+        4
+      );
 
-    const parsedTime = format(parsedAcctStartTime, 'HH:mm');
+      parsedDate = format(parsedAcctStartTime, 'dd/MM/yyyy');
+
+      parsedTime = format(parsedAcctStartTime, 'HH:mm');
+    }
 
     const days_in_current_month = getDate(new Date());
 
@@ -185,6 +190,12 @@ class ClientController {
       finance_state = 'Liberado';
     }
 
+    let equipment_status = 'Offline';
+    if (current_user_connection.length !== 0) {
+      equipment_status =
+        current_user_connection[0].acctstoptime === null ? 'Online' : 'Offline';
+    }
+
     const response = {
       ...client.dataValues,
       finance_state,
@@ -195,9 +206,11 @@ class ClientController {
       ).toFixed(2),
       second_to_last_data_usage: secondToLastDataUsage / 1024 / 1024 / 1024,
       third_to_last_data_usage: thirdToLastDataUsage / 1024 / 1024 / 1024,
-      current_user_connection: `${parsedDate} às ${parsedTime}`,
-      equipment_status:
-        current_user_connection[0].acctstoptime === null ? 'Online' : 'Offline',
+      current_user_connection:
+        parsedDate !== null
+          ? `${parsedDate} às ${parsedTime}`
+          : 'Não há conexões',
+      equipment_status,
       graph_obj,
     };
 
