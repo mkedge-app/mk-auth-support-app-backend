@@ -4,6 +4,7 @@ import {
   differenceInMinutes,
   format,
   endOfYear,
+  addHours,
 } from 'date-fns';
 
 import { Op } from 'sequelize';
@@ -39,17 +40,20 @@ class UserConnectionsController {
     const response_obj = [];
 
     client_connections.forEach(connection => {
-      const start_time = format(connection.acctstarttime, 'HH:mm');
-      const start_date = format(connection.acctstarttime, 'dd/MM/yyyy');
+      const start_time = format(addHours(connection.acctstarttime, 4), 'HH:mm');
+      const start_date = format(
+        addHours(connection.acctstarttime, 4),
+        'dd/MM/yyyy'
+      );
 
       const end_time =
         connection.acctstoptime !== null
-          ? format(connection.acctstoptime, 'HH:mm')
+          ? format(addHours(connection.acctstoptime, 4), 'HH:mm')
           : null;
 
       const end_date =
         connection.acctstoptime !== null
-          ? format(connection.acctstoptime, 'dd/MM/yyyy')
+          ? format(addHours(connection.acctstoptime, 4), 'dd/MM/yyyy')
           : null;
 
       let duration = 0;
