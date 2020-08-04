@@ -148,6 +148,12 @@ class RequestController {
       attributes: ['acctstarttime', 'acctstoptime'],
     });
 
+    let equipment_status = 'Offline';
+    if (current_user_connection.length !== 0) {
+      equipment_status =
+        current_user_connection[0].acctstoptime === null ? 'Online' : 'Offline';
+    }
+
     const obj = {
       id: request.id,
       client_id: response.id,
@@ -172,8 +178,7 @@ class RequestController {
       mensagem: msg.msg,
       caixa_hermetica: response.caixa_herm,
       employee_name: employee === null ? null : employee.nome,
-      equipment_status:
-        current_user_connection[0].acctstoptime === null ? 'Online' : 'Offline',
+      equipment_status,
     };
 
     return res.json(obj);
