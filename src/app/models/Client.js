@@ -27,6 +27,7 @@ class Client extends Model {
         equipamento: Sequelize.STRING,
         bloqueado: Sequelize.STRING,
         observacao: Sequelize.STRING,
+        cpf_cnpj: Sequelize.STRING,
       },
       {
         sequelize,
