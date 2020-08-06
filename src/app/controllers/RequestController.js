@@ -148,6 +148,12 @@ class RequestController {
       attributes: ['acctstarttime', 'acctstoptime'],
     });
 
+    let equipment_status = 'Offline';
+    if (current_user_connection.length !== 0) {
+      equipment_status =
+        current_user_connection[0].acctstoptime === null ? 'Online' : 'Offline';
+    }
+
     const obj = {
       id: request.id,
       client_id: response.id,
@@ -172,8 +178,7 @@ class RequestController {
       mensagem: msg.msg,
       caixa_hermetica: response.caixa_herm,
       employee_name: employee === null ? null : employee.nome,
-      equipment_status:
-        current_user_connection[0].acctstoptime === null ? 'Online' : 'Offline',
+      equipment_status,
     };
 
     return res.json(obj);
@@ -205,11 +210,16 @@ class RequestController {
           return res.status(405).json({ error: 'Ticket already closed' });
         }
 
+        const { closingNote, employee_id } = req.body;
+
+        const employee = await Employee.findByPk(employee_id);
+
         const formattedDate = format(new Date(), 'dd-MM-yyyy HH:mm:ss');
 
         // Request closing
         request.status = 'fechado';
         request.fechamento = formattedDate;
+        request.motivo_fechar = `fechado por ${employee.nome}: ${closingNote}`;
         await request.save();
 
         // Saving system log
