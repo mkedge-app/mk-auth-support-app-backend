@@ -210,11 +210,16 @@ class RequestController {
           return res.status(405).json({ error: 'Ticket already closed' });
         }
 
+        const { closingNote, employee_id } = req.body;
+
+        const employee = await Employee.findByPk(employee_id);
+
         const formattedDate = format(new Date(), 'dd-MM-yyyy HH:mm:ss');
 
         // Request closing
         request.status = 'fechado';
         request.fechamento = formattedDate;
+        request.motivo_fechar = `fechado por ${employee.nome}: ${closingNote}`;
         await request.save();
 
         // Saving system log
