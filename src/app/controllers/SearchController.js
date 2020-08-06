@@ -1,11 +1,7 @@
 import { Op } from 'sequelize';
-import { endOfYear } from 'date-fns';
-
 import Client from '../models/Client';
-import Radacct from '../models/Radacct';
 
 class SearchController {
-  // eslint-disable-next-line consistent-return
   async index(req, res) {
     const { term } = req.query;
 
@@ -21,48 +17,10 @@ class SearchController {
             [Op.like]: `%${term}%`,
           },
         },
-        attributes: ['id', 'nome', 'login'],
+        attributes: ['id', 'nome'],
       });
 
-      const promises = clients.map(client => {
-        return Radacct.findAll({
-          where: {
-            username: client.login,
-            acctstarttime: {
-              [Op.lte]: endOfYear(new Date()),
-            },
-          },
-          limit: 1,
-          order: [['acctstarttime', 'DESC']],
-          attributes: ['acctstoptime'],
-        });
-      });
-
-      Promise.all(promises).then(response => {
-        const equipment_array = [];
-        // eslint-disable-next-line array-callback-return
-        response.map(item => {
-          if (item.length !== 0) {
-            let equipment_status = 'Offline';
-            equipment_status =
-              item[0].acctstoptime === null ? 'Online' : 'Offline';
-
-            equipment_array.push(equipment_status);
-          } else {
-            const equipment_status = 'Offline';
-            equipment_array.push(equipment_status);
-          }
-        });
-
-        clients.forEach((client, index) => {
-          clients[index] = {
-            ...client.dataValues,
-            equipment_array: equipment_array[index],
-          };
-        });
-
-        return res.json(clients);
-      });
+      return res.json(clients);
     }
 
     const clients = await Client.findAll({
@@ -71,48 +29,10 @@ class SearchController {
           [Op.like]: `%${term}%`,
         },
       },
-      attributes: ['id', 'nome', 'login'],
+      attributes: ['id', 'nome'],
     });
 
-    const promises = clients.map(client => {
-      return Radacct.findAll({
-        where: {
-          username: client.login,
-          acctstarttime: {
-            [Op.lte]: endOfYear(new Date()),
-          },
-        },
-        limit: 1,
-        order: [['acctstarttime', 'DESC']],
-        attributes: ['acctstoptime'],
-      });
-    });
-
-    Promise.all(promises).then(response => {
-      const equipment_array = [];
-      // eslint-disable-next-line array-callback-return
-      response.map(item => {
-        if (item.length !== 0) {
-          let equipment_status = 'Offline';
-          equipment_status =
-            item[0].acctstoptime === null ? 'Online' : 'Offline';
-
-          equipment_array.push(equipment_status);
-        } else {
-          const equipment_status = 'Offline';
-          equipment_array.push(equipment_status);
-        }
-      });
-
-      clients.forEach((client, index) => {
-        clients[index] = {
-          ...client.dataValues,
-          equipment_array: equipment_array[index],
-        };
-      });
-
-      return res.json(clients);
-    });
+    return res.json(clients);
   }
 }
 
