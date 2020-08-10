@@ -17,6 +17,7 @@ class Client extends Model {
         plano: Sequelize.STRING,
         tipo: Sequelize.STRING,
         ip: Sequelize.STRING,
+        mac: Sequelize.STRING,
         porta_olt: Sequelize.STRING,
         caixa_herm: Sequelize.STRING,
         porta_splitter: Sequelize.STRING,
