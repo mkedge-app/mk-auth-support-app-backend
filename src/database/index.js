@@ -8,6 +8,7 @@ import Mensagem from '../app/models/Mensagem';
 import SystemLog from '../app/models/SystemLog';
 import CTO from '../app/models/CTO';
 import Radacct from '../app/models/Radacct';
+import Invoice from '../app/models/Invoice';
 
 import databaseConfig from '../config/database';
 
@@ -20,6 +21,7 @@ const models = [
   SystemLog,
   CTO,
   Radacct,
+  Invoice,
 ];
 
 class Database {
