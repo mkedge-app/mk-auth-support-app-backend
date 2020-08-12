@@ -34,6 +34,6 @@ routes.get('/search', SearchController.index);
 
 routes.get('/connections/:id', UserConnectionsController.show);
 
-routes.get('/invoices/:id', InvoiceController.show);
+routes.get('/invoices/:client_id', InvoiceController.show);
 
 export default routes;
