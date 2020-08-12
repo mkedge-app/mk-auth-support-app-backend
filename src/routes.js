@@ -7,6 +7,7 @@ import ClientController from './app/controllers/ClientController';
 import EmployeeController from './app/controllers/EmployeeController';
 import SearchController from './app/controllers/SearchController';
 import UserConnectionsController from './app/controllers/UserConnectionsController';
+import InvoiceController from './app/controllers/InvoiceController';
 
 import authMiddleware from './app/middlewares/auth';
 
@@ -32,5 +33,7 @@ routes.get('/employee/:id', EmployeeController.show);
 routes.get('/search', SearchController.index);
 
 routes.get('/connections/:id', UserConnectionsController.show);
+
+routes.get('/invoices/:client_id', InvoiceController.show);
 
 export default routes;
