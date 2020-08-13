@@ -14,6 +14,7 @@ class InvoiceController {
     const pendingInvoices = await Invoice.findAll({
       where: {
         login,
+        datadel: null,
         status: {
           [Op.or]: ['vencido', 'aberto'],
         },
@@ -49,6 +50,7 @@ class InvoiceController {
     const paidInvoices = await Invoice.findAll({
       where: {
         login,
+        datadel: null,
         status: 'pago',
       },
     });
