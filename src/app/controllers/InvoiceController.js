@@ -9,7 +9,7 @@ class InvoiceController {
   async show(req, res) {
     const { client_id } = req.params;
 
-    const { login, observacao } = await Client.findByPk(client_id);
+    const { login, observacao, rem_obs } = await Client.findByPk(client_id);
 
     const pendingInvoices = await Invoice.findAll({
       where: {
@@ -88,6 +88,7 @@ class InvoiceController {
 
     return res.json({
       observacao,
+      rem_obs,
       invoices: response,
     });
   }
