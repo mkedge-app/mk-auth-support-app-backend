@@ -6,6 +6,7 @@ import {
   getDaysInMonth,
   addHours,
   endOfYear,
+  parseISO,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -185,23 +186,23 @@ class ClientController {
         format(subMonths(new Date(), 5), 'MMM', { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
-          format(subMonths(new Date(), 5), 'MMM', { locale: ptBR }).slice(1),
+        format(subMonths(new Date(), 5), 'MMM', { locale: ptBR }).slice(1),
         format(subMonths(new Date(), 4), 'MMM', { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
-          format(subMonths(new Date(), 4), 'MMM', { locale: ptBR }).slice(1),
+        format(subMonths(new Date(), 4), 'MMM', { locale: ptBR }).slice(1),
         format(subMonths(new Date(), 3), 'MMM', { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
-          format(subMonths(new Date(), 3), 'MMM', { locale: ptBR }).slice(1),
+        format(subMonths(new Date(), 3), 'MMM', { locale: ptBR }).slice(1),
         format(subMonths(new Date(), 2), 'MMM', { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
-          format(subMonths(new Date(), 2), 'MMM', { locale: ptBR }).slice(1),
+        format(subMonths(new Date(), 2), 'MMM', { locale: ptBR }).slice(1),
         format(subMonths(new Date(), 1), 'MMM', { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
-          format(subMonths(new Date(), 1), 'MMM', { locale: ptBR }).slice(1),
+        format(subMonths(new Date(), 1), 'MMM', { locale: ptBR }).slice(1),
       ],
       datasets: [
         {
@@ -256,7 +257,7 @@ class ClientController {
   async update(req, res) {
     const { id: client_id } = req.params;
 
-    const { latitude, longitude, new_cto } = req.body;
+    const { latitude, longitude, new_cto, observacao, date } = req.body;
 
     const client = await Client.findByPk(client_id);
 
@@ -270,6 +271,14 @@ class ClientController {
 
     if (latitude && longitude) {
       client.coordenadas = `${latitude},${longitude}`;
+    }
+
+    if (observacao) {
+      client.observacao = observacao;
+
+      if (date !== null) {
+        client.rem_obs = format(parseISO(date), 'yyyy-MM-dd 00:00:00');
+      }
     }
 
     await client.save();
