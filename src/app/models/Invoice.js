@@ -10,6 +10,7 @@ class Invoice extends Model {
         },
         datavenc: Sequelize.DATE,
         datapag: Sequelize.DATE,
+        datadel: Sequelize.DATE,
         valor: Sequelize.STRING,
         status: Sequelize.STRING,
         login: Sequelize.STRING,
