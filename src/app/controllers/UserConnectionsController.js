@@ -56,27 +56,27 @@ class UserConnectionsController {
           ? format(addHours(connection.acctstoptime, 4), 'dd/MM/yyyy')
           : null;
 
+      const now_time = new Date(
+        new Date().valueOf() - new Date().getTimezoneOffset() * 60000
+      );
+
       let duration = 0;
 
       duration = `${differenceInDays(
-        connection.acctstoptime === null ? new Date() : connection.acctstoptime,
+        connection.acctstoptime === null ? now_time : connection.acctstoptime,
         connection.acctstarttime
       )}d`;
 
       if (duration === '0d') {
         duration = `${differenceInHours(
-          connection.acctstoptime === null
-            ? new Date()
-            : connection.acctstoptime,
+          connection.acctstoptime === null ? now_time : connection.acctstoptime,
           connection.acctstarttime
         )}h`;
       }
 
       if (duration === '0h') {
         duration = `${differenceInMinutes(
-          connection.acctstoptime === null
-            ? new Date()
-            : connection.acctstoptime,
+          connection.acctstoptime === null ? now_time : connection.acctstoptime,
           connection.acctstarttime
         )}m`;
       }
