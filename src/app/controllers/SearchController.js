@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 import { Op } from 'sequelize';
 import Client from '../models/Client';
 
@@ -21,6 +22,16 @@ class SearchController {
           attributes: ['id', 'nome'],
         });
 
+        clients.sort((a, b) => {
+          if (a.nome < b.nome) {
+            return -1;
+          }
+          if (a.nome > b.nome) {
+            return 1;
+          }
+          return 0;
+        });
+
         return res.json(clients);
       }
       // eslint-disable-next-line no-restricted-globals
@@ -33,6 +44,16 @@ class SearchController {
           },
         },
         attributes: ['id', 'nome'],
+      });
+
+      clients.sort((a, b) => {
+        if (a.nome < b.nome) {
+          return -1;
+        }
+        if (a.nome > b.nome) {
+          return 1;
+        }
+        return 0;
       });
 
       return res.json(clients);
@@ -49,6 +70,16 @@ class SearchController {
         attributes: ['id', 'nome'],
       });
 
+      clients.sort((a, b) => {
+        if (a.nome < b.nome) {
+          return -1;
+        }
+        if (a.nome > b.nome) {
+          return 1;
+        }
+        return 0;
+      });
+
       return res.json(clients);
     }
 
@@ -59,6 +90,16 @@ class SearchController {
         },
       },
       attributes: ['id', 'nome'],
+    });
+
+    clients.sort((a, b) => {
+      if (a.nome < b.nome) {
+        return -1;
+      }
+      if (a.nome > b.nome) {
+        return 1;
+      }
+      return 0;
     });
 
     return res.json(clients);
