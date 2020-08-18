@@ -186,23 +186,23 @@ class ClientController {
         format(subMonths(new Date(), 5), 'MMM', { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
-        format(subMonths(new Date(), 5), 'MMM', { locale: ptBR }).slice(1),
+          format(subMonths(new Date(), 5), 'MMM', { locale: ptBR }).slice(1),
         format(subMonths(new Date(), 4), 'MMM', { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
-        format(subMonths(new Date(), 4), 'MMM', { locale: ptBR }).slice(1),
+          format(subMonths(new Date(), 4), 'MMM', { locale: ptBR }).slice(1),
         format(subMonths(new Date(), 3), 'MMM', { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
-        format(subMonths(new Date(), 3), 'MMM', { locale: ptBR }).slice(1),
+          format(subMonths(new Date(), 3), 'MMM', { locale: ptBR }).slice(1),
         format(subMonths(new Date(), 2), 'MMM', { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
-        format(subMonths(new Date(), 2), 'MMM', { locale: ptBR }).slice(1),
+          format(subMonths(new Date(), 2), 'MMM', { locale: ptBR }).slice(1),
         format(subMonths(new Date(), 1), 'MMM', { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
-        format(subMonths(new Date(), 1), 'MMM', { locale: ptBR }).slice(1),
+          format(subMonths(new Date(), 1), 'MMM', { locale: ptBR }).slice(1),
       ],
       datasets: [
         {
@@ -257,7 +257,18 @@ class ClientController {
   async update(req, res) {
     const { id: client_id } = req.params;
 
-    const { latitude, longitude, new_cto, observacao, date } = req.body;
+    const {
+      latitude,
+      longitude,
+      new_cto,
+      observacao,
+      date,
+      celular,
+      fone,
+      endereco_res,
+      numero_res,
+      bairro_res,
+    } = req.body;
 
     const client = await Client.findByPk(client_id);
 
@@ -281,9 +292,23 @@ class ClientController {
       }
     }
 
+    if (celular) {
+      client.celular = celular;
+    }
+
+    if (fone) {
+      client.fone = fone;
+    }
+
+    if (endereco_res && numero_res && bairro_res) {
+      client.endereco_res = endereco_res;
+      client.numero_res = numero_res;
+      client.bairro_res = bairro_res;
+    }
+
     await client.save();
 
-    return res.sendStatus(200);
+    return res.json(client);
   }
 }
 
