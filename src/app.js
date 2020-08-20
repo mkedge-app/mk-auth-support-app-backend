@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import http from 'http';
 import routes from './routes';
 
 import './database';
@@ -9,7 +10,10 @@ import DatabaseSubject from './observers/subjects/database/index';
 
 class App {
   constructor() {
-    this.server = express();
+    this.app = express();
+    this.server = http.Server(this.app);
+
+    this.initNotificationSocket();
 
     this.middlewares();
     this.routes();
@@ -17,12 +21,12 @@ class App {
   }
 
   middlewares() {
-    this.server.use(cors());
-    this.server.use(express.json());
+    this.app.use(cors());
+    this.app.use(express.json());
   }
 
   routes() {
-    this.server.use(routes);
+    this.app.use(routes);
   }
 
   mongo() {
@@ -36,8 +40,8 @@ class App {
     );
   }
 
-  initDataBaseObserver() {
-    DatabaseSubject();
+  initNotificationSocket() {
+    DatabaseSubject.socket(this.server);
   }
 }
 
