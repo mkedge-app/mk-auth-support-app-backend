@@ -1,12 +1,16 @@
 /* eslint-disable no-console */
 import MySQLEvents from '@rodrigogs/mysql-events';
 import mysql from 'mysql';
+import io from 'socket.io';
 
 import databaseConfig from '../../../config/database';
 import DatabaseObserver from '../../DatabaseObserver';
 
 class DatabaseSubject {
   constructor() {
+    this.connectedUsers = {};
+
+    // this.socket(http_server);
     this.init();
   }
 
@@ -14,6 +18,24 @@ class DatabaseSubject {
     this.watchDatabase()
       .then(() => console.log('Waiting for database events...'))
       .catch(console.error);
+  }
+
+  socket(http_server) {
+    this.io = io(http_server);
+
+    this.io.on('connection', socket => {
+      const { employee_id } = socket.handshake.query;
+      this.connectedUsers[employee_id] = socket.id;
+
+      socket.on('disconnect', () => {
+        delete this.connectedUsers[employee_id];
+      });
+
+      socket.on('error', err => {
+        console.log('Socket.IO Error');
+        console.log(err.stack); // this is changed from your code in last comment
+      });
+    });
   }
 
   async watchDatabase() {
@@ -39,7 +61,11 @@ class DatabaseSubject {
       onEvent: event => {
         const { tecnico: new_employee_id } = event.affectedRows[0].after;
 
-        DatabaseObserver.notifyEmployee(new_employee_id);
+        DatabaseObserver.notifyEmployee(
+          new_employee_id,
+          this.connectedUsers,
+          this.io
+        );
       },
     });
 

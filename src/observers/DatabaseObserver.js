@@ -1,5 +1,4 @@
-/* eslint-disable no-console */
-// import databaseConfig from '../config/database';
+import Notification from '../app/schemas/notification';
 
 class DatabaseObserver {
   constructor() {
@@ -8,8 +7,17 @@ class DatabaseObserver {
 
   init() {}
 
-  notifyEmployee(employee_id) {
-    console.log(`Um novo chamado foi assinalado para o técnico ${employee_id}`);
+  async notifyEmployee(employee_id, connectedUsers, io) {
+    const notification = await Notification.create({
+      content: `2`,
+      user: employee_id,
+    });
+
+    const socketOwner = connectedUsers[employee_id];
+
+    if (socketOwner) {
+      io.to(socketOwner).emit('notification', notification);
+    }
   }
 }
 

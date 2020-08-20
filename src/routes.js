@@ -8,6 +8,7 @@ import EmployeeController from './app/controllers/EmployeeController';
 import SearchController from './app/controllers/SearchController';
 import UserConnectionsController from './app/controllers/UserConnectionsController';
 import InvoiceController from './app/controllers/InvoiceController';
+import NotificationController from './app/controllers/NotificationController';
 
 import authMiddleware from './app/middlewares/auth';
 
@@ -35,5 +36,7 @@ routes.get('/search', SearchController.index);
 routes.get('/connections/:id', UserConnectionsController.show);
 
 routes.get('/invoices/:client_id', InvoiceController.show);
+
+routes.get('/notification/:employee_id', NotificationController.show);
 
 export default routes;
