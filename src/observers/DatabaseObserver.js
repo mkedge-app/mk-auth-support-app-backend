@@ -7,9 +7,10 @@ class DatabaseObserver {
 
   init() {}
 
-  async notifyEmployee(employee_id, connectedUsers, io) {
+  async notifyEmployee(employee_id, connectedUsers, io, header, message) {
     const notification = await Notification.create({
-      content: `2`,
+      header,
+      content: message,
       user: employee_id,
     });
 
