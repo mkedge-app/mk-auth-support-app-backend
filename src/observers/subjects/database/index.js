@@ -2,6 +2,7 @@
 import MySQLEvents from '@rodrigogs/mysql-events';
 import mysql from 'mysql';
 import io from 'socket.io';
+import { format } from 'date-fns';
 
 import databaseConfig from '../../../config/database';
 import DatabaseObserver from '../../DatabaseObserver';
@@ -55,16 +56,44 @@ class DatabaseSubject {
     await instance.start();
 
     instance.addTrigger({
-      name: 'ON_ANY_CHANGE',
-      expression: 'mkradius.sis_suporte',
+      name: 'ON_EMPLOYEE_CHANGE',
+      expression: 'mkradius.sis_suporte.tecnico',
       statement: MySQLEvents.STATEMENTS.ALL,
       onEvent: event => {
         const { tecnico: new_employee_id } = event.affectedRows[0].after;
 
+        const header = 'Novo chamado';
+        const message = 'Um novo chamado foi assinalado para você';
+
         DatabaseObserver.notifyEmployee(
           new_employee_id,
           this.connectedUsers,
-          this.io
+          this.io,
+          header,
+          message
+        );
+      },
+    });
+
+    instance.addTrigger({
+      name: 'ON_VISIT_DATE_CHANGE',
+      expression: 'mkradius.sis_suporte.visita',
+      statement: MySQLEvents.STATEMENTS.ALL,
+      onEvent: event => {
+        const { tecnico: new_employee_id } = event.affectedRows[0].after;
+
+        const { visita } = event.affectedRows[0].after;
+        const new_visit_time = format(visita, 'dd/MM/yyyy');
+
+        const header = 'Data de visita alterada';
+        const message = `Visita à Fulano de Tal foi alterada para ${new_visit_time}`;
+
+        DatabaseObserver.notifyEmployee(
+          new_employee_id,
+          this.connectedUsers,
+          this.io,
+          header,
+          message
         );
       },
     });
