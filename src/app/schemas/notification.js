@@ -19,9 +19,18 @@ const NotificationSchema = new mongoose.Schema(
       required: true,
       default: false,
     },
+    viewed: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    viewedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
-    timestamps: true,
+    timestamps: false,
   }
 );
 
