@@ -5,8 +5,10 @@ import http from 'http';
 import routes from './routes';
 
 import './database';
+import './observers/subjects/database/index';
 
-import DatabaseSubject from './observers/subjects/database/index';
+import SocketIO from './lib/socket';
+import Queue from './lib/queue';
 
 class App {
   constructor() {
@@ -41,7 +43,8 @@ class App {
   }
 
   initNotificationSocket() {
-    DatabaseSubject.socket(this.server);
+    SocketIO.start(this.server);
+    Queue.processQueue();
   }
 }
 
