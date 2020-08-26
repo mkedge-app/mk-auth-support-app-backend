@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 import MySQLEvents from '@rodrigogs/mysql-events';
 import mysql from 'mysql';
-import io from 'socket.io';
 import { format } from 'date-fns';
 
 import databaseConfig from '../../../config/database';
@@ -11,7 +10,6 @@ class DatabaseSubject {
   constructor() {
     this.connectedUsers = {};
 
-    // this.socket(http_server);
     this.init();
   }
 
@@ -19,24 +17,6 @@ class DatabaseSubject {
     this.watchDatabase()
       .then(() => console.log('Waiting for database events...'))
       .catch(console.error);
-  }
-
-  socket(http_server) {
-    this.io = io(http_server);
-
-    this.io.on('connection', socket => {
-      const { employee_id } = socket.handshake.query;
-      this.connectedUsers[employee_id] = socket.id;
-
-      socket.on('disconnect', () => {
-        delete this.connectedUsers[employee_id];
-      });
-
-      socket.on('error', err => {
-        console.log('Socket.IO Error');
-        console.log(err.stack); // this is changed from your code in last comment
-      });
-    });
   }
 
   async watchDatabase() {
@@ -65,13 +45,7 @@ class DatabaseSubject {
         const header = 'Novo chamado';
         const message = 'Um novo chamado foi assinalado para você';
 
-        DatabaseObserver.notifyEmployee(
-          new_employee_id,
-          this.connectedUsers,
-          this.io,
-          header,
-          message
-        );
+        DatabaseObserver.notifyEmployee(new_employee_id, header, message);
       },
     });
 
@@ -88,13 +62,7 @@ class DatabaseSubject {
         const header = 'Data de visita alterada';
         const message = `Visita à Fulano de Tal foi alterada para ${new_visit_time}`;
 
-        DatabaseObserver.notifyEmployee(
-          new_employee_id,
-          this.connectedUsers,
-          this.io,
-          header,
-          message
-        );
+        DatabaseObserver.notifyEmployee(new_employee_id, header, message);
       },
     });
 
