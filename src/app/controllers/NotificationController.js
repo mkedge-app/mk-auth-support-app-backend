@@ -27,7 +27,7 @@ class NotificationController {
 
     const notifications = await Notification.find({
       user: employee_id,
-    });
+    }).sort({ createdAt: 'desc' });
 
     return res.json({ notifications });
   }
