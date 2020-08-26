@@ -6,6 +6,8 @@ import { format } from 'date-fns';
 import databaseConfig from '../../../config/database';
 import DatabaseObserver from '../../DatabaseObserver';
 
+import Client from '../../../app/models/Client';
+
 class DatabaseSubject {
   constructor() {
     this.connectedUsers = {};
@@ -39,13 +41,32 @@ class DatabaseSubject {
       name: 'ON_EMPLOYEE_CHANGE',
       expression: 'mkradius.sis_suporte.tecnico',
       statement: MySQLEvents.STATEMENTS.ALL,
-      onEvent: event => {
+      onEvent: async event => {
         const { tecnico: new_employee_id } = event.affectedRows[0].after;
+        const { id, login } = event.affectedRows[0].after;
+
+        const client = await Client.findOne({
+          where: {
+            login,
+          },
+        });
 
         const header = 'Novo chamado';
         const message = 'Um novo chamado foi assinalado para você';
+        const request_data = {
+          id,
+          nome: client.nome,
+          tipo: client.tipo,
+          ip: client.ip,
+          plano: client.plano,
+        };
 
-        DatabaseObserver.notifyEmployee(new_employee_id, header, message);
+        DatabaseObserver.notifyEmployee(
+          new_employee_id,
+          header,
+          message,
+          request_data
+        );
       },
     });
 
