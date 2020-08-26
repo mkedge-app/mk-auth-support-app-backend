@@ -14,6 +14,10 @@ const NotificationSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    request_data: {
+      type: Object,
+      required: true,
+    },
     read: {
       type: Boolean,
       required: true,
@@ -30,7 +34,7 @@ const NotificationSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: false,
+    timestamps: true,
   }
 );
 
