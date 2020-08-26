@@ -49,6 +49,7 @@ class DatabaseSubject {
           where: {
             login,
           },
+          attributes: ['nome', 'tipo', 'ip', 'plano'],
         });
 
         const header = 'Novo chamado';
