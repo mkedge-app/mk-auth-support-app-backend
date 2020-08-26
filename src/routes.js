@@ -38,5 +38,6 @@ routes.get('/connections/:id', UserConnectionsController.show);
 routes.get('/invoices/:client_id', InvoiceController.show);
 
 routes.get('/notification/:employee_id', NotificationController.show);
+routes.put('/notification', NotificationController.update);
 
 export default routes;

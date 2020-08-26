@@ -1,23 +1,28 @@
+import NotificationSending from '../app/jobs/NotificationSending';
+import Queue from '../lib/queue';
+import SocketIO from '../lib/socket';
+
 import Notification from '../app/schemas/notification';
 
 class DatabaseObserver {
-  constructor() {
-    this.init();
-  }
-
-  init() {}
-
-  async notifyEmployee(employee_id, connectedUsers, io, header, message) {
+  async notifyEmployee(employee_id, header, message, request_data) {
     const notification = await Notification.create({
       header,
       content: message,
       user: employee_id,
+      request_data,
     });
+
+    // eslint-disable-next-line no-underscore-dangle
+    const connectedUsers = SocketIO.users;
 
     const socketOwner = connectedUsers[employee_id];
 
     if (socketOwner) {
-      io.to(socketOwner).emit('notification', notification);
+      await Queue.add(NotificationSending.key, {
+        notification,
+        socketOwner,
+      });
     }
   }
 }
