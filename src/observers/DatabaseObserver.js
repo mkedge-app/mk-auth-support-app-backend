@@ -5,11 +5,12 @@ import SocketIO from '../lib/socket';
 import Notification from '../app/schemas/notification';
 
 class DatabaseObserver {
-  async notifyEmployee(employee_id, header, message) {
+  async notifyEmployee(employee_id, header, message, request_data) {
     const notification = await Notification.create({
       header,
       content: message,
       user: employee_id,
+      request_data,
     });
 
     // eslint-disable-next-line no-underscore-dangle
