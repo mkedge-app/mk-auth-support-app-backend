@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import Bee from 'bee-queue';
 import NotificationSending from '../app/jobs/NotificationSending';
 

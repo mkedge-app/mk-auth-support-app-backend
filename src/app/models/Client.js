@@ -18,6 +18,7 @@ class Client extends Model {
         tipo: Sequelize.STRING,
         ip: Sequelize.STRING,
         mac: Sequelize.STRING,
+        automac: Sequelize.STRING,
         porta_olt: Sequelize.STRING,
         caixa_herm: Sequelize.STRING,
         porta_splitter: Sequelize.STRING,
@@ -30,6 +31,7 @@ class Client extends Model {
         observacao: Sequelize.STRING,
         rem_obs: Sequelize.DATE,
         cpf_cnpj: Sequelize.STRING,
+        status_corte: Sequelize.STRING,
       },
       {
         sequelize,
