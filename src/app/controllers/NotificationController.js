@@ -28,8 +28,6 @@ class NotificationController {
 
       case 'markAsRead': {
         const { notification_id } = req.body;
-        console.log('notification_id');
-        console.log(notification_id);
 
         const notification = await Notification.findById(notification_id);
         if (notification) {
