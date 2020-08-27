@@ -268,6 +268,7 @@ class ClientController {
       endereco_res,
       numero_res,
       bairro_res,
+      automac,
     } = req.body;
 
     const client = await Client.findByPk(client_id);
@@ -304,6 +305,11 @@ class ClientController {
       client.endereco_res = endereco_res;
       client.numero_res = numero_res;
       client.bairro_res = bairro_res;
+    }
+
+    if (automac) {
+      client.mac = null;
+      client.automac = 'sim';
     }
 
     await client.save();
