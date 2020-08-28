@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable no-console */
 import MySQLEvents from '@rodrigogs/mysql-events';
 import mysql from 'mysql';
@@ -42,6 +43,8 @@ class DatabaseSubject {
       expression: 'mkradius.sis_suporte.tecnico',
       statement: MySQLEvents.STATEMENTS.ALL,
       onEvent: async event => {
+        const { tecnico: previous_employee_id } = event.affectedRows[0].before;
+
         const { tecnico: new_employee_id } = event.affectedRows[0].after;
         const { id, login } = event.affectedRows[0].after;
 
@@ -52,8 +55,6 @@ class DatabaseSubject {
           attributes: ['nome', 'tipo', 'ip', 'plano'],
         });
 
-        const header = 'Novo chamado';
-        const message = 'Um novo chamado foi assinalado para você';
         const request_data = {
           id,
           nome: client.nome,
@@ -62,12 +63,30 @@ class DatabaseSubject {
           plano: client.plano,
         };
 
+        // Notificação para o novo técnico
+        const header = client.nome;
+        const message = `Você recebeu um novo chamado`;
+
         DatabaseObserver.notifyEmployee(
           new_employee_id,
           header,
           message,
           request_data
         );
+
+        // Notificação para o antigo técnico
+        if (previous_employee_id) {
+          const header_ = client.nome;
+          const [client_first_name] = client.nome.split(' ');
+          const message_ = `Você não é mais responsável pelo chamado de ${client_first_name}`;
+
+          DatabaseObserver.notifyEmployee(
+            previous_employee_id,
+            header_,
+            message_,
+            request_data
+          );
+        }
       },
     });
 
@@ -76,7 +95,7 @@ class DatabaseSubject {
       expression: 'mkradius.sis_suporte.visita',
       statement: MySQLEvents.STATEMENTS.ALL,
       onEvent: event => {
-        const { tecnico: new_employee_id } = event.affectedRows[0].after;
+        const { tecnico: employee_id } = event.affectedRows[0].after;
 
         const { visita } = event.affectedRows[0].after;
         const new_visit_time = format(visita, 'dd/MM/yyyy');
@@ -84,7 +103,7 @@ class DatabaseSubject {
         const header = 'Data de visita alterada';
         const message = `Visita à Fulano de Tal foi alterada para ${new_visit_time}`;
 
-        DatabaseObserver.notifyEmployee(new_employee_id, header, message);
+        DatabaseObserver.notifyEmployee(employee_id, header, message);
       },
     });
 
