@@ -151,6 +151,46 @@ class DatabaseSubject {
       },
     });
 
+    instance.addTrigger({
+      name: 'ON_CLOSE_REQUEST',
+      expression: 'mkradius.sis_suporte.status',
+      statement: MySQLEvents.STATEMENTS.ALL,
+      onEvent: async event => {
+        const { tecnico: employee_id } = event.affectedRows[0].after;
+        const { id, login } = event.affectedRows[0].after;
+
+        const client = await Client.findOne({
+          where: {
+            login,
+          },
+          attributes: ['nome', 'tipo', 'ip', 'plano'],
+        });
+
+        const request_data = {
+          id,
+          nome: client.nome,
+          tipo: client.tipo,
+          ip: client.ip,
+          plano: client.plano,
+        };
+
+        const { status: new_status } = event.affectedRows[0].after;
+
+        if (new_status === 'fechado') {
+          const header = client.nome;
+          const [client_first_name] = client.nome.split(' ');
+          const message = `Chamado de ${client_first_name} acaba de ser fechado`;
+
+          DatabaseObserver.notifyEmployee(
+            employee_id,
+            header,
+            message,
+            request_data
+          );
+        }
+      },
+    });
+
     instance.on(MySQLEvents.EVENTS.CONNECTION_ERROR, console.error);
     instance.on(MySQLEvents.EVENTS.ZONGJI_ERROR, console.error);
   }
