@@ -19,8 +19,11 @@ class SocketIO {
     this.io = io(http_server);
 
     this.io.on('connection', socket => {
-      const { employee_id } = socket.handshake.query;
-      this.connectedUsers[employee_id] = socket.id;
+      const { employee_id, oneSignalUserId } = socket.handshake.query;
+      this.connectedUsers[employee_id] = {
+        socketId: socket.id,
+        oneSignalUserId,
+      };
 
       console.log(this.connectedUsers);
 
