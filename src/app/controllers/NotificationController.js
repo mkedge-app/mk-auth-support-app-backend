@@ -2,28 +2,43 @@ import Notification from '../schemas/notification';
 
 class NotificationController {
   async update(req, res) {
-    const { action } = req.body;
+    const { action, employee_id } = req.body;
 
     switch (action) {
       case 'markAsViewed': {
-        const { employee_id, viewedAt } = req.body;
+        const { viewedAt } = req.body;
         const not_viewed_notifications = await Notification.find()
-          .where('viewed')
-          .equals(false)
           .where('user')
-          .equals(employee_id);
+          .equals(employee_id)
+          .sort({ createdAt: 'desc' });
+
+        if (!not_viewed_notifications) {
+          return res.status(400).json({ message: 'No notification not found' });
+        }
+
+        const response = [];
+        not_viewed_notifications.forEach(async element => {
+          if (element.viewed === false) {
+            element.viewed = true;
+            element.viewedAt = viewedAt;
+          }
+
+          response.push(element);
+        });
 
         not_viewed_notifications.forEach(async element => {
           const notification = await Notification.findById(element.id);
 
-          if (notification) {
-            notification.viewed = true;
-            notification.viewedAt = viewedAt;
-            await notification.save();
+          if (notification.viewed === false) {
+            if (notification) {
+              notification.viewed = true;
+              notification.viewedAt = viewedAt;
+              await notification.save();
+            }
           }
         });
 
-        break;
+        return res.json({ notifications: response });
       }
 
       case 'markAsRead': {
@@ -42,7 +57,11 @@ class NotificationController {
         break;
     }
 
-    return res.json({ ok: true });
+    const notifications = await Notification.find({
+      user: employee_id,
+    }).sort({ createdAt: 'desc' });
+
+    return res.json({ notifications });
   }
 
   async show(req, res) {
