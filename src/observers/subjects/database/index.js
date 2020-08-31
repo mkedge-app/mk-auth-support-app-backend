@@ -42,50 +42,59 @@ class DatabaseSubject {
       name: 'ON_EMPLOYEE_CHANGE',
       expression: 'mkradius.sis_suporte.tecnico',
       statement: MySQLEvents.STATEMENTS.ALL,
+
       onEvent: async event => {
-        const { tecnico: previous_employee_id } = event.affectedRows[0].before;
+        try {
+          console.log('-------------------------------------');
+          console.log('ALTERAÇÃO NO BANCO DE DADOS');
+          const {
+            tecnico: previous_employee_id,
+          } = event.affectedRows[0].before;
 
-        const { tecnico: new_employee_id } = event.affectedRows[0].after;
-        const { id, login } = event.affectedRows[0].after;
+          const { tecnico: new_employee_id } = event.affectedRows[0].after;
+          const { id, login } = event.affectedRows[0].after;
 
-        const client = await Client.findOne({
-          where: {
-            login,
-          },
-          attributes: ['nome', 'tipo', 'ip', 'plano'],
-        });
+          const client = await Client.findOne({
+            where: {
+              login,
+            },
+            attributes: ['nome', 'tipo', 'ip', 'plano'],
+          });
 
-        const request_data = {
-          id,
-          nome: client.nome,
-          tipo: client.tipo,
-          ip: client.ip,
-          plano: client.plano,
-        };
+          const request_data = {
+            id,
+            nome: client.nome,
+            tipo: client.tipo,
+            ip: client.ip,
+            plano: client.plano,
+          };
 
-        // Notificação para o novo técnico
-        const header = client.nome;
-        const message = `Você recebeu um novo chamado`;
-
-        DatabaseObserver.notifyEmployee(
-          new_employee_id,
-          header,
-          message,
-          request_data
-        );
-
-        // Notificação para o antigo técnico
-        if (previous_employee_id) {
-          const header_ = client.nome;
-          const [client_first_name] = client.nome.split(' ');
-          const message_ = `Você não é mais responsável pelo chamado de ${client_first_name}`;
+          // Notificação para o novo técnico
+          const header = client.nome;
+          const message = `Você recebeu um novo chamado`;
 
           DatabaseObserver.notifyEmployee(
-            previous_employee_id,
-            header_,
-            message_,
+            new_employee_id,
+            header,
+            message,
             request_data
           );
+
+          // Notificação para o antigo técnico
+          if (previous_employee_id) {
+            const header_ = client.nome;
+            const [client_first_name] = client.nome.split(' ');
+            const message_ = `Você não é mais responsável pelo chamado de ${client_first_name}`;
+
+            DatabaseObserver.notifyEmployee(
+              previous_employee_id,
+              header_,
+              message_,
+              request_data
+            );
+          }
+        } catch (error) {
+          console.log(error);
         }
       },
     });
