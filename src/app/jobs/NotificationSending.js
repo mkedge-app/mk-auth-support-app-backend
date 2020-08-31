@@ -6,9 +6,9 @@ class NotificationSending {
   }
 
   async handle({ data }) {
-    const { notification, socketOwner } = data;
+    const { socketOwner } = data;
     const io = SocketIO.ioEmit;
-    io.to(socketOwner).emit('notification', notification);
+    io.to(socketOwner).emit('notification');
   }
 }
 
