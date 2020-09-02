@@ -45,8 +45,6 @@ class DatabaseSubject {
 
       onEvent: async event => {
         try {
-          console.log('-------------------------------------');
-          console.log('ALTERAÇÃO NO BANCO DE DADOS');
           const {
             tecnico: previous_employee_id,
           } = event.affectedRows[0].before;
@@ -73,7 +71,7 @@ class DatabaseSubject {
           const header = client.nome;
           const message = `Você recebeu um novo chamado`;
 
-          DatabaseObserver.notifyEmployee(
+          await DatabaseObserver.notifyEmployee(
             new_employee_id,
             header,
             message,
@@ -86,7 +84,7 @@ class DatabaseSubject {
             const [client_first_name] = client.nome.split(' ');
             const message_ = `Você não é mais responsável pelo chamado de ${client_first_name}`;
 
-            DatabaseObserver.notifyEmployee(
+            await DatabaseObserver.notifyEmployee(
               previous_employee_id,
               header_,
               message_,
