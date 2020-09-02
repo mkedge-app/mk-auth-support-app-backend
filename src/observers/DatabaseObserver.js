@@ -30,7 +30,7 @@ class DatabaseObserver {
         // Envio da push notification
         const pushNotificationMessage = {
           app_id: 'ba39cc13-1ac4-46f6-82f5-929b5b3a6562',
-          contents: { en: 'English Message' },
+          contents: { en: message },
           include_player_ids: [oneSignalUserId],
         };
 
