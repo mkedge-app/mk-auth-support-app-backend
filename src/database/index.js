@@ -9,6 +9,7 @@ import SystemLog from '../app/models/SystemLog';
 import CTO from '../app/models/CTO';
 import Radacct from '../app/models/Radacct';
 import Invoice from '../app/models/Invoice';
+import Notification from '../app/models/Notification';
 
 import databaseConfig from '../config/database';
 
@@ -22,6 +23,7 @@ const models = [
   CTO,
   Radacct,
   Invoice,
+  Notification,
 ];
 
 class Database {
