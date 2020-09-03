@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import io from 'socket.io';
+import PushNotificationSender from './oneSignal';
 
 class SocketIO {
   constructor() {
@@ -26,6 +27,11 @@ class SocketIO {
         socketId: socket.id,
         oneSignalUserId,
       };
+
+      PushNotificationSender.addNewUser({
+        employee_id,
+        oneSignalUserId,
+      });
 
       socket.on('disconnect', () => {
         console.log(
