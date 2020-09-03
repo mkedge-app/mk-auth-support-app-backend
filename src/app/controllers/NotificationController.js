@@ -1,3 +1,6 @@
+import { subDays } from 'date-fns';
+import { Op } from 'sequelize';
+
 import Notification from '../models/Notification';
 
 class NotificationController {
@@ -64,13 +67,17 @@ class NotificationController {
   }
 
   async show(req, res) {
+    const date = subDays(new Date(), 3);
+
     // eslint-disable-next-line radix
     const employee_id = parseInt(req.params.employee_id);
 
     const notifications = await Notification.findAll({
       where: {
-        // eslint-disable-next-line radix
         user: employee_id,
+        created_at: {
+          [Op.gte]: date,
+        },
       },
       order: [['created_at', 'DESC']],
     });
