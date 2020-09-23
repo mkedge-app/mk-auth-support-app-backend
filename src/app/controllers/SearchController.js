@@ -89,7 +89,6 @@ class SearchController {
     }
 
     if (filterBy === '2') {
-      console.log('ASHUASHUAHSUAHSUHAUSHAUHSUAHSUAHUASH');
       const clients = await Client.findAll({
         where: {
           cli_ativado: searchmode === 'enable' ? 's' : 'n',
