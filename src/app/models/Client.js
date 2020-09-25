@@ -21,6 +21,7 @@ class Client extends Model {
         automac: Sequelize.STRING,
         porta_olt: Sequelize.STRING,
         caixa_herm: Sequelize.STRING,
+        ssid: Sequelize.STRING,
         porta_splitter: Sequelize.STRING,
         cli_ativado: Sequelize.STRING,
         nome: Sequelize.STRING,
