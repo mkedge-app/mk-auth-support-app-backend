@@ -49,7 +49,7 @@ class SocketIO {
 
       socket.on('error', err => {
         console.log('Socket.IO Error');
-        console.log(err.stack); // this is changed from your code in last comment
+        console.log(err.stack); // this is changed from your code in the last comment
       });
 
       socket.on('online', () => {
