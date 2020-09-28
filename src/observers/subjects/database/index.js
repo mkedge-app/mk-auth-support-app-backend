@@ -45,10 +45,6 @@ class DatabaseSubject {
 
       onEvent: async event => {
         try {
-          const {
-            tecnico: previous_employee_id,
-          } = event.affectedRows[0].before;
-
           const { tecnico: new_employee_id } = event.affectedRows[0].after;
           const { id, login } = event.affectedRows[0].after;
 
@@ -79,7 +75,11 @@ class DatabaseSubject {
           );
 
           // Notificação para o antigo técnico
-          if (previous_employee_id) {
+          if (event.affectedRows[0].before) {
+            const {
+              tecnico: previous_employee_id,
+            } = event.affectedRows[0].before;
+
             const header_ = client.nome;
             const [client_first_name] = client.nome.split(' ');
             const message_ = `Você não é mais responsável pelo chamado de ${client_first_name}`;
