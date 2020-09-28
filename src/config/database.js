@@ -1,6 +1,6 @@
 module.exports = {
   dialect: 'mariadb',
-  host: '172.31.255.2',
+  host: '127.0.0.1',
   username: 'root',
   password: 'vertrigo',
   database: 'mkradius',
