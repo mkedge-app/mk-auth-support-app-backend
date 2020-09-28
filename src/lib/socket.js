@@ -33,12 +33,18 @@ class SocketIO {
         oneSignalUserId,
       });
 
+      console.log(`List of push notification users:`);
+      console.log(PushNotificationSender.connectedUsers);
+
       socket.on('disconnect', () => {
         console.log(
           `The employee ${employee_id} disconnected from this websocket`
         );
 
         delete this.connectedUsers[employee_id];
+
+        console.log(`List of push notification users:`);
+        console.log(PushNotificationSender.connectedUsers);
       });
 
       socket.on('error', err => {
