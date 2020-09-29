@@ -1,4 +1,4 @@
-import { parseISO, addHours, subHours, format, endOfYear } from 'date-fns';
+import { parseISO, format, endOfYear } from 'date-fns';
 import { Op } from 'sequelize';
 
 import Request from '../models/Request';
@@ -171,8 +171,18 @@ class RequestController {
       id: request.id,
       client_id: response.id,
       chamado: request.chamado,
-      visita: format(addHours(request.visita, 4), 'HH:mm'),
-      data_visita: format(addHours(request.visita, 4), 'dd/MM/yyyy'),
+      visita: format(
+        new Date(
+          request.visita.valueOf() + request.visita.getTimezoneOffset() * 60000
+        ),
+        'HH:mm'
+      ),
+      data_visita: format(
+        new Date(
+          request.visita.valueOf() + request.visita.getTimezoneOffset() * 60000
+        ),
+        'dd/MM/yyyy'
+      ),
       nome: request.nome,
       fechamento: request.fechamento,
       motivo_fechamento: request.motivo_fechar,
@@ -254,7 +264,10 @@ class RequestController {
 
       case 'update_visita_time': {
         const new_visita_time = format(
-          subHours(parseISO(req.body.new_visita_time), 4),
+          new Date(
+            parseISO(req.body.new_visita_time).valueOf() -
+              parseISO(req.body.new_visita_time).getTimezoneOffset() * 60000
+          ),
           'HH:mm:ss'
         ).toString();
 
