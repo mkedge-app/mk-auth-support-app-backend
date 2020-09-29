@@ -35,9 +35,16 @@ class RequestController {
     // eslint-disable-next-line array-callback-return
     requests.map((item, index) => {
       if (item.visita) {
-        const dataBaseTime = format(item.visita, "yyyy-MM-dd'T'00:00:00");
+        const dataBaseTime = format(
+          requests[index].visita,
+          "yyyy-MM-dd'T'00:00:00"
+        );
+
         const apiTime = format(
-          addHours(parseISO(date), 4),
+          new Date(
+            parseISO(date).valueOf() +
+              parseISO(date).getTimezoneOffset() * 60000
+          ),
           "yyyy-MM-dd'T'00:00:00"
         );
 
@@ -80,7 +87,13 @@ class RequestController {
 
       response_object.push({
         id: givenDateRequests[index].id,
-        visita: format(addHours(givenDateRequests[index].visita, 4), 'HH:mm'),
+        visita: format(
+          new Date(
+            givenDateRequests[index].visita.valueOf() +
+              givenDateRequests[index].visita.getTimezoneOffset() * 60000
+          ),
+          'HH:mm'
+        ),
         nome: givenDateRequests[index].nome,
         login: response.login,
         senha: response.senha,
