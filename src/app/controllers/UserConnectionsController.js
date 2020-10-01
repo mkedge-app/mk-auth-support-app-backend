@@ -39,21 +39,29 @@ class UserConnectionsController {
 
     const response_obj = [];
 
+    const timeZoneOffset = new Date().getTimezoneOffset() / 60;
+
     client_connections.forEach(connection => {
-      const start_time = format(addHours(connection.acctstarttime, 4), 'HH:mm');
+      const start_time = format(
+        addHours(connection.acctstarttime, timeZoneOffset),
+        'HH:mm'
+      );
       const start_date = format(
-        addHours(connection.acctstarttime, 4),
+        addHours(connection.acctstarttime, timeZoneOffset),
         'dd/MM/yyyy'
       );
 
       const end_time =
         connection.acctstoptime !== null
-          ? format(addHours(connection.acctstoptime, 4), 'HH:mm')
+          ? format(addHours(connection.acctstoptime, timeZoneOffset), 'HH:mm')
           : null;
 
       const end_date =
         connection.acctstoptime !== null
-          ? format(addHours(connection.acctstoptime, 4), 'dd/MM/yyyy')
+          ? format(
+              addHours(connection.acctstoptime, timeZoneOffset),
+              'dd/MM/yyyy'
+            )
           : null;
 
       const now_time = new Date(

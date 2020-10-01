@@ -157,13 +157,15 @@ class ClientController {
       attributes: ['acctstarttime', 'acctstoptime'],
     });
 
+    const timeZoneOffset = new Date().getTimezoneOffset() / 60;
+
     let parsedDate = null;
     let parsedTime = null;
 
     if (current_user_connection.length !== 0) {
       const parsedAcctStartTime = addHours(
         current_user_connection[0].acctstarttime,
-        4
+        timeZoneOffset
       );
 
       parsedDate = format(parsedAcctStartTime, 'dd/MM/yyyy');
