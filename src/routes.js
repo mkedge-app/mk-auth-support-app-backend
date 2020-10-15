@@ -9,12 +9,18 @@ import SearchController from './app/controllers/SearchController';
 import UserConnectionsController from './app/controllers/UserConnectionsController';
 import InvoiceController from './app/controllers/InvoiceController';
 import NotificationController from './app/controllers/NotificationController';
+import ProviderController from './app/controllers/ProviderController';
 
 import authMiddleware from './app/middlewares/auth';
+import { ConnectionResolver } from './app/middlewares/connectionResolver';
 
 const routes = new Router();
 
-routes.post('/sessions', SessionController.store);
+routes.post('/new_provider', ProviderController.create);
+
+routes.use(ConnectionResolver);
+
+routes.post('/sessions/', SessionController.store);
 
 routes.use(authMiddleware);
 
