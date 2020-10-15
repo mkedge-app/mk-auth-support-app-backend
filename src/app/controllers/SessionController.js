@@ -37,12 +37,15 @@ class SessionController {
 
     const isAdmin = cli_grupos.includes('full_clientes', 0);
 
+    const { tenant_id } = req.query;
+
     return res.json({
       user: {
         idacesso,
         nome,
         employee_id: employee_id.id,
         isAdmin,
+        tenant_id,
       },
       token: jwt.sign({ idacesso }, authConfig.secret, {
         expiresIn: authConfig.expiresIn,
