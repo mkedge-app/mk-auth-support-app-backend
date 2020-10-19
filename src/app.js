@@ -4,7 +4,7 @@ import http from 'http';
 import routes from './routes';
 
 import './database';
-import './observers/subjects/database/index';
+// import './observers/subjects/database/index';
 
 import SocketIO from './lib/socket';
 import Queue from './lib/queue';
