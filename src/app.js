@@ -7,7 +7,7 @@ import './database';
 // import './observers/subjects/database/index';
 
 import SocketIO from './lib/socket';
-import Queue from './lib/queue';
+// import Queue from './lib/queue';
 
 class App {
   constructor() {
@@ -31,7 +31,7 @@ class App {
 
   initNotificationSocket() {
     SocketIO.start(this.server);
-    Queue.processQueue();
+    // Queue.processQueue();
   }
 }
 
