@@ -264,10 +264,7 @@ class RequestController {
 
       case 'update_visita_time': {
         const new_visita_time = format(
-          new Date(
-            parseISO(req.body.new_visita_time).valueOf() -
-              parseISO(req.body.new_visita_time).getTimezoneOffset() * 60000
-          ),
+          new Date(parseISO(req.body.new_visita_time).valueOf()),
           'HH:mm:ss'
         ).toString();
 

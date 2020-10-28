@@ -1,5 +1,5 @@
 /* eslint-disable no-else-return */
-import { format } from 'date-fns';
+import { format, addHours } from 'date-fns';
 import { Op } from 'sequelize';
 
 import Invoice from '../models/Invoice';
@@ -37,7 +37,7 @@ class InvoiceController {
     const pending_invoices = [];
     pendingInvoices.forEach(invoice => {
       pending_invoices.push({
-        title: format(invoice.datavenc, 'dd/MM/yyyy'),
+        title: format(addHours(invoice.datavenc, 3), 'dd/MM/yyyy'),
         content: {
           tipo: invoice.tipo,
           valor: invoice.valor,
