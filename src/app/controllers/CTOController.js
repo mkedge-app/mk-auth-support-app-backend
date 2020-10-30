@@ -49,7 +49,7 @@ class CTOController {
         req.params.longitude
       );
 
-      if (d <= 0.2) {
+      if (d <= 0.35) {
         const connection_amount = await Client.findAll({
           where: {
             caixa_herm: CTOs[i].nome,
