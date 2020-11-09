@@ -1,55 +1,78 @@
 import { parseISO, format, endOfYear } from 'date-fns';
 import { Op } from 'sequelize';
 
-import Request from '../models/Request';
+import SupportRequest from '../models/SupportRequest';
+import InstallationRequest from '../models/InstallationRequest';
 import Client from '../models/Client';
 import Mensagem from '../models/Mensagem';
-import SystemLog from '../models/SystemLog';
+// import SystemLog from '../models/SystemLog';
 import Employee from '../models/Employee';
 import Radacct from '../models/Radacct';
 
 class RequestController {
   async index(req, res) {
-    const { date, tecnico: tecnico_id } = req.body;
+    const { date, tecnico: tecnico_id, isAdmin } = req.body;
 
-    let requests = null;
-    if (tecnico_id === null) {
-      requests = await Request.findAll();
+    const { nome: employee_name } = await Employee.findByPk(tecnico_id);
+
+    let support_requests = null;
+    let installation_requests = null;
+
+    if (isAdmin) {
+      support_requests = await SupportRequest.findAll();
+      installation_requests = await InstallationRequest.findAll();
     } else {
-      requests = await Request.findAll({
+      support_requests = await SupportRequest.findAll({
         where: {
           tecnico: tecnico_id,
+        },
+      });
+
+      installation_requests = await SupportRequest.findAll({
+        where: {
+          tecnico: employee_name,
         },
       });
     }
 
     // Verifica se exitem chamadas para o técnico informado
-    if (!requests) {
-      return res
-        .status(204)
-        .json({ message: 'No support requests for this user!' });
+    if (!support_requests && !installation_requests) {
+      return res.status(204).json({ message: 'No requests for this user!' });
     }
 
     const givenDateRequests = [];
 
+    const apiTime = format(
+      new Date(
+        parseISO(date).valueOf() + parseISO(date).getTimezoneOffset() * 60000
+      ),
+      "yyyy-MM-dd'T'00:00:00"
+    );
+
     // eslint-disable-next-line array-callback-return
-    requests.map((item, index) => {
+    support_requests.map((item, index) => {
       if (item.visita) {
         const dataBaseTime = format(
-          requests[index].visita,
-          "yyyy-MM-dd'T'00:00:00"
-        );
-
-        const apiTime = format(
-          new Date(
-            parseISO(date).valueOf() +
-              parseISO(date).getTimezoneOffset() * 60000
-          ),
+          support_requests[index].visita,
           "yyyy-MM-dd'T'00:00:00"
         );
 
         if (dataBaseTime === apiTime) {
-          givenDateRequests.push(requests[index]);
+          givenDateRequests.push(support_requests[index]);
+        }
+      }
+    });
+
+    // eslint-disable-next-line array-callback-return
+    installation_requests.map((item, index) => {
+      if (item.visita) {
+        const dataBaseTime = format(
+          installation_requests[index].visita,
+          "yyyy-MM-dd'T'00:00:00"
+        );
+
+        if (dataBaseTime === apiTime) {
+          givenDateRequests.push(installation_requests[index]);
         }
       }
     });
@@ -66,50 +89,82 @@ class RequestController {
     const response_object = [];
 
     do {
-      const { login, chamado, tecnico } = givenDateRequests[index];
+      const { login, chamado, tecnico, tipo } = givenDateRequests[index];
+      if (!tipo) {
+        // eslint-disable-next-line no-await-in-loop
+        const response = await Client.findOne({
+          where: {
+            login,
+          },
+        });
 
-      // eslint-disable-next-line no-await-in-loop
-      const response = await Client.findOne({
-        where: {
-          login,
-        },
-      });
+        // eslint-disable-next-line no-await-in-loop
+        const msg = await Mensagem.findOne({
+          where: {
+            chamado,
+          },
+        });
 
-      // eslint-disable-next-line no-await-in-loop
-      const msg = await Mensagem.findOne({
-        where: {
-          chamado,
-        },
-      });
+        // eslint-disable-next-line no-await-in-loop
+        const employee = await Employee.findByPk(tecnico);
 
-      // eslint-disable-next-line no-await-in-loop
-      const employee = await Employee.findByPk(tecnico);
-
-      response_object.push({
-        id: givenDateRequests[index].id,
-        visita: format(
-          new Date(
-            givenDateRequests[index].visita.valueOf() +
-              givenDateRequests[index].visita.getTimezoneOffset() * 60000
+        response_object.push({
+          id: givenDateRequests[index].id,
+          visita: format(
+            new Date(
+              givenDateRequests[index].visita.valueOf() +
+                givenDateRequests[index].visita.getTimezoneOffset() * 60000
+            ),
+            'HH:mm'
           ),
-          'HH:mm'
-        ),
-        nome: givenDateRequests[index].nome,
-        login: response.login,
-        senha: response.senha,
-        plano: response.plano,
-        tipo: response.tipo,
-        ip: response.ip,
-        status: givenDateRequests[index].status,
-        assunto: givenDateRequests[index].assunto,
-        endereco: response.endereco_res,
-        numero: response.numero_res,
-        bairro: response.bairro_res,
-        mensagem: msg.msg,
-        employee_name: employee === null ? null : employee.nome,
-      });
+          nome: givenDateRequests[index].nome,
+          login: response.login,
+          senha: response.senha,
+          plano: response.plano,
+          tipo: response.tipo,
+          ip: response.ip,
+          status: givenDateRequests[index].status,
+          prioridade: givenDateRequests[index].prioridade,
+          assunto: givenDateRequests[index].assunto,
+          endereco: response.endereco_res,
+          numero: response.numero_res,
+          bairro: response.bairro_res,
+          mensagem: msg.msg,
+          employee_name: employee === null ? null : employee.nome,
+        });
 
-      index -= 1;
+        index -= 1;
+      } else {
+        // eslint-disable-next-line no-await-in-loop
+        const employee = await Employee.findOne({
+          where: {
+            nome: tecnico,
+          },
+        });
+
+        response_object.push({
+          id: givenDateRequests[index].id,
+          visita: format(
+            new Date(
+              givenDateRequests[index].visita.valueOf() +
+                givenDateRequests[index].visita.getTimezoneOffset() * 60000
+            ),
+            'HH:mm'
+          ),
+          nome: givenDateRequests[index].nome,
+          assunto: 'Ativação',
+          ip: givenDateRequests[index].ip,
+          plano: givenDateRequests[index].plano,
+          status:
+            givenDateRequests[index].instalado === 'sim' ? 'fechado' : 'aberto',
+          endereco: givenDateRequests[index].endereco_res,
+          numero: givenDateRequests[index].numero_res,
+          bairro: givenDateRequests[index].bairro_res,
+          employee_name: employee === null ? null : employee.nome,
+        });
+
+        index -= 1;
+      }
     } while (index >= 0);
 
     // Organizando array em ordem crescente de visita
