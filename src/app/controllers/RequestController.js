@@ -181,28 +181,112 @@ class RequestController {
   }
 
   async show(req, res) {
-    const { id: request_id } = req.params;
+    const { id: request_id, request_type } = req.params;
 
-    const request = await Request.findByPk(request_id);
+    if (request_type === 'Suporte') {
+      const request = await SupportRequest.findByPk(request_id);
+
+      // Verifica se exitem chamadas para o técnico informado
+      if (!request) {
+        return res
+          .status(204)
+          .json({ message: 'Request ticket does not exist' });
+      }
+
+      const response = await Client.findOne({
+        where: {
+          login: request.login,
+        },
+      });
+
+      const msg = await Mensagem.findOne({
+        where: {
+          chamado: request.chamado,
+        },
+      });
+
+      const employee = await Employee.findByPk(request.tecnico);
+
+      const current_user_connection = await Radacct.findAll({
+        where: {
+          username: request.login,
+          acctstarttime: {
+            [Op.lte]: endOfYear(new Date()),
+          },
+        },
+        limit: 1,
+        order: [['acctstarttime', 'DESC']],
+        attributes: ['acctstarttime', 'acctstoptime'],
+      });
+
+      let equipment_status = 'Offline';
+      if (current_user_connection.length !== 0) {
+        equipment_status =
+          current_user_connection[0].acctstoptime === null
+            ? 'Online'
+            : 'Offline';
+      }
+
+      const obj = {
+        id: request.id,
+        client_id: response.id,
+        chamado: request.chamado,
+        visita: format(
+          new Date(
+            request.visita.valueOf() +
+              request.visita.getTimezoneOffset() * 60000
+          ),
+          'HH:mm'
+        ),
+        data_visita: format(
+          new Date(
+            request.visita.valueOf() +
+              request.visita.getTimezoneOffset() * 60000
+          ),
+          'dd/MM/yyyy'
+        ),
+        nome: request.nome,
+        fechamento: request.fechamento,
+        motivo_fechamento: request.motivo_fechar,
+        login: response.login,
+        senha: response.senha,
+        plano: response.plano,
+        tipo: response.tipo,
+        ip: response.ip,
+        status: request.status,
+        assunto: request.assunto,
+        endereco: response.endereco_res,
+        numero: response.numero_res,
+        bairro: response.bairro_res,
+        equipamento: response.equipamento,
+        coordenadas: response.coordenadas,
+        mensagem: msg.msg,
+        caixa_hermetica: response.caixa_herm,
+        employee_name: employee === null ? null : employee.nome,
+        equipment_status,
+      };
+
+      return res.json(obj);
+    }
+
+    const request = await InstallationRequest.findByPk(request_id);
 
     // Verifica se exitem chamadas para o técnico informado
     if (!request) {
       return res.status(204).json({ message: 'Request ticket does not exist' });
     }
 
-    const response = await Client.findOne({
+    const client = await Client.findOne({
       where: {
         login: request.login,
       },
     });
 
-    const msg = await Mensagem.findOne({
+    const employee = await Employee.findOne({
       where: {
-        chamado: request.chamado,
+        nome: request.tecnico,
       },
     });
-
-    const employee = await Employee.findByPk(request.tecnico);
 
     const current_user_connection = await Radacct.findAll({
       where: {
@@ -224,8 +308,8 @@ class RequestController {
 
     const obj = {
       id: request.id,
-      client_id: response.id,
       chamado: request.chamado,
+      client_id: client ? client.id : null,
       visita: format(
         new Date(
           request.visita.valueOf() + request.visita.getTimezoneOffset() * 60000
@@ -241,20 +325,21 @@ class RequestController {
       nome: request.nome,
       fechamento: request.fechamento,
       motivo_fechamento: request.motivo_fechar,
-      login: response.login,
-      senha: response.senha,
-      plano: response.plano,
-      tipo: response.tipo,
-      ip: response.ip,
+      login: request.login,
+      senha: request.senha,
+      plano: request.plano,
+      tipo: request.tipo,
+      ip: request.ip,
       status: request.status,
-      assunto: request.assunto,
-      endereco: response.endereco_res,
-      numero: response.numero_res,
-      bairro: response.bairro_res,
-      equipamento: response.equipamento,
-      coordenadas: response.coordenadas,
-      mensagem: msg.msg,
-      caixa_hermetica: response.caixa_herm,
+      instalado: request.instalado,
+      assunto: request_type,
+      endereco: request.endereco_res,
+      numero: request.numero_res,
+      bairro: request.bairro_res,
+      equipamento: request.equipamento,
+      coordenadas: request.coordenadas,
+      mensagem: request.obs,
+      caixa_hermetica: null,
       employee_name: employee === null ? null : employee.nome,
       equipment_status,
     };
