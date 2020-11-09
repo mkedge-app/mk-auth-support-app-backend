@@ -5,7 +5,8 @@ import Sequelize from 'sequelize';
 import Tenant from '../schemas/Tenant';
 
 import User from '../models/User';
-import Request from '../models/Request';
+import SupportRequest from '../models/SupportRequest';
+import InstallationRequest from '../models/InstallationRequest';
 import Employee from '../models/Employee';
 import Client from '../models/Client';
 import Mensagem from '../models/Mensagem';
@@ -17,7 +18,7 @@ import Notification from '../models/Notification';
 
 const models = [
   User,
-  Request,
+  SupportRequest,
   Employee,
   Client,
   Mensagem,
@@ -26,6 +27,7 @@ const models = [
   Radacct,
   Invoice,
   Notification,
+  InstallationRequest,
 ];
 
 const tenantDatabaseConnections = {};
