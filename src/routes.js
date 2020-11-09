@@ -25,7 +25,7 @@ routes.post('/sessions/', SessionController.store);
 routes.use(authMiddleware);
 
 routes.post('/requests', RequestController.index);
-routes.get('/request/:id', RequestController.show);
+routes.get('/request/:id/:request_type', RequestController.show);
 routes.post('/request/:id', RequestController.update);
 
 routes.post('/client/:id', ClientController.update);
