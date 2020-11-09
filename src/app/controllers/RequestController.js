@@ -349,23 +349,39 @@ class RequestController {
 
   async update(req, res) {
     const { id: request_id } = req.params;
+    const { request_type } = req.body;
 
-    const request = await Request.findByPk(request_id);
+    let request = null;
+
+    if (request_type === 'Suporte') {
+      request = await SupportRequest.findByPk(request_id);
+    } else {
+      // Colocar a lógica para pegar a request da tabela de Ativação
+      request = await InstallationRequest.findByPk(request_id);
+    }
 
     if (!request) {
       return res.status(400).json({ error: 'This ticket does not exist' });
     }
 
-    let log = null;
+    const log = null;
     const { action } = req.body;
 
     switch (action) {
       case 'update_employee': {
         const { employee_id } = req.body;
 
-        request.tecnico = employee_id;
-        await request.save();
-        break;
+        if (request_type === 'Suporte') {
+          request.tecnico = employee_id;
+          await request.save();
+          break;
+        } else {
+          const employee = await Employee.findByPk(employee_id);
+
+          request.tecnico = employee.nome;
+          await request.save();
+          break;
+        }
       }
 
       case 'close_request': {
@@ -373,33 +389,50 @@ class RequestController {
           return res.status(405).json({ error: 'Ticket already closed' });
         }
 
-        const { closingNote, employee_id } = req.body;
+        if (request_type === 'Suporte') {
+          const { closingNote, employee_id } = req.body;
 
-        const employee = await Employee.findByPk(employee_id);
+          const employee = await Employee.findByPk(employee_id);
 
-        const formattedDate = format(new Date(), 'dd-MM-yyyy HH:mm:ss');
+          const formattedDate = format(new Date(), 'dd-MM-yyyy HH:mm:ss');
 
-        // Request closing
-        request.status = 'fechado';
-        request.fechamento = formattedDate;
-        request.motivo_fechar = `fechado por ${employee.nome}: ${closingNote}`;
-        await request.save();
+          // Request closing
+          request.status = 'fechado';
+          request.fechamento = formattedDate;
+          request.motivo_fechar = `fechado por ${employee.nome}: ${closingNote}`;
+          await request.save();
 
-        // Saving system log
-        const { chamado, nome } = request;
-        const { login } = req.body;
+          // // Saving system log
+          // const { chamado, nome } = request;
+          // const { login } = req.body;
 
-        const logDate = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
+          // const logDate = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
 
-        log = await SystemLog.create({
-          registro: `fechou o chamado ${chamado} de: ${nome}`,
-          data: logDate,
-          login,
-          tipo: 'app',
-          operacao: 'OPERNULL',
-        });
+          // log = await SystemLog.create({
+          //   registro: `fechou o chamado ${chamado} de: ${nome}`,
+          //   data: logDate,
+          //   login,
+          //   tipo: 'app',
+          //   operacao: 'OPERNULL',
+          // });
 
-        break;
+          break;
+        } else {
+          const { isVisited, isInstalled, isAvailable } = req.body;
+
+          const formattedDate = format(new Date(), 'dd-MM-yyyy HH:mm:ss');
+
+          // Request closing
+          request.fechamento = formattedDate;
+          request.datainst = formattedDate;
+          request.visitado = isVisited ? 'sim' : 'nao';
+          request.instalado = isInstalled ? 'sim' : 'nao';
+          request.disp = isAvailable ? 'sim' : 'nao';
+
+          await request.save();
+
+          break;
+        }
       }
 
       case 'update_visita_time': {
