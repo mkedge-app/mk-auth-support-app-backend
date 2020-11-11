@@ -5,7 +5,8 @@ import SupportRequest from '../models/SupportRequest';
 import InstallationRequest from '../models/InstallationRequest';
 import Client from '../models/Client';
 import Mensagem from '../models/Mensagem';
-// import SystemLog from '../models/SystemLog';
+import SystemLog from '../models/SystemLog';
+import User from '../models/User';
 import Employee from '../models/Employee';
 import Radacct from '../models/Radacct';
 
@@ -234,14 +235,14 @@ class RequestController {
         visita: format(
           new Date(
             request.visita.valueOf() +
-              request.visita.getTimezoneOffset() * 60000
+            request.visita.getTimezoneOffset() * 60000
           ),
           'HH:mm'
         ),
         data_visita: format(
           new Date(
             request.visita.valueOf() +
-              request.visita.getTimezoneOffset() * 60000
+            request.visita.getTimezoneOffset() * 60000
           ),
           'dd/MM/yyyy'
         ),
@@ -364,16 +365,46 @@ class RequestController {
       return res.status(400).json({ error: 'This ticket does not exist' });
     }
 
-    const log = null;
+    let log = null;
     const { action } = req.body;
 
     switch (action) {
       case 'update_employee': {
-        const { employee_id } = req.body;
+        const { employee_id, madeBy } = req.body;
+
+        // Recuperação do login do novo técnico
+        const { email: new_email } = await Employee.findByPk(employee_id);
+        const { login: new_login } = await User.findOne({
+          where: {
+            email: new_email,
+          },
+        });
+
+        // Recuperação do login do técnico que fez a alteração no chamado
+        const { email } = await Employee.findByPk(madeBy);
+        const { login } = await User.findOne({
+          where: {
+            email,
+          },
+        });
 
         if (request_type === 'Suporte') {
           request.tecnico = employee_id;
           await request.save();
+
+          // Criação de log da operação
+          const { chamado } = request;
+
+          const logDate = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
+
+          log = await SystemLog.create({
+            registro: `assinalou o chamado ${chamado} para ${new_login} via MK-Edge`,
+            data: logDate,
+            login,
+            tipo: 'app',
+            operacao: 'OPERNULL',
+          });
+
           break;
         } else {
           const employee = await Employee.findByPk(employee_id);
