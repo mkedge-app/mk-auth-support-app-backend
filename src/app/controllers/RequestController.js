@@ -1,4 +1,4 @@
-import { parseISO, format, endOfYear } from 'date-fns';
+import { parseISO, format, endOfYear, addHours } from 'date-fns';
 import { Op } from 'sequelize';
 
 import SupportRequest from '../models/SupportRequest';
@@ -232,17 +232,11 @@ class RequestController {
         id: request.id,
         client_id: response.id,
         chamado: request.chamado,
-        visita: format(
-          new Date(
-            request.visita.valueOf() +
-            request.visita.getTimezoneOffset() * 60000
-          ),
-          'HH:mm'
-        ),
+        visita: format(request.visita, 'HH:mm'),
         data_visita: format(
           new Date(
             request.visita.valueOf() +
-            request.visita.getTimezoneOffset() * 60000
+              request.visita.getTimezoneOffset() * 60000
           ),
           'dd/MM/yyyy'
         ),
@@ -467,18 +461,43 @@ class RequestController {
       }
 
       case 'update_visita_time': {
+        const timeZoneOffset = new Date().getTimezoneOffset() / 60;
+
         const new_visita_time = format(
-          new Date(parseISO(req.body.new_visita_time).valueOf()),
+          addHours(parseISO(req.body.new_visita_time), timeZoneOffset),
           'HH:mm:ss'
         ).toString();
 
         const current_date = format(request.visita, 'yyyy-MM-dd').toString();
 
-        const updated_visit = parseISO(`${current_date}T${new_visita_time}`);
+        const updated_visit = `${current_date}T${new_visita_time}`;
 
         request.visita = updated_visit;
 
         await request.save();
+
+        const { madeBy } = req.body;
+
+        // Recuperação do login do técnico que fez a alteração no chamado
+        const { email } = await Employee.findByPk(madeBy);
+        const { login } = await User.findOne({
+          where: {
+            email,
+          },
+        });
+
+        // Criação de log da operação
+        const { chamado } = request;
+
+        const logDate = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
+
+        log = await SystemLog.create({
+          registro: `alterou a hora de visita do chamado ${chamado} para ${new_visita_time} via MK-Edge`,
+          data: logDate,
+          login,
+          tipo: 'app',
+          operacao: 'OPERNULL',
+        });
 
         break;
       }
