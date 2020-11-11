@@ -516,6 +516,34 @@ class RequestController {
 
         await request.save();
 
+        const { madeBy } = req.body;
+
+        // Recuperação do login do técnico que fez a alteração no chamado
+        const { email } = await Employee.findByPk(madeBy);
+        const { login } = await User.findOne({
+          where: {
+            email,
+          },
+        });
+
+        // Criação de log da operação
+        const { chamado } = request;
+
+        const logDate = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
+
+        const formatted_new_visita_date = format(
+          parseISO(new_visita_date),
+          'dd/MM/yyyy'
+        );
+
+        log = await SystemLog.create({
+          registro: `alterou a data de visita do chamado ${chamado} para ${formatted_new_visita_date} via MK-Edge`,
+          data: logDate,
+          login,
+          tipo: 'app',
+          operacao: 'OPERNULL',
+        });
+
         break;
       }
 
