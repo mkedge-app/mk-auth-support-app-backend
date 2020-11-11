@@ -9,6 +9,7 @@ class Employee extends Model {
           primaryKey: true,
         },
         nome: Sequelize.STRING,
+        email: Sequelize.STRING,
       },
       {
         sequelize,
