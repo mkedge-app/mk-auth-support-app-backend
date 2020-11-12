@@ -1,11 +1,12 @@
-import { parseISO, format, endOfYear } from 'date-fns';
+import { parseISO, format, endOfYear, addHours } from 'date-fns';
 import { Op } from 'sequelize';
 
 import SupportRequest from '../models/SupportRequest';
 import InstallationRequest from '../models/InstallationRequest';
 import Client from '../models/Client';
 import Mensagem from '../models/Mensagem';
-// import SystemLog from '../models/SystemLog';
+import SystemLog from '../models/SystemLog';
+import User from '../models/User';
 import Employee from '../models/Employee';
 import Radacct from '../models/Radacct';
 
@@ -28,7 +29,7 @@ class RequestController {
         },
       });
 
-      installation_requests = await SupportRequest.findAll({
+      installation_requests = await InstallationRequest.findAll({
         where: {
           tecnico: employee_name,
         },
@@ -231,13 +232,7 @@ class RequestController {
         id: request.id,
         client_id: response.id,
         chamado: request.chamado,
-        visita: format(
-          new Date(
-            request.visita.valueOf() +
-              request.visita.getTimezoneOffset() * 60000
-          ),
-          'HH:mm'
-        ),
+        visita: format(request.visita, 'HH:mm'),
         data_visita: format(
           new Date(
             request.visita.valueOf() +
@@ -364,16 +359,46 @@ class RequestController {
       return res.status(400).json({ error: 'This ticket does not exist' });
     }
 
-    const log = null;
+    let log = null;
     const { action } = req.body;
 
     switch (action) {
       case 'update_employee': {
-        const { employee_id } = req.body;
+        const { employee_id, madeBy } = req.body;
+
+        // Recuperação do login do novo técnico
+        const { email: new_email } = await Employee.findByPk(employee_id);
+        const { login: new_login } = await User.findOne({
+          where: {
+            email: new_email,
+          },
+        });
+
+        // Recuperação do login do técnico que fez a alteração no chamado
+        const { email } = await Employee.findByPk(madeBy);
+        const { login } = await User.findOne({
+          where: {
+            email,
+          },
+        });
 
         if (request_type === 'Suporte') {
           request.tecnico = employee_id;
           await request.save();
+
+          // Criação de log da operação
+          const { chamado } = request;
+
+          const logDate = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
+
+          log = await SystemLog.create({
+            registro: `assinalou o chamado ${chamado} para ${new_login} via MK-Edge`,
+            data: logDate,
+            login,
+            tipo: 'app',
+            operacao: 'OPERNULL',
+          });
+
           break;
         } else {
           const employee = await Employee.findByPk(employee_id);
@@ -436,18 +461,43 @@ class RequestController {
       }
 
       case 'update_visita_time': {
+        const timeZoneOffset = new Date().getTimezoneOffset() / 60;
+
         const new_visita_time = format(
-          new Date(parseISO(req.body.new_visita_time).valueOf()),
+          addHours(parseISO(req.body.new_visita_time), timeZoneOffset),
           'HH:mm:ss'
         ).toString();
 
         const current_date = format(request.visita, 'yyyy-MM-dd').toString();
 
-        const updated_visit = parseISO(`${current_date}T${new_visita_time}`);
+        const updated_visit = `${current_date}T${new_visita_time}`;
 
         request.visita = updated_visit;
 
         await request.save();
+
+        const { madeBy } = req.body;
+
+        // Recuperação do login do técnico que fez a alteração no chamado
+        const { email } = await Employee.findByPk(madeBy);
+        const { login } = await User.findOne({
+          where: {
+            email,
+          },
+        });
+
+        // Criação de log da operação
+        const { chamado } = request;
+
+        const logDate = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
+
+        log = await SystemLog.create({
+          registro: `alterou a hora de visita do chamado ${chamado} para ${new_visita_time} via MK-Edge`,
+          data: logDate,
+          login,
+          tipo: 'app',
+          operacao: 'OPERNULL',
+        });
 
         break;
       }
@@ -465,6 +515,34 @@ class RequestController {
         request.visita = updated_visit;
 
         await request.save();
+
+        const { madeBy } = req.body;
+
+        // Recuperação do login do técnico que fez a alteração no chamado
+        const { email } = await Employee.findByPk(madeBy);
+        const { login } = await User.findOne({
+          where: {
+            email,
+          },
+        });
+
+        // Criação de log da operação
+        const { chamado } = request;
+
+        const logDate = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
+
+        const formatted_new_visita_date = format(
+          parseISO(new_visita_date),
+          'dd/MM/yyyy'
+        );
+
+        log = await SystemLog.create({
+          registro: `alterou a data de visita do chamado ${chamado} para ${formatted_new_visita_date} via MK-Edge`,
+          data: logDate,
+          login,
+          tipo: 'app',
+          operacao: 'OPERNULL',
+        });
 
         break;
       }
