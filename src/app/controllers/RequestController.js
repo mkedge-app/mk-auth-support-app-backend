@@ -29,7 +29,7 @@ class RequestController {
         },
       });
 
-      installation_requests = await SupportRequest.findAll({
+      installation_requests = await InstallationRequest.findAll({
         where: {
           tecnico: employee_name,
         },
