@@ -145,13 +145,7 @@ class RequestController {
 
         response_object.push({
           id: givenDateRequests[index].id,
-          visita: format(
-            new Date(
-              givenDateRequests[index].visita.valueOf() +
-                givenDateRequests[index].visita.getTimezoneOffset() * 60000
-            ),
-            'HH:mm'
-          ),
+          visita: format(givenDateRequests[index].visita, 'HH:mm'),
           nome: givenDateRequests[index].nome,
           assunto: 'Ativação',
           ip: givenDateRequests[index].ip,
@@ -305,12 +299,7 @@ class RequestController {
       id: request.id,
       chamado: request.chamado,
       client_id: client ? client.id : null,
-      visita: format(
-        new Date(
-          request.visita.valueOf() + request.visita.getTimezoneOffset() * 60000
-        ),
-        'HH:mm'
-      ),
+      visita: format(request.visita, 'HH:mm'),
       data_visita: format(
         new Date(
           request.visita.valueOf() + request.visita.getTimezoneOffset() * 60000
