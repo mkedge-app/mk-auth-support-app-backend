@@ -109,13 +109,12 @@ class RequestController {
         // eslint-disable-next-line no-await-in-loop
         const employee = await Employee.findByPk(tecnico);
 
+        const timeZoneOffset = new Date().getTimezoneOffset() / 60;
+
         response_object.push({
           id: givenDateRequests[index].id,
           visita: format(
-            new Date(
-              givenDateRequests[index].visita.valueOf() +
-                givenDateRequests[index].visita.getTimezoneOffset() * 60000
-            ),
+            addHours(givenDateRequests[index].visita, timeZoneOffset),
             'HH:mm'
           ),
           nome: givenDateRequests[index].nome,
@@ -143,9 +142,14 @@ class RequestController {
           },
         });
 
+        const timeZoneOffset = new Date().getTimezoneOffset() / 60;
+
         response_object.push({
           id: givenDateRequests[index].id,
-          visita: format(givenDateRequests[index].visita, 'HH:mm'),
+          visita: format(
+            addHours(givenDateRequests[index].visita, timeZoneOffset),
+            'HH:mm'
+          ),
           nome: givenDateRequests[index].nome,
           assunto: 'Ativação',
           ip: givenDateRequests[index].ip,
@@ -222,11 +226,13 @@ class RequestController {
             : 'Offline';
       }
 
+      const timeZoneOffset = new Date().getTimezoneOffset() / 60;
+
       const obj = {
         id: request.id,
         client_id: response.id,
         chamado: request.chamado,
-        visita: format(request.visita, 'HH:mm'),
+        visita: format(addHours(request.visita, timeZoneOffset), 'HH:mm'),
         data_visita: format(
           new Date(
             request.visita.valueOf() +
@@ -295,11 +301,13 @@ class RequestController {
         current_user_connection[0].acctstoptime === null ? 'Online' : 'Offline';
     }
 
+    const timeZoneOffset = new Date().getTimezoneOffset() / 60;
+
     const obj = {
       id: request.id,
       chamado: request.chamado,
       client_id: client ? client.id : null,
-      visita: format(request.visita, 'HH:mm'),
+      visita: format(addHours(request.visita, timeZoneOffset), 'HH:mm'),
       data_visita: format(
         new Date(
           request.visita.valueOf() + request.visita.getTimezoneOffset() * 60000
@@ -450,10 +458,8 @@ class RequestController {
       }
 
       case 'update_visita_time': {
-        const timeZoneOffset = new Date().getTimezoneOffset() / 60;
-
         const new_visita_time = format(
-          addHours(parseISO(req.body.new_visita_time), timeZoneOffset),
+          parseISO(req.body.new_visita_time),
           'HH:mm:ss'
         ).toString();
 
