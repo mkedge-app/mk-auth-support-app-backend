@@ -27,6 +27,8 @@ class InstallationRequest extends Model {
         datainst: Sequelize.STRING,
         instalado: Sequelize.STRING,
         disp: Sequelize.STRING,
+        telefone: Sequelize.STRING,
+        celular: Sequelize.STRING,
       },
       {
         sequelize,
