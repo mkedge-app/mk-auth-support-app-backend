@@ -333,6 +333,8 @@ class RequestController {
       mensagem: request.obs,
       caixa_hermetica: null,
       employee_name: employee === null ? null : employee.nome,
+      telefone: request.telefone,
+      celular: request.celular,
       equipment_status,
     };
 
