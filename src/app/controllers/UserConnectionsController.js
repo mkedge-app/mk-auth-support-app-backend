@@ -15,6 +15,7 @@ import Radacct from '../models/Radacct';
 class UserConnectionsController {
   async show(req, res) {
     const { id: client_id } = req.params;
+    const { page } = req.query;
 
     const client = await Client.findByPk(client_id);
 
@@ -30,6 +31,7 @@ class UserConnectionsController {
         },
       },
       limit: 10,
+      offset: 10 * page,
       order: [['acctstarttime', 'DESC']],
     });
 
@@ -118,6 +120,8 @@ class UserConnectionsController {
       const download = calcOctets(connection.acctoutputoctets, 0);
 
       response_obj.push({
+        id: connection.radacctid.toString(),
+
         start_date,
         start_time,
 
