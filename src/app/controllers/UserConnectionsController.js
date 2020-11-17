@@ -31,7 +31,7 @@ class UserConnectionsController {
         },
       },
       limit: 10,
-      offset: 10 * page,
+      offset: 10 * (page - 1),
       order: [['acctstarttime', 'DESC']],
     });
 
