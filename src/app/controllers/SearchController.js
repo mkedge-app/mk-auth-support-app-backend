@@ -88,6 +88,7 @@ class SearchController {
       } else {
         const clients = await Client.findAll({
           where: {
+            cli_ativado: searchmode === 'enable' ? 's' : 'n',
             cpf_cnpj: {
               [Op.like]: `%${term}%`,
             },
