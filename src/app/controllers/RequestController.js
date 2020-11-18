@@ -1,3 +1,4 @@
+/* eslint-disable radix */
 import { parseISO, format, endOfYear, addHours } from 'date-fns';
 import { Op } from 'sequelize';
 
@@ -90,7 +91,9 @@ class RequestController {
     const response_object = [];
 
     do {
-      const { login, chamado, tecnico, tipo } = givenDateRequests[index];
+      const { login, chamado, tecnico, tipo, coordenadas } = givenDateRequests[
+        index
+      ];
       if (!tipo) {
         // eslint-disable-next-line no-await-in-loop
         const response = await Client.findOne({
@@ -144,6 +147,8 @@ class RequestController {
 
         const timeZoneOffset = new Date().getTimezoneOffset() / 60;
 
+        const [latitude, longitude] = coordenadas.split(', ');
+
         response_object.push({
           id: givenDateRequests[index].id,
           visita: format(
@@ -160,6 +165,8 @@ class RequestController {
           numero: givenDateRequests[index].numero_res,
           bairro: givenDateRequests[index].bairro_res,
           employee_name: employee === null ? null : employee.nome,
+          latitude: parseFloat(latitude),
+          longitude: parseFloat(longitude),
         });
 
         index -= 1;
@@ -228,6 +235,8 @@ class RequestController {
 
       const timeZoneOffset = new Date().getTimezoneOffset() / 60;
 
+      const [latitude, longitude] = response.coordenadas.split(', ');
+
       const obj = {
         id: request.id,
         client_id: response.id,
@@ -259,6 +268,8 @@ class RequestController {
         caixa_hermetica: response.caixa_herm,
         employee_name: employee === null ? null : employee.nome,
         equipment_status,
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude),
       };
 
       return res.json(obj);
@@ -303,6 +314,8 @@ class RequestController {
 
     const timeZoneOffset = new Date().getTimezoneOffset() / 60;
 
+    const [latitude, longitude] = request.coordenadas.split(', ');
+
     const obj = {
       id: request.id,
       chamado: request.chamado,
@@ -317,6 +330,7 @@ class RequestController {
       nome: request.nome,
       fechamento: request.fechamento,
       motivo_fechamento: request.motivo_fechar,
+      visitado: request.visitado,
       login: request.login,
       senha: request.senha,
       plano: request.plano,
@@ -330,6 +344,8 @@ class RequestController {
       bairro: request.bairro_res,
       equipamento: request.equipamento,
       coordenadas: request.coordenadas,
+      latitude,
+      longitude,
       mensagem: request.obs,
       caixa_hermetica: null,
       employee_name: employee === null ? null : employee.nome,
