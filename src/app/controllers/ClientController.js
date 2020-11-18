@@ -314,7 +314,7 @@ class ClientController {
       client.automac = 'sim';
     }
 
-    await client.save();
+    // await client.save();
 
     return res.json(client);
   }
