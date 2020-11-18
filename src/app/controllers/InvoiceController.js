@@ -39,6 +39,7 @@ class InvoiceController {
       pending_invoices.push({
         title: format(addHours(invoice.datavenc, 3), 'dd/MM/yyyy'),
         content: {
+          titulo: invoice.id,
           tipo: invoice.tipo,
           valor: invoice.valor,
           status: invoice.status,
@@ -73,6 +74,7 @@ class InvoiceController {
       paid_invoices.push({
         title: format(invoice.datavenc, 'dd/MM/yyyy'),
         content: {
+          titulo: invoice.id,
           tipo: invoice.tipo,
           valor: invoice.valor,
           status: invoice.status,
