@@ -77,6 +77,7 @@ class InvoiceController {
           valor: invoice.valor,
           status: invoice.status,
           descricao: invoice.obs,
+          paidAt: format(invoice.datapag, 'dd/MM/yyyy'),
         },
       });
     });
