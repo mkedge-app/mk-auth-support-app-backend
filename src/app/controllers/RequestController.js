@@ -2,14 +2,15 @@
 import { parseISO, format, endOfYear, addHours } from 'date-fns';
 import { Op } from 'sequelize';
 
+import CTO from '../models/CTO';
+import User from '../models/User';
+import Client from '../models/Client';
+import Radacct from '../models/Radacct';
+import Mensagem from '../models/Mensagem';
+import Employee from '../models/Employee';
+import SystemLog from '../models/SystemLog';
 import SupportRequest from '../models/SupportRequest';
 import InstallationRequest from '../models/InstallationRequest';
-import Client from '../models/Client';
-import Mensagem from '../models/Mensagem';
-import SystemLog from '../models/SystemLog';
-import User from '../models/User';
-import Employee from '../models/Employee';
-import Radacct from '../models/Radacct';
 
 class RequestController {
   async index(req, res) {
@@ -237,6 +238,13 @@ class RequestController {
 
       const [latitude, longitude] = response.coordenadas.split(', ');
 
+      // Verifica se a caixa hermética do cliente é uma caixa cadastrada na MP_Caixas
+      const cto = await CTO.findOne({
+        where: {
+          nome: response.caixa_herm,
+        },
+      });
+
       const obj = {
         id: request.id,
         client_id: response.id,
@@ -265,7 +273,7 @@ class RequestController {
         equipamento: response.equipamento,
         coordenadas: response.coordenadas,
         mensagem: msg.msg,
-        caixa_hermetica: response.caixa_herm,
+        caixa_hermetica: cto ? response.caixa_herm : null,
         employee_name: employee === null ? null : employee.nome,
         equipment_status,
         latitude: parseFloat(latitude),
@@ -430,15 +438,13 @@ class RequestController {
         }
 
         if (request_type === 'Suporte') {
-          const { closingNote, employee_id } = req.body;
+          const { closingNote, employee_id, closingDate } = req.body;
 
           const employee = await Employee.findByPk(employee_id);
 
-          const formattedDate = format(new Date(), 'dd-MM-yyyy HH:mm:ss');
-
           // Request closing
           request.status = 'fechado';
-          request.fechamento = formattedDate;
+          request.fechamento = closingDate;
           request.motivo_fechar = `fechado por ${employee.nome}: ${closingNote}`;
           await request.save();
 

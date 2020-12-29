@@ -4,17 +4,17 @@ import Sequelize from 'sequelize';
 
 import Tenant from '../schemas/Tenant';
 
-import User from '../models/User';
-import SupportRequest from '../models/SupportRequest';
-import InstallationRequest from '../models/InstallationRequest';
-import Employee from '../models/Employee';
-import Client from '../models/Client';
-import Mensagem from '../models/Mensagem';
-import SystemLog from '../models/SystemLog';
 import CTO from '../models/CTO';
+import User from '../models/User';
+import Client from '../models/Client';
 import Radacct from '../models/Radacct';
 import Invoice from '../models/Invoice';
+import Employee from '../models/Employee';
+import Mensagem from '../models/Mensagem';
+import SystemLog from '../models/SystemLog';
 import Notification from '../models/Notification';
+import SupportRequest from '../models/SupportRequest';
+import InstallationRequest from '../models/InstallationRequest';
 
 const models = [
   User,
