@@ -32,7 +32,7 @@ routes.post('/client/:id', ClientController.update);
 routes.get('/client/:id', ClientController.show);
 
 routes.get('/cto/:latitude/:longitude', CTOController.index);
-routes.get('/cto/:cto_name', CTOController.show);
+routes.get('/cto', CTOController.show);
 
 routes.get('/employees', EmployeeController.index);
 routes.get('/employee/:id', EmployeeController.show);
