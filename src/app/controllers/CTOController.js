@@ -75,7 +75,7 @@ class CTOController {
   async show(req, res) {
     const cto = await CTO.findOne({
       where: {
-        nome: req.params.cto_name,
+        nome: req.query.cto_name,
       },
     });
 
