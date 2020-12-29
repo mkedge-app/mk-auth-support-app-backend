@@ -10,6 +10,7 @@ import {
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+import CTO from '../models/CTO';
 import Client from '../models/Client';
 import Radacct from '../models/Radacct';
 
@@ -235,6 +236,15 @@ class ClientController {
         current_user_connection[0].acctstoptime === null ? 'Online' : 'Offline';
     }
 
+    // Verifica se a caixa hermética do cliente é uma caixa cadastrada na MP_Caixas
+    const cto = await CTO.findOne({
+      where: {
+        nome: client.caixa_herm,
+      },
+    });
+
+    client.caixa_herm = cto ? client.caixa_herm : null;
+
     const response = {
       ...client.dataValues,
       finance_state,
@@ -314,7 +324,7 @@ class ClientController {
       client.automac = 'sim';
     }
 
-    // await client.save();
+    await client.save();
 
     return res.json(client);
   }
