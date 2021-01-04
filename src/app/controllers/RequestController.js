@@ -148,7 +148,7 @@ class RequestController {
 
         const timeZoneOffset = new Date().getTimezoneOffset() / 60;
 
-        const [latitude, longitude] = coordenadas.split(', ');
+        const [latitude, longitude] = coordenadas.split(',');
 
         response_object.push({
           id: givenDateRequests[index].id,
@@ -167,7 +167,7 @@ class RequestController {
           bairro: givenDateRequests[index].bairro_res,
           employee_name: employee === null ? null : employee.nome,
           latitude: parseFloat(latitude),
-          longitude: parseFloat(longitude),
+          longitude: parseFloat(longitude.replace(/\s+/, ' ')),
         });
 
         index -= 1;
@@ -322,7 +322,7 @@ class RequestController {
 
     const timeZoneOffset = new Date().getTimezoneOffset() / 60;
 
-    const [latitude, longitude] = request.coordenadas.split(', ');
+    const [latitude, longitude] = request.coordenadas.split(',');
 
     const obj = {
       id: request.id,
