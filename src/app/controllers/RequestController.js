@@ -148,7 +148,13 @@ class RequestController {
 
         const timeZoneOffset = new Date().getTimezoneOffset() / 60;
 
-        const [latitude, longitude] = coordenadas.split(',');
+        let latitude = null;
+        let longitude = null;
+
+        if (coordenadas) {
+          [latitude, longitude] = coordenadas.split(',');
+          longitude = parseFloat(longitude.replace(/\s+/, ' '));
+        }
 
         response_object.push({
           id: givenDateRequests[index].id,
@@ -166,8 +172,8 @@ class RequestController {
           numero: givenDateRequests[index].numero_res,
           bairro: givenDateRequests[index].bairro_res,
           employee_name: employee === null ? null : employee.nome,
-          latitude: parseFloat(latitude),
-          longitude: parseFloat(longitude.replace(/\s+/, ' ')),
+          latitude,
+          longitude,
         });
 
         index -= 1;
@@ -236,7 +242,13 @@ class RequestController {
 
       const timeZoneOffset = new Date().getTimezoneOffset() / 60;
 
-      const [latitude, longitude] = response.coordenadas.split(', ');
+      let latitude = null;
+      let longitude = null;
+
+      if (response.coordenadas) {
+        [latitude, longitude] = response.coordenadas.split(', ');
+        longitude = parseFloat(longitude.replace(/\s+/, ' '));
+      }
 
       // Verifica se a caixa hermética do cliente é uma caixa cadastrada na MP_Caixas
       const cto = await CTO.findOne({
@@ -322,7 +334,13 @@ class RequestController {
 
     const timeZoneOffset = new Date().getTimezoneOffset() / 60;
 
-    const [latitude, longitude] = request.coordenadas.split(',');
+    let latitude = null;
+    let longitude = null;
+
+    if (request.coordenadas) {
+      [latitude, longitude] = request.coordenadas.split(', ');
+      longitude = parseFloat(longitude.replace(/\s+/, ' '));
+    }
 
     const obj = {
       id: request.id,
