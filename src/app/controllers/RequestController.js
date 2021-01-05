@@ -246,7 +246,7 @@ class RequestController {
       let longitude = null;
 
       if (response.coordenadas) {
-        [latitude, longitude] = response.coordenadas.split(', ');
+        [latitude, longitude] = response.coordenadas.split(',');
         longitude = parseFloat(longitude.replace(/\s+/, ' '));
       }
 
@@ -338,7 +338,7 @@ class RequestController {
     let longitude = null;
 
     if (request.coordenadas) {
-      [latitude, longitude] = request.coordenadas.split(', ');
+      [latitude, longitude] = request.coordenadas.split(',');
       longitude = parseFloat(longitude.replace(/\s+/, ' '));
     }
 
