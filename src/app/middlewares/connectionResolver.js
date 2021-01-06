@@ -13,6 +13,7 @@ import Employee from '../models/Employee';
 import Mensagem from '../models/Mensagem';
 import SystemLog from '../models/SystemLog';
 import Notification from '../models/Notification';
+import ConnectedUsers from '../models/ConnectedUsers';
 import SupportRequest from '../models/SupportRequest';
 import InstallationRequest from '../models/InstallationRequest';
 
@@ -28,6 +29,7 @@ const models = [
   Invoice,
   Notification,
   InstallationRequest,
+  ConnectedUsers,
 ];
 
 const tenantDatabaseConnections = {};
