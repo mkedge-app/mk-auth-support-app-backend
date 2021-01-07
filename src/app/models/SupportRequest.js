@@ -15,7 +15,7 @@ class SupportRequest extends Model {
         assunto: Sequelize.STRING,
         visita: Sequelize.DATE,
         chamado: Sequelize.STRING,
-        fechamento: Sequelize.DATE,
+        fechamento: Sequelize.STRING,
         motivo_fechar: Sequelize.STRING,
         prioridade: Sequelize.STRING,
       },
