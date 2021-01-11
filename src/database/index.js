@@ -6,16 +6,24 @@ class Database {
   }
 
   mongo() {
-    // Conex√£o com o mongo modo Desenvolvimento
+    // Conex„o com o mongo modo Desenvolvimento
     // this.mongoConnection = mongoose.connect(
     //   'mongodb://192.168.99.100:27017/mkedgetenants',
     //   { useNewUrlParser: true, useUnifiedTopology: true }
     // );
 
-    // Conex√£o com mongo modo Produ√ß√£o
+    // Conex„o com mongo modo ProduÁ„o
     this.mongoConnection = mongoose.connect(
-      'mongodb://root:F@lcon31@localhost:27017/mkedgetenants',
-      { useNewUrlParser: true, useUnifiedTopology: true }
+      'mongodb://localhost:27017/mkedgetenants',
+      {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        authSource: 'admin',
+        auth: {
+          user: 'root',
+          password: 'Falcon2931',
+        },
+      }
     );
   }
 }
