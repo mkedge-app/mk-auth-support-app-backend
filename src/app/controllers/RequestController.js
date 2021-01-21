@@ -2,7 +2,7 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable radix */
-import { parseISO, format, endOfYear, addHours } from 'date-fns';
+import { parseISO, format, endOfYear, addHours, subHours } from 'date-fns';
 import { Op } from 'sequelize';
 
 import CTO from '../models/CTO';
@@ -19,10 +19,9 @@ class RequestController {
   async index(req, res) {
     const { date, tecnico: tecnico_id, isAdmin } = req.body;
 
+    const timeZoneOffset = new Date().getTimezoneOffset() / 60;
+
     const dayStarting = new Date(date);
-    dayStarting.setUTCHours(0);
-    dayStarting.setUTCMinutes(0);
-    dayStarting.setUTCSeconds(0);
 
     const dayEnding = new Date(date);
     dayEnding.setUTCHours(23);
@@ -62,8 +61,6 @@ class RequestController {
     if (!support_requests && !installation_requests) {
       return res.status(204).json({ message: 'No requests for this user!' });
     }
-
-    const timeZoneOffset = new Date().getTimezoneOffset() / 60;
 
     const response_object = [];
 
@@ -223,7 +220,7 @@ class RequestController {
         data_visita: format(
           new Date(
             request.visita.valueOf() +
-            request.visita.getTimezoneOffset() * 60000
+              request.visita.getTimezoneOffset() * 60000
           ),
           'dd/MM/yyyy'
         ),
