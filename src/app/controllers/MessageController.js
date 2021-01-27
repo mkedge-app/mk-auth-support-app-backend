@@ -6,6 +6,28 @@ import User from '../models/User';
 import Client from '../models/Client';
 
 class MessageController {
+  async store(req, res) {
+    const { chamado } = req.query;
+    const { msg } = req.body;
+
+    const requester = await User.findOne({
+      where: {
+        idacesso: req.idacesso,
+      },
+    });
+
+    const new_note = await Mensagem.create({
+      chamado,
+      msg,
+      tipo: 'mk-edge',
+      login: requester.login,
+      atendente: requester.nome,
+      msg_data: new Date().toString(),
+    });
+
+    return res.json(new_note);
+  }
+
   async show(req, res) {
     const { chamado } = req.query;
 
