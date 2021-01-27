@@ -10,6 +10,10 @@ class Mensagem extends Model {
         },
         chamado: Sequelize.STRING,
         msg: Sequelize.STRING,
+        atendente: Sequelize.STRING,
+        msg_data: Sequelize.STRING,
+        login: Sequelize.STRING,
+        tipo: Sequelize.STRING,
       },
       {
         sequelize,
