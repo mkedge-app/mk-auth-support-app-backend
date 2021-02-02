@@ -1,6 +1,8 @@
 /* eslint-disable eqeqeq */
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable no-await-in-loop */
+import { format, addHours } from 'date-fns';
+
 import Mensagem from '../models/Mensagem';
 import User from '../models/User';
 import Client from '../models/Client';
@@ -22,7 +24,7 @@ class MessageController {
       tipo: 'mk-edge',
       login: requester.login,
       atendente: requester.nome,
-      msg_data: new Date().toString(),
+      msg_data: new Date(),
     });
 
     return res.json(new_note);
@@ -38,6 +40,11 @@ class MessageController {
     });
 
     for (const [, item] of notes.entries()) {
+      const timeZoneOffset = new Date().getTimezoneOffset() / 60;
+
+      const date = addHours(item.msg_data, timeZoneOffset);
+      item.msg_data = format(date, `dd/MM/yyyy 'às' HH:MM:ss`);
+
       // Recupera os dados do usuário que originou a request
       const requester = await User.findOne({
         where: {
