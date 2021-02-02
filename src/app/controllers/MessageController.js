@@ -10,7 +10,7 @@ import Client from '../models/Client';
 class MessageController {
   async store(req, res) {
     const { chamado } = req.query;
-    const { msg } = req.body;
+    const { msg, msg_data } = req.body;
 
     const requester = await User.findOne({
       where: {
@@ -24,7 +24,7 @@ class MessageController {
       tipo: 'mk-edge',
       login: requester.login,
       atendente: requester.nome,
-      msg_data: new Date(),
+      msg_data,
     });
 
     return res.json(new_note);
@@ -42,8 +42,10 @@ class MessageController {
     for (const [, item] of notes.entries()) {
       const timeZoneOffset = new Date().getTimezoneOffset() / 60;
 
-      const date = addHours(item.msg_data, timeZoneOffset);
-      item.msg_data = format(date, `dd/MM/yyyy 'às' HH:MM:ss`);
+      item.msg_data = format(
+        addHours(item.msg_data, timeZoneOffset),
+        `dd/MM/yyyy 'às' HH:mm:ss`
+      );
 
       // Recupera os dados do usuário que originou a request
       const requester = await User.findOne({
