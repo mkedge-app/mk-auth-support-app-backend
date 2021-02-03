@@ -81,7 +81,23 @@ loadTenantConnections();
 async function ConnectionResolver(req, res, next) {
   const { tenant_id } = req.query;
 
+  if (!tenant_id) {
+    return res.status(401).json({ message: 'No key provided' });
+  }
+
+  const tenant = await Tenant.findById(tenant_id);
+
+  if (!tenant) {
+    return res.status(401).json({ message: 'Invalid key' });
+  }
+
   const sequelizeConnection = tenantDatabaseConnections[tenant_id];
+
+  if (!sequelizeConnection) {
+    return res
+      .status(401)
+      .json({ message: 'Tenant database is not connected' });
+  }
 
   if (sequelizeConnection) {
     models.map(model => model.init(sequelizeConnection));

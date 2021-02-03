@@ -10,6 +10,7 @@ import UserConnectionsController from './app/controllers/UserConnectionsControll
 import InvoiceController from './app/controllers/InvoiceController';
 import NotificationController from './app/controllers/NotificationController';
 import ProviderController from './app/controllers/ProviderController';
+import MessageController from './app/controllers/MessageController';
 
 import authMiddleware from './app/middlewares/auth';
 import { ConnectionResolver } from './app/middlewares/connectionResolver';
@@ -45,5 +46,8 @@ routes.get('/invoices/:client_id', InvoiceController.show);
 
 routes.get('/notification/:employee_id', NotificationController.show);
 routes.put('/notification', NotificationController.update);
+
+routes.get('/messages', MessageController.show);
+routes.post('/messages', MessageController.store);
 
 export default routes;

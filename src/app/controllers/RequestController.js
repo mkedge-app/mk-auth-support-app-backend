@@ -64,7 +64,7 @@ class RequestController {
 
     const response_object = [];
 
-    for (const [idx, request] of support_requests.entries()) {
+    for (const [, request] of support_requests.entries()) {
       const { login, chamado, tecnico } = request;
 
       const response = await Client.findOne({
@@ -96,7 +96,7 @@ class RequestController {
         endereco: response.endereco_res,
         numero: response.numero_res,
         bairro: response.bairro_res,
-        mensagem: msg.msg,
+        mensagem: msg ? msg.msg : null,
         employee_name: employee === null ? null : employee.nome,
       });
     }
@@ -220,7 +220,7 @@ class RequestController {
         data_visita: format(
           new Date(
             request.visita.valueOf() +
-              request.visita.getTimezoneOffset() * 60000
+            request.visita.getTimezoneOffset() * 60000
           ),
           'dd/MM/yyyy'
         ),
