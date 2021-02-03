@@ -2,6 +2,7 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable no-await-in-loop */
 import { format, addHours } from 'date-fns';
+import { Op } from 'sequelize';
 
 import Mensagem from '../models/Mensagem';
 import User from '../models/User';
@@ -36,6 +37,12 @@ class MessageController {
     const notes = await Mensagem.findAll({
       where: {
         chamado,
+        msg: {
+          [Op.ne]: null,
+        },
+        tipo: {
+          [Op.ne]: 'F5F5F5',
+        },
       },
     });
 
