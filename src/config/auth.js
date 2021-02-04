@@ -1,4 +1,6 @@
+import 'dotenv/config';
+
 export default {
-  secret: 'updsuportesecretkey',
-  expiresIn: '7d',
+  secret: process.env.AUTH_SECRET,
+  expiresIn: process.env.AUTH_EXPIRESIN,
 };

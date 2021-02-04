@@ -1,8 +1,7 @@
-/* eslint-disable no-console */
 import Bee from 'bee-queue';
 import NotificationSending from '../app/jobs/NotificationSending';
-
 import redisConfig from '../config/redis';
+import logger from '../logger';
 
 const jobs = [NotificationSending];
 
@@ -37,8 +36,8 @@ class Queue {
   }
 
   failureHandle(job, err) {
-    console.log(`Queue ${job.queue.name} FAILED`);
-    console.log(err);
+    logger.error(`Queue ${job.queue.name} FAILED`);
+    logger.error(`Error: ${err}`);
   }
 }
 
