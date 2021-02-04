@@ -1,5 +1,6 @@
-/* eslint-disable no-console */
 import https from 'https';
+import logger from '../logger';
+import appConfig from '../config/app';
 
 class PushNotificationSender {
   constructor() {
@@ -16,7 +17,7 @@ class PushNotificationSender {
 
   pushNotification(message, employee_id) {
     const pushMessage = {
-      app_id: 'ba39cc13-1ac4-46f6-82f5-929b5b3a6562',
+      app_id: appConfig.app_id_push_notification,
       contents: { en: message },
       include_player_ids: [this.connectedUsers[employee_id]],
     };
@@ -35,14 +36,12 @@ class PushNotificationSender {
 
     const req = https.request(options, res => {
       res.on('data', data => {
-        console.log('Response:');
-        console.log(JSON.parse(data));
+        logger.info(`Response: ${JSON.parse(data)}`);
       });
     });
 
     req.on('error', e => {
-      console.log('ERROR:');
-      console.log(e);
+      logger.error(`Error: ${e}`);
     });
 
     req.write(JSON.stringify(pushMessage));

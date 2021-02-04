@@ -1,5 +1,4 @@
 /* eslint-disable no-underscore-dangle */
-/* eslint-disable no-console */
 import MySQLEvents from '@rodrigogs/mysql-events';
 import mysql from 'mysql';
 import { format } from 'date-fns';
@@ -8,6 +7,7 @@ import databaseConfig from '../../../config/database';
 import DatabaseObserver from '../../DatabaseObserver';
 
 import Client from '../../../app/models/Client';
+import logger from '../../../logger';
 
 class DatabaseSubject {
   constructor() {
@@ -18,8 +18,8 @@ class DatabaseSubject {
 
   init() {
     this.watchDatabase()
-      .then(() => console.log('Waiting for database events...'))
-      .catch(console.error);
+      .then(() => logger.info('Waiting for database events...'))
+      .catch(logger.error);
   }
 
   async watchDatabase() {
@@ -92,7 +92,7 @@ class DatabaseSubject {
             );
           }
         } catch (error) {
-          console.log(error);
+          logger.error(error);
         }
       },
     });
@@ -198,8 +198,8 @@ class DatabaseSubject {
       },
     });
 
-    instance.on(MySQLEvents.EVENTS.CONNECTION_ERROR, console.error);
-    instance.on(MySQLEvents.EVENTS.ZONGJI_ERROR, console.error);
+    instance.on(MySQLEvents.EVENTS.CONNECTION_ERROR, logger.error);
+    instance.on(MySQLEvents.EVENTS.ZONGJI_ERROR, logger.error);
   }
 }
 
