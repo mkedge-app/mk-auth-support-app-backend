@@ -1,5 +1,5 @@
-/* eslint-disable no-console */
 import io from 'socket.io';
+import logger from '../logger';
 import PushNotificationSender from './oneSignal';
 
 class SocketIO {
@@ -21,7 +21,7 @@ class SocketIO {
 
     this.io.on('connection', socket => {
       const { employee_id, oneSignalUserId } = socket.handshake.query;
-      console.log(`Employee ${employee_id} has been connected to websocket`);
+      logger.info(`Employee ${employee_id} has been connected to websocket`);
 
       this.connectedUsers[employee_id] = {
         socketId: socket.id,
@@ -33,27 +33,26 @@ class SocketIO {
         oneSignalUserId,
       });
 
-      console.log(`List of push notification users:`);
-      console.log(PushNotificationSender.connectedUsers);
+      logger.info(`List of push notification users:`);
+      logger.info(PushNotificationSender.connectedUsers);
 
       socket.on('disconnect', () => {
-        console.log(
+        logger.info(
           `The employee ${employee_id} disconnected from this websocket`
         );
 
         delete this.connectedUsers[employee_id];
 
-        console.log(`List of push notification users:`);
-        console.log(PushNotificationSender.connectedUsers);
+        logger.info(`List of push notification users:`);
+        logger.info(PushNotificationSender.connectedUsers);
       });
 
       socket.on('error', err => {
-        console.log('Socket.IO Error');
-        console.log(err.stack); // this is changed from your code in the last comment
+        logger.error(`Socket.io Error: ${err.stack}`); // this is changed from your code in the last comment
       });
 
       socket.on('online', () => {
-        // console.log('I am alive');
+        // logger.info('I am alive');
       });
     });
   }

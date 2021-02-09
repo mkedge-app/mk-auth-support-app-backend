@@ -1,4 +1,6 @@
 import mongoose from 'mongoose';
+import databaseConfig from '../config/database';
+import logger from '../logger';
 
 class Database {
   constructor() {
@@ -6,25 +8,32 @@ class Database {
   }
 
   mongo() {
-    // Conexão com o mongo modo Desenvolvimento
-    // this.mongoConnection = mongoose.connect(
-    //   'mongodb://192.168.99.100:27017/mkedgetenants',
-    //   { useNewUrlParser: true, useUnifiedTopology: true }
-    // );
-
-    // Conexão com mongo modo Produção
-    this.mongoConnection = mongoose.connect(
-      'mongodb://localhost:27017/mkedgetenants',
-      {
+    // Conexao com o mongo modo Desenvolvimento
+    try {
+      this.mongoConnection = mongoose.connect(databaseConfig.mongodb_url, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
-        authSource: 'admin',
-        auth: {
-          user: 'root',
-          password: 'Falcon2931',
-        },
-      }
-    );
+      });
+      logger.info(`Successfull connection: ${databaseConfig.mongodb_url}`);
+    } catch (error) {
+      logger.error(`Connection Error: ${error}`);
+    }
+
+    // Conexao com mongo modo Producao
+    // try {
+    //   this.mongoConnection = mongoose.connect(databaseConfig.mongodb_url, {
+    //     useNewUrlParser: true,
+    //     useUnifiedTopology: true,
+    //     authSource: databaseConfig.mongodb_auth_source,
+    //     auth: {
+    //       user: databaseConfig.mongodb_user,
+    //       password: databaseConfig.mongodb_password,
+    //     },
+    //   });
+    //   logger.info(`Successfull connection: ${databaseConfig.mongodb_url}`);
+    // } catch (error) {
+    //   logger.error(`Connection Error: ${error}`);
+    // }
   }
 }
 
