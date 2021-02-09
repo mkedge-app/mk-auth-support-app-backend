@@ -14,10 +14,10 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
-    "prettier/prettier": "error",
-    "class-methods-use-this": "off",
-    "no-param-reassign": "off",
-    "camelcase": "off",
-    "no-unused-vars": ["error", { "argsIgnorePattern": "next" }]
+    'prettier/prettier': 'error',
+    'class-methods-use-this': 'off',
+    'no-param-reassign': 'off',
+    camelcase: 'off',
+    'no-unused-vars': ['error', { argsIgnorePattern: 'next' }],
   },
 };
