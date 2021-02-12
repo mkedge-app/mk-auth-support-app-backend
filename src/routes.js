@@ -1,16 +1,17 @@
 import { Router } from 'express';
 
-import SessionController from './app/controllers/SessionController';
-import RequestController from './app/controllers/RequestController';
 import CTOController from './app/controllers/CTOController';
 import ClientController from './app/controllers/ClientController';
-import EmployeeController from './app/controllers/EmployeeController';
 import SearchController from './app/controllers/SearchController';
-import UserConnectionsController from './app/controllers/UserConnectionsController';
+import RequestController from './app/controllers/RequestController';
 import InvoiceController from './app/controllers/InvoiceController';
-import NotificationController from './app/controllers/NotificationController';
-import ProviderController from './app/controllers/ProviderController';
 import MessageController from './app/controllers/MessageController';
+import HistoryController from './app/controllers/HistoryController';
+import SessionController from './app/controllers/SessionController';
+import EmployeeController from './app/controllers/EmployeeController';
+import ProviderController from './app/controllers/ProviderController';
+import NotificationController from './app/controllers/NotificationController';
+import UserConnectionsController from './app/controllers/UserConnectionsController';
 
 import authMiddleware from './app/middlewares/auth';
 import { ConnectionResolver } from './app/middlewares/connectionResolver';
@@ -49,5 +50,7 @@ routes.put('/notification', NotificationController.update);
 
 routes.get('/messages', MessageController.show);
 routes.post('/messages', MessageController.store);
+
+routes.get('/requests/history', HistoryController.show);
 
 export default routes;
