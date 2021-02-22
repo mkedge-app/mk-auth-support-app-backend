@@ -85,7 +85,7 @@ async function ConnectionResolver(req, res, next) {
     return res.status(401).json({ message: 'No key provided' });
   }
 
-  const tenant = await Tenant.findById(tenant_id);
+  const tenant = await Tenant.find({ _id: tenant_id });
 
   if (!tenant) {
     return res.status(401).json({ message: 'Invalid key' });
