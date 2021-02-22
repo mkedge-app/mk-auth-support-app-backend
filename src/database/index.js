@@ -7,33 +7,21 @@ class Database {
     this.mongo();
   }
 
-  mongo() {
-    // Conexao com o mongo modo Desenvolvimento
+  async mongo() {
+    // Conexao com o mongo
     try {
-      this.mongoConnection = mongoose.connect(databaseConfig.mongodb_url, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
+      this.mongoConnection = await mongoose.connect(
+        databaseConfig.mongodb_url,
+        {
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+        }
+      );
+
       logger.info(`Successfull connection: ${databaseConfig.mongodb_url}`);
     } catch (error) {
       logger.error(`Connection Error: ${error}`);
     }
-
-    // Conexao com mongo modo Producao
-    // try {
-    //   this.mongoConnection = mongoose.connect(databaseConfig.mongodb_url, {
-    //     useNewUrlParser: true,
-    //     useUnifiedTopology: true,
-    //     authSource: databaseConfig.mongodb_auth_source,
-    //     auth: {
-    //       user: databaseConfig.mongodb_user,
-    //       password: databaseConfig.mongodb_password,
-    //     },
-    //   });
-    //   logger.info(`Successfull connection: ${databaseConfig.mongodb_url}`);
-    // } catch (error) {
-    //   logger.error(`Connection Error: ${error}`);
-    // }
   }
 }
 
