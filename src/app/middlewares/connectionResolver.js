@@ -12,6 +12,7 @@ import Invoice from '../models/Invoice';
 import Employee from '../models/Employee';
 import Mensagem from '../models/Mensagem';
 import SystemLog from '../models/SystemLog';
+import Permissions from '../models/Permissions';
 import Notification from '../models/Notification';
 import ConnectedUsers from '../models/ConnectedUsers';
 import SupportRequest from '../models/SupportRequest';
@@ -30,6 +31,7 @@ const models = [
   Notification,
   InstallationRequest,
   ConnectedUsers,
+  Permissions,
 ];
 
 const tenantDatabaseConnections = {};
@@ -85,7 +87,7 @@ async function ConnectionResolver(req, res, next) {
     return res.status(401).json({ message: 'No key provided' });
   }
 
-  const tenant = await Tenant.findById(tenant_id);
+  const tenant = await Tenant.find({ _id: tenant_id });
 
   if (!tenant) {
     return res.status(401).json({ message: 'Invalid key' });
