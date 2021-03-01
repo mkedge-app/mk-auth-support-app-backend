@@ -13,6 +13,7 @@ import ProviderController from './app/controllers/ProviderController';
 import NotificationController from './app/controllers/NotificationController';
 import OverdueRequestController from './app/controllers/OverdueRequestController';
 import UserConnectionsController from './app/controllers/UserConnectionsController';
+import AppStructureController from './app/controllers/AppStructureController';
 
 import authMiddleware from './app/middlewares/auth';
 import { ConnectionResolver } from './app/middlewares/connectionResolver';
@@ -24,6 +25,8 @@ routes.post('/new_provider', ProviderController.create);
 routes.use(ConnectionResolver);
 
 routes.post('/sessions/', SessionController.store);
+
+routes.get('/app/structure', AppStructureController.index);
 
 routes.use(authMiddleware);
 
