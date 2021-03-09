@@ -16,6 +16,7 @@ import UserConnectionsController from './app/controllers/UserConnectionsControll
 import AppStructureController from './app/controllers/AppStructureController';
 
 import authMiddleware from './app/middlewares/auth';
+import permissionMiddleware from './app/middlewares/permission';
 import { ConnectionResolver } from './app/middlewares/connectionResolver';
 
 const routes = new Router();
@@ -24,7 +25,7 @@ routes.post('/new_provider', ProviderController.create);
 
 routes.use(ConnectionResolver);
 
-routes.post('/sessions/', SessionController.store);
+routes.post('/sessions', SessionController.store);
 
 routes.get('/app/structure', AppStructureController.index);
 
@@ -32,7 +33,6 @@ routes.use(authMiddleware);
 
 routes.post('/requests', RequestController.index);
 routes.get('/request/:id/:request_type', RequestController.show);
-routes.post('/request/:id', RequestController.update);
 
 routes.post('/client/:id', ClientController.update);
 routes.get('/client/:id', ClientController.show);
@@ -53,9 +53,13 @@ routes.get('/notification/:employee_id', NotificationController.show);
 routes.put('/notification', NotificationController.update);
 
 routes.get('/messages', MessageController.show);
-routes.post('/messages', MessageController.store);
 
 routes.get('/requests/history', HistoryController.show);
 routes.get('/requests/overdue', OverdueRequestController.index);
+
+routes.use(permissionMiddleware);
+
+routes.post('/request/:id', RequestController.update);
+routes.post('/messages', MessageController.store);
 
 export default routes;
