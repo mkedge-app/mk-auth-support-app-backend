@@ -34,7 +34,6 @@ routes.use(authMiddleware);
 routes.post('/requests', RequestController.index);
 routes.get('/request/:id/:request_type', RequestController.show);
 
-routes.post('/client/:id', ClientController.update);
 routes.get('/client/:id', ClientController.show);
 
 routes.get('/cto/:latitude/:longitude', CTOController.index);
@@ -61,5 +60,6 @@ routes.use(permissionMiddleware);
 
 routes.post('/request/:id', RequestController.update);
 routes.post('/messages', MessageController.store);
+routes.post('/client/:id', ClientController.update);
 
 export default routes;
