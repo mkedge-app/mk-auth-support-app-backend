@@ -11,7 +11,7 @@ class Mensagem extends Model {
         chamado: Sequelize.STRING,
         msg: Sequelize.STRING,
         atendente: Sequelize.STRING,
-        msg_data: Sequelize.STRING,
+        msg_data: Sequelize.DATE,
         login: Sequelize.STRING,
         tipo: Sequelize.STRING,
       },
