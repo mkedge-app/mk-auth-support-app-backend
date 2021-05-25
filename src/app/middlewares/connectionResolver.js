@@ -43,6 +43,7 @@ async function loadTenantConnections() {
     const connection = new Sequelize({
       dialect,
       host,
+      port: 3308,
       username,
       password,
       database,
