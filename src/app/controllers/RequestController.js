@@ -220,7 +220,7 @@ class RequestController {
         data_visita: format(
           new Date(
             request.visita.valueOf() +
-            request.visita.getTimezoneOffset() * 60000
+              request.visita.getTimezoneOffset() * 60000
           ),
           'dd/MM/yyyy'
         ),
@@ -240,7 +240,7 @@ class RequestController {
         bairro: response.bairro_res,
         equipamento: response.equipamento,
         coordenadas: response.coordenadas,
-        mensagem: msg.msg,
+        mensagem: msg ? msg.msg : 'Não informada',
         caixa_hermetica: cto ? response.caixa_herm : null,
         employee_name: employee === null ? null : employee.nome,
         equipment_status,
