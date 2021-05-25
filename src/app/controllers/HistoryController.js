@@ -34,8 +34,7 @@ class HistoryController {
     for (const [, request] of opened_support_requests.entries()) {
       if (request.tecnico !== null) {
         const func = await Employee.findByPk(request.tecnico);
-        request.tecnico = func ? func.nome : null;
-        await request.save();
+        request.dataValues.tecnico = func ? func.nome : null;
       }
     }
 
@@ -64,15 +63,14 @@ class HistoryController {
       if (request.tecnico !== null) {
         const func = await Employee.findByPk(request.tecnico);
 
-        request.tecnico = func ? func.nome : null;
-        await request.save();
+        request.dataValues.tecnico = func ? func.nome : null;
       }
     }
 
     const closed_array =
       sort_mode === 'DESC'
         ? [...closed_support_requests, ...closed_installation_requests]
-        : [...closed_installation_requests, ...closed_support_requests]
+        : [...closed_installation_requests, ...closed_support_requests];
 
     const response = {
       opened_requests: opened_array,
