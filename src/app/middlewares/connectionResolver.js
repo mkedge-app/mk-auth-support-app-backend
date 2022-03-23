@@ -39,12 +39,13 @@ const tenantDatabaseConnections = {};
 async function loadTenantConnections() {
   const providers = await Tenant.find({});
 
-  providers.map(tenant => {
+  providers.map(async tenant => {
     const { _id: id, dialect, host, username, password, database } = tenant;
 
     const connection = new Sequelize({
       dialect,
       host,
+      port: 3308,
       username,
       password,
       database,
