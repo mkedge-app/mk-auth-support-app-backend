@@ -1,6 +1,4 @@
-import 'dotenv/config';
-
 export default {
-  secret: "updsuportesecretkey",
-  expiresIn: "7d",
+  secret: 'updsuportesecretkey',
+  expiresIn: '7d',
 };
