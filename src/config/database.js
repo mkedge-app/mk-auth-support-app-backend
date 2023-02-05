@@ -6,4 +6,4 @@ export default {
   mongodb_url: mongoUrl,
   mongodb_user: 'root',
   mongodb_password: 'Falcon2931',
-};
+}
