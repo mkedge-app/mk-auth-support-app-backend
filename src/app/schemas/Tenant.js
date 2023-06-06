@@ -1,35 +1,66 @@
 import mongoose from 'mongoose';
+import { resolveDbConnection } from '../middlewares/connectionResolver';
 
 const TenantSchema = new mongoose.Schema(
   {
-    nome: {
-      type: String,
-      required: true,
-    },
     cnpj: {
       type: String,
       required: true,
     },
-    dialect: {
+    responsavel: {
       type: String,
       required: true,
     },
-    host: {
+    contato: {
       type: String,
       required: true,
     },
-    username: {
-      type: String,
-      required: true,
-    },
-    password: {
-      type: String,
-      required: true,
+    provedor: {
+      nome: {
+        type: String,
+        required: true,
+      }
     },
     database: {
-      type: String,
-      required: true,
+      name: {
+        type: String,
+        required: true,
+      },
+      dialect: {
+        type: String,
+        required: true,
+      },
+      host: {
+        type: String,
+        required: true,
+      },
+      username: {
+        type: String,
+        required: true,
+      },
+      password: {
+        type: String,
+        required: true,
+      },
     },
+    assinatura: {
+      ativa: {
+        type: Boolean,
+        required: false,
+      },
+      valor: {
+        type: Number,
+        required: true,
+      },
+      data_vencimento: {
+        type: Date,
+        required: true,
+      },
+      dia_vencimento: {
+        type: String,
+        required: true,
+      },
+    }
   },
   {
     timestamps: true,
