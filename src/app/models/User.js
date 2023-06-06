@@ -27,12 +27,7 @@ class User extends Model {
 
   checkPassword(password) {
     const incoming_hash = sha256(password);
-
-    if (!(incoming_hash === this.sha)) {
-      return false;
-    }
-
-    return true;
+    return incoming_hash === this.sha;
   }
 }
 
