@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@rodrigogs/mysql-events": "^0.6.0",
+    "bcrypt": "^5.1.0",
     "bee-queue": "^1.2.3",
     "cors": "^2.8.5",
     "date-fns": "^2.10.0",

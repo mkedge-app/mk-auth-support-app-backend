@@ -37,46 +37,49 @@ const models = [
 const tenantDatabaseConnections = {};
 
 async function loadTenantConnections() {
-  const providers = await Tenant.find({});
+  const providers = await Tenant.find({
+    assinatura: { ativa: true }
+  });
 
   providers.map(async tenant => {
-    const { _id: id, dialect, host, username, password, database } = tenant;
+    try {
+      await connectNewTenantsDB(tenant);
+      console.log('Successfuly connected to', tenant.nome, "database");
+    } catch (error) {
+      console.log(tenant.nome, error);
+    }
+  });
+}
+
+function connectNewTenantsDB(tenant) {
+  return new Promise(async (resolve, reject) => {
+    const { id } = tenant;
+
+    if (!tenant.assinatura.ativa) {
+      reject('Tenant is not active');
+    }
 
     const connection = new Sequelize({
-      dialect,
-      host,
-      port: 3306,
-      username,
-      password,
-      database,
+      dialect: tenant.database.dialect,
+      host: tenant.database.host,
+      username: tenant.database.username,
+      password: tenant.database.password,
+      database: tenant.database.name,
       define: {
         timestamps: false,
         underscored: true,
         underscoredAll: true,
       },
     });
-
-    tenantDatabaseConnections[id] = connection;
-  });
-}
-
-async function connectNewTenantsDB(tenant) {
-  const { _id: id, dialect, host, username, password, database } = tenant;
-
-  const connection = new Sequelize({
-    dialect,
-    host,
-    username,
-    password,
-    database,
-    define: {
-      timestamps: false,
-      underscored: true,
-      underscoredAll: true,
-    },
-  });
-
-  tenantDatabaseConnections[id] = connection;
+    
+    try {
+      await connection.authenticate();
+      tenantDatabaseConnections[id] = connection;
+      resolve();
+    } catch (error) {
+      reject('Database params are invalid');
+    }
+  })
 }
 
 loadTenantConnections();
@@ -88,10 +91,14 @@ async function ConnectionResolver(req, res, next) {
     return res.status(401).json({ message: 'No key provided' });
   }
 
-  const tenant = await Tenant.find({ _id: tenant_id });
+  const tenant = await Tenant.findOne({ _id: tenant_id });
 
   if (!tenant) {
     return res.status(401).json({ message: 'Invalid key' });
+  }
+
+  if (!tenant.assinatura.ativa) {
+    return res.status(401).json({ message: 'Subscription is not active' });
   }
 
   const sequelizeConnection = tenantDatabaseConnections[tenant_id];
@@ -108,4 +115,22 @@ async function ConnectionResolver(req, res, next) {
   }
 }
 
-export { ConnectionResolver, connectNewTenantsDB };
+async function resolveDbConnection(tenant) {
+  return new Promise(async (resolve, reject) => {
+    const { id } = tenant;
+    const connection = tenantDatabaseConnections[id]
+
+    if (connection) {
+      try {
+        await connection.authenticate();
+        resolve(true);
+      } catch (error) {
+        resolve(false);
+      }
+    } else {
+      resolve(false);
+    }
+  });
+}
+
+export { ConnectionResolver, connectNewTenantsDB, tenantDatabaseConnections, resolveDbConnection };

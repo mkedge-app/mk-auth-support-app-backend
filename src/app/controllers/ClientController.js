@@ -189,23 +189,23 @@ class ClientController {
         format(subMonths(new Date(), 5), 'MMM', { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
-          format(subMonths(new Date(), 5), 'MMM', { locale: ptBR }).slice(1),
+        format(subMonths(new Date(), 5), 'MMM', { locale: ptBR }).slice(1),
         format(subMonths(new Date(), 4), 'MMM', { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
-          format(subMonths(new Date(), 4), 'MMM', { locale: ptBR }).slice(1),
+        format(subMonths(new Date(), 4), 'MMM', { locale: ptBR }).slice(1),
         format(subMonths(new Date(), 3), 'MMM', { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
-          format(subMonths(new Date(), 3), 'MMM', { locale: ptBR }).slice(1),
+        format(subMonths(new Date(), 3), 'MMM', { locale: ptBR }).slice(1),
         format(subMonths(new Date(), 2), 'MMM', { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
-          format(subMonths(new Date(), 2), 'MMM', { locale: ptBR }).slice(1),
+        format(subMonths(new Date(), 2), 'MMM', { locale: ptBR }).slice(1),
         format(subMonths(new Date(), 1), 'MMM', { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
-          format(subMonths(new Date(), 1), 'MMM', { locale: ptBR }).slice(1),
+        format(subMonths(new Date(), 1), 'MMM', { locale: ptBR }).slice(1),
       ],
       datasets: [
         {
@@ -232,8 +232,13 @@ class ClientController {
 
     let equipment_status = 'Offline';
     if (current_user_connection.length !== 0) {
-      equipment_status =
-        current_user_connection[0].acctstoptime === null ? 'Online' : 'Offline';
+      const nullConnection = current_user_connection.find(connection => {
+        if (connection.acctstoptime === null) {
+          return connection;
+        }
+      });
+
+      equipment_status = nullConnection ? 'Online' : 'Offline';
     }
 
     // Verifica se a caixa hermética do cliente é uma caixa cadastrada na MP_Caixas

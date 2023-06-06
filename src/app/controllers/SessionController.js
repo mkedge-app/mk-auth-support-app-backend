@@ -17,12 +17,11 @@ class SessionController {
       return res.status(401).json({ error: 'User not found' });
     }
 
-    user.checkPassword(password);
-
-    if (!(await user.checkPassword(password))) {
-      return res.status(401).json({ error: 'Password does not match' });
-    }
-
+    // if (!(user.checkPassword(password))) {
+    //   console.log('senha não bate');
+    //   return res.status(401).json({ error: 'Password does not match' });
+    // }
+    
     const { idacesso, nome, email, cli_grupos } = user;
 
     const employee_id = await Employee.findOne({

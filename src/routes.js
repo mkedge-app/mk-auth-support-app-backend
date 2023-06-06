@@ -18,12 +18,24 @@ import AppStructureController from './app/controllers/AppStructureController';
 import authMiddleware from './app/middlewares/auth';
 import permissionMiddleware from './app/middlewares/permission';
 import { ConnectionResolver } from './app/middlewares/connectionResolver';
+import ConnectController from './app/controllers/ConnectController';
+import ProviderStatusController from './app/controllers/ProviderStatusController';
+import PaymentController from './app/controllers/PaymentController';
 
 const routes = new Router();
 
-routes.post('/new_provider', ProviderController.create);
+routes.get('/providers', ProviderController.index);
+routes.post('/provider', ProviderController.create);
+routes.put('/provider/:tenant_id', ProviderController.update);
+routes.get('/provider/:tenant_id', ProviderController.show);
+//Aqui nao passa por nenhuma verificação
+
+routes.post('/connect', ConnectController.store);
+routes.post('/assinatura', ProviderStatusController.update);
+routes.post('/payment', PaymentController.index);
 
 routes.use(ConnectionResolver);
+// Alterna o banco de dados conforme o cliente
 
 routes.post('/sessions', SessionController.store);
 
@@ -57,6 +69,7 @@ routes.get('/requests/history', HistoryController.show);
 routes.get('/requests/overdue', OverdueRequestController.index);
 
 routes.use(permissionMiddleware);
+// Verifica se o usuário tem permissão
 
 routes.post('/request/:id', RequestController.update);
 routes.post('/messages', MessageController.store);
