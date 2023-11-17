@@ -92,7 +92,6 @@ async function ConnectionResolver(req, res, next) {
   }
 
   const tenant = await Tenant.findOne({ _id: tenant_id });
-
   if (!tenant) {
     return res.status(401).json({ message: 'Invalid key' });
   }

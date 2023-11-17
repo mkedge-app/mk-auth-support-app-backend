@@ -11,6 +11,7 @@ class Client extends Model {
         endereco_res: Sequelize.STRING,
         numero_res: Sequelize.STRING,
         bairro_res: Sequelize.STRING,
+        complemento_res: Sequelize.STRING,
         coordenadas: Sequelize.STRING,
         login: Sequelize.STRING,
         senha: Sequelize.STRING,
