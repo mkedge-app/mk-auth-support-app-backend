@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { resolveDbConnection } from '../middlewares/connectionResolver';
 
 const TenantSchema = new mongoose.Schema(
   {
@@ -77,12 +78,6 @@ const TenantSchema = new mongoose.Schema(
     webhook_mka_secret: {
       type: String,
       required: false,
-    },
-    // 🚩 Feature Flag: Usar API MK-AUTH
-    use_mka_api: {
-      type: Boolean,
-      required: false,
-      default: false,
     },
   },
   {
