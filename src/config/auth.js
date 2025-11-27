@@ -1,4 +1,4 @@
 export default {
-  secret: 'updsuportesecretkey',
-  expiresIn: '7d',
+  secret: process.env.AUTH_SECRET || 'updsuportesecretkey',
+  expiresIn: process.env.AUTH_EXPIRESIN || '7d',
 };

@@ -14,15 +14,15 @@ import Employee from '../models/Employee';
 import SystemLog from '../models/SystemLog';
 import SupportRequest from '../models/SupportRequest';
 import InstallationRequest from '../models/InstallationRequest';
+import ConnectedUsers from '../models/ConnectedUsers';
 
 class RequestController {
   async index(req, res) {
     const { date, tecnico: tecnico_id, isAdmin } = req.body;
-
+    
     const timeZoneOffset = new Date().getTimezoneOffset() / 60;
-
+    
     const dayStarting = new Date(date);
-
     const dayEnding = new Date(date);
     dayEnding.setUTCHours(23);
     dayEnding.setUTCMinutes(59);
@@ -48,7 +48,7 @@ class RequestController {
       });
 
       const { nome: employee_name } = await Employee.findByPk(tecnico_id);
-
+      
       installation_requests = await InstallationRequest.findAll({
         where: {
           visita: { [Op.between]: [dayStarting, dayEnding] },
@@ -62,74 +62,142 @@ class RequestController {
       return res.status(204).json({ message: 'No requests for this user!' });
     }
 
+    // === OTIMIZAÇÃO 1: Buscar todos os clientes de uma só vez ===
+    const clientLogins = support_requests.map(r => r.login).filter(Boolean);
+    const clients = await Client.findAll({
+      where: {
+        login: { [Op.in]: clientLogins }
+      },
+      attributes: ['id', 'login', 'senha', 'plano', 'tipo', 'ip', 'endereco_res', 'numero_res', 'bairro_res', 'fone', 'celular', 'coordenadas']
+    });
+    
+    const clientsMap = {};
+    clients.forEach(client => {
+      clientsMap[client.login] = client;
+    });
+
+    // === OTIMIZAÇÃO 2: Buscar status online de todos de uma vez ===
+    const allLogins = [
+      ...support_requests.map(r => r.login),
+      ...installation_requests.map(r => r.login)
+    ].filter(Boolean);
+
+    const onlineUsers = await ConnectedUsers.findAll({
+      where: {
+        login: { [Op.in]: allLogins }
+      },
+      attributes: ['login']
+    });
+
+    const onlineLoginsSet = new Set(onlineUsers.map(u => u.login));
+
+    // === OTIMIZAÇÃO 3: Buscar todas as mensagens de uma vez ===
+    const chamados = support_requests.map(r => r.chamado).filter(Boolean);
+    const mensagens = await Mensagem.findAll({
+      where: {
+        chamado: { [Op.in]: chamados }
+      }
+    });
+    const mensagensMap = {};
+    mensagens.forEach(msg => {
+      mensagensMap[msg.chamado] = msg.msg;
+    });
+
+    // === OTIMIZAÇÃO 4: Buscar todos os técnicos de uma vez ===
+    const tecnicoIds = [...new Set(support_requests.map(r => r.tecnico).filter(Boolean))];
+    const employees = await Employee.findAll({
+      where: {
+        id: { [Op.in]: tecnicoIds }
+      },
+      attributes: ['id', 'nome']
+    });
+    const employeesMap = {};
+    employees.forEach(emp => {
+      employeesMap[emp.id] = emp.nome;
+    });
+
     const response_object = [];
 
-    for (const [, request] of support_requests.entries()) {
-      const { login, chamado, tecnico } = request;
-
-      const response = await Client.findOne({
-        where: {
-          login,
-        },
-      });
-
-      const msg = await Mensagem.findOne({
-        where: {
-          chamado,
-        },
-      });
-
-      const employee = await Employee.findByPk(tecnico);
-
-      response_object.push({
-        id: request.id,
-        visita: format(addHours(request.visita, timeZoneOffset), 'HH:mm'),
-        nome: request.nome,
-        login: response.login,
-        senha: response.senha,
-        plano: response.plano,
-        tipo: response.tipo,
-        ip: response.ip,
-        status: request.status,
-        prioridade: request.prioridade,
-        assunto: request.assunto,
-        endereco: response.endereco_res,
-        numero: response.numero_res,
-        bairro: response.bairro_res,
-        mensagem: msg ? msg.msg : null,
-        employee_name: employee === null ? null : employee.nome,
-      });
-    }
-
-    for (const [idx, request] of installation_requests.entries()) {
-      const { tecnico, coordenadas } = request;
-
-      const employee = await Employee.findOne({
-        where: {
-          nome: tecnico,
-        },
-      });
+    // === Processar support_requests SEM loop de queries ===
+    for (const request of support_requests) {
+      const client = clientsMap[request.login];
+      const isOnline = onlineLoginsSet.has(request.login);
 
       let latitude = null;
       let longitude = null;
-
-      if (coordenadas) {
-        [latitude, longitude] = coordenadas.split(',');
+      if (client && client.coordenadas) {
+        [latitude, longitude] = client.coordenadas.split(',');
         longitude = parseFloat(longitude.replace(/\s+/, ' '));
       }
 
       response_object.push({
         id: request.id,
+        cliente_id: client ? client.id : null,  // ← NOVO campo essencial
+        visita: format(addHours(request.visita, timeZoneOffset), 'HH:mm'),
+        nome: request.nome,
+        login: client ? client.login : null,
+        senha: client ? client.senha : null,
+        plano: client ? client.plano : null,
+        tipo: client ? client.tipo : null,
+        ip: client ? client.ip : null,
+        status: request.status,
+        prioridade: request.prioridade,
+        assunto: request.assunto,
+        endereco: client ? client.endereco_res : null,
+        numero: client ? client.numero_res : null,
+        bairro: client ? client.bairro_res : null,
+        mensagem: mensagensMap[request.chamado] || null,
+        employee_name: employeesMap[request.tecnico] || null,
+        cliente_status_online: isOnline ? 'Online' : 'Offline',  // ← NOVO
+        cliente_telefone: client ? client.fone : null,  // ← NOVO
+        cliente_celular: client ? client.celular : null,  // ← NOVO
+        latitude,
+        longitude,
+      });
+    }
+
+    // === Buscar técnicos de instalação por nome ===
+    const tecnicoNomes = [...new Set(installation_requests.map(r => r.tecnico).filter(Boolean))];
+    const installEmployees = await Employee.findAll({
+      where: {
+        nome: { [Op.in]: tecnicoNomes }
+      },
+      attributes: ['nome']
+    });
+    const installEmployeesMap = {};
+    installEmployees.forEach(emp => {
+      installEmployeesMap[emp.nome] = emp.nome;
+    });
+
+    // === Processar installation_requests ===
+    for (const request of installation_requests) {
+      const isOnline = onlineLoginsSet.has(request.login);
+
+      let latitude = null;
+      let longitude = null;
+
+      if (request.coordenadas) {
+        [latitude, longitude] = request.coordenadas.split(',');
+        longitude = parseFloat(longitude.replace(/\s+/, ' '));
+      }
+
+      response_object.push({
+        id: request.id,
+        cliente_id: null,
         visita: format(addHours(request.visita, timeZoneOffset), 'HH:mm'),
         nome: request.nome,
         assunto: 'Ativação',
         ip: request.ip,
         plano: request.plano,
         status: request.instalado === 'sim' ? 'fechado' : 'aberto',
+        prioridade: 'normal',
         endereco: request.endereco_res,
         numero: request.numero_res,
         bairro: request.bairro_res,
-        employee_name: employee === null ? null : employee.nome,
+        employee_name: installEmployeesMap[request.tecnico] || null,
+        cliente_status_online: isOnline ? 'Online' : 'Offline',  // ← NOVO
+        cliente_telefone: request.telefone || null,  // ← NOVO
+        cliente_celular: request.celular || null,  // ← NOVO
         latitude,
         longitude,
       });
@@ -150,10 +218,10 @@ class RequestController {
 
   async show(req, res) {
     const { id: request_id, request_type } = req.params;
-
+    
     if (request_type === 'Suporte') {
       const request = await SupportRequest.findByPk(request_id);
-
+      
       // Verifica se exitem chamadas para o técnico informado
       if (!request) {
         return res
@@ -174,7 +242,7 @@ class RequestController {
       });
 
       const employee = await Employee.findByPk(request.tecnico);
-
+      
       const current_user_connection = await Radacct.findAll({
         where: {
           username: request.login,
@@ -196,7 +264,7 @@ class RequestController {
       }
 
       const timeZoneOffset = new Date().getTimezoneOffset() / 60;
-
+      
       let latitude = null;
       let longitude = null;
 
@@ -254,7 +322,7 @@ class RequestController {
     }
 
     const request = await InstallationRequest.findByPk(request_id);
-
+    
     // Verifica se exitem chamadas para o técnico informado
     if (!request) {
       return res.status(204).json({ message: 'Request ticket does not exist' });
@@ -291,7 +359,7 @@ class RequestController {
     }
 
     const timeZoneOffset = new Date().getTimezoneOffset() / 60;
-
+    
     let latitude = null;
     let longitude = null;
 
@@ -389,7 +457,7 @@ class RequestController {
           const { chamado } = request;
 
           const logDate = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
-
+          
           log = await SystemLog.create({
             registro: `assinalou o chamado ${chamado} para ${new_login} via MK-Edge`,
             data: logDate,
@@ -401,7 +469,6 @@ class RequestController {
           break;
         } else {
           const employee = await Employee.findByPk(employee_id);
-
           request.tecnico = employee.nome;
           await request.save();
           break;
@@ -415,9 +482,8 @@ class RequestController {
 
         if (request_type === 'Suporte') {
           const { closingNote, employee_id, closingDate } = req.body;
-
           const employee = await Employee.findByPk(employee_id);
-
+          
           // Request closing
           request.status = 'fechado';
           request.fechamento = closingDate;
@@ -429,7 +495,7 @@ class RequestController {
           // const { login } = req.body;
 
           // const logDate = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
-
+          
           // log = await SystemLog.create({
           //   registro: `fechou o chamado ${chamado} de: ${nome}`,
           //   data: logDate,
@@ -441,16 +507,15 @@ class RequestController {
           break;
         } else {
           const { isVisited, isInstalled, isAvailable } = req.body;
-
           const formattedDate = format(new Date(), 'dd-MM-yyyy HH:mm:ss');
-
+          
           // Request closing
           request.fechamento = formattedDate;
           request.datainst = formattedDate;
           request.visitado = isVisited ? 'sim' : 'nao';
           request.instalado = isInstalled ? 'sim' : 'nao';
           request.disp = isAvailable ? 'sim' : 'nao';
-
+          
           await request.save();
 
           break;
@@ -464,9 +529,7 @@ class RequestController {
         ).toString();
 
         const current_date = format(request.visita, 'yyyy-MM-dd').toString();
-
         const updated_visit = `${current_date}T${new_visita_time}`;
-
         request.visita = updated_visit;
 
         await request.save();
@@ -485,7 +548,7 @@ class RequestController {
         const { chamado } = request;
 
         const logDate = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
-
+        
         log = await SystemLog.create({
           registro: `alterou a hora de visita do chamado ${chamado} para ${new_visita_time} via MK-Edge`,
           data: logDate,
@@ -504,9 +567,7 @@ class RequestController {
         ).toString();
 
         const current_time = format(request.visita, 'HH:mm:ss').toString();
-
         const updated_visit = parseISO(`${new_visita_date}T${current_time}`);
-
         request.visita = updated_visit;
 
         await request.save();
@@ -525,7 +586,6 @@ class RequestController {
         const { chamado } = request;
 
         const logDate = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
-
         const formatted_new_visita_date = format(
           parseISO(new_visita_date),
           'dd/MM/yyyy'

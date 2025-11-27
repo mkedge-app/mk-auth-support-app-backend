@@ -25,7 +25,7 @@ class MessageController {
       tipo: 'mk-edge',
       login: requester.login,
       atendente: requester.nome,
-      msg_data,
+      msg_data: msg_data || new Date(),
     });
 
     return res.json(new_note);
@@ -33,6 +33,13 @@ class MessageController {
 
   async show(req, res) {
     const { chamado } = req.query;
+
+    // Busca o usuário uma única vez
+    const requester = await User.findOne({
+      where: {
+        idacesso: req.idacesso,
+      },
+    });
 
     const notes = await Mensagem.findAll({
       where: {
@@ -44,37 +51,53 @@ class MessageController {
           [Op.ne]: 'F5F5F5',
         },
       },
+      order: [['id', 'ASC']],
+      raw: true,
     });
 
-    for (const [, item] of notes.entries()) {
-      const timeZoneOffset = new Date().getTimezoneOffset() / 60;
+    // Coletar logins únicos para buscar clientes
+    const clientLogins = notes
+      .filter(note => note.atendente === null)
+      .map(note => note.login)
+      .filter(Boolean);
 
-      item.msg_data = format(
-        addHours(item.msg_data, timeZoneOffset),
-        `dd/MM/yyyy 'às' HH:mm:ss`
-      );
-
-      // Recupera os dados do usuário que originou a request
-      const requester = await User.findOne({
-        where: {
-          idacesso: req.idacesso,
+    // Buscar todos os clientes de uma vez
+    const clients = await Client.findAll({
+      where: {
+        login: {
+          [Op.in]: clientLogins.length > 0 ? clientLogins : [''],
         },
-      });
+      },
+    });
 
-      if (item.dataValues.atendente === null) {
-        // Recupera os dados do cliente
-        const client = await Client.findOne({
-          where: {
-            login: item.dataValues.login,
-          },
-        });
+    // Criar mapa de clientes
+    const clientsMap = {};
+    clients.forEach(client => {
+      clientsMap[client.login] = client;
+    });
 
-        item.dataValues.atendente = client.nome;
+    // Processar notas
+    for (const item of notes) {
+      // Formatar data se existir
+      if (item.msg_data) {
+        const timeZoneOffset = new Date().getTimezoneOffset() / 60;
+        item.msg_data = format(
+          addHours(new Date(item.msg_data), timeZoneOffset),
+          `dd/MM/yyyy 'às' HH:mm:ss`
+        );
+      } else {
+        item.msg_data = 'Sem data';
+      }
+
+      // Preencher atendente
+      if (item.atendente === null) {
+        const client = clientsMap[item.login];
+        item.atendente = client ? client.nome : 'Cliente';
       } else if (
-        item.dataValues.atendente !== null &&
-        item.dataValues.atendente.toLowerCase() == requester.login.toLowerCase()
+        item.atendente !== null &&
+        item.atendente.toLowerCase() == requester.login.toLowerCase()
       ) {
-        item.dataValues.atendente = 'Você';
+        item.atendente = 'Você';
       }
     }
 

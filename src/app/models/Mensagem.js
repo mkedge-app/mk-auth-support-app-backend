@@ -7,17 +7,22 @@ class Mensagem extends Model {
         id: {
           type: Sequelize.INTEGER,
           primaryKey: true,
+          autoIncrement: true,
         },
         chamado: Sequelize.STRING,
-        msg: Sequelize.STRING,
+        msg: Sequelize.TEXT,
         atendente: Sequelize.STRING,
-        msg_data: Sequelize.DATE,
+        msg_data: {
+          type: Sequelize.DATE,
+          field: 'msg_data',
+        },
         login: Sequelize.STRING,
         tipo: Sequelize.STRING,
       },
       {
         sequelize,
         tableName: 'sis_msg',
+        timestamps: false,
       }
     );
 

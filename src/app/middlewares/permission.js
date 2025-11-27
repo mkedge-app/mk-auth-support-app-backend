@@ -25,7 +25,6 @@ export default async (req, res, next) => {
 
   try {
     const { login: userLogin } = await User.findByPk(req.idacesso);
-    console.log(`🔐 Verificando permissão para usuário: ${userLogin}, action: ${action}, permission: ${permissions[action]}`);
     
     const permission = await Permissions.findOne({
       where: {
@@ -34,10 +33,7 @@ export default async (req, res, next) => {
       },
     });
 
-    console.log(`📋 Permissão encontrada:`, permission ? permission.dataValues : 'NÃO ENCONTRADA');
-
     if (!permission) {
-      console.log(`❌ Permissão ${permissions[action]} não existe para o usuário ${userLogin}`);
       return res.status(401).json({
         message: 'Você não tem permissão para realizar esta operação',
         code: 401,
@@ -45,17 +41,14 @@ export default async (req, res, next) => {
     }
 
     if (!(permission.dataValues.permissao === 'sim')) {
-      console.log(`❌ Permissão ${permissions[action]} existe mas está definida como: ${permission.dataValues.permissao}`);
       return res.status(401).json({
         message: 'Para obter acesso, solicite ao administrador do sistema',
         code: 401,
       });
     }
 
-    console.log(`✅ Permissão concedida!`);
     return next();
   } catch (err) {
-    console.error(`❌ Erro ao verificar permissão:`, err);
     return res.status(401).json({
       message:
         'Não foi possível confirmar se você tem permissão para realizar esta operação',

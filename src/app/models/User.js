@@ -20,6 +20,7 @@ class User extends Model {
       {
         sequelize,
         tableName: 'sis_acesso',
+        timestamps: false,
       }
     );
 
@@ -27,17 +28,11 @@ class User extends Model {
   }
 
   checkPassword(password) {
-    console.log('===== DEBUG checkPassword =====');
-    console.log('Senha recebida:', password);
-    console.log('Hash no banco:', this.sha);
-    
     // Primeiro aplica SHA-256 na senha (padrão do sistema)
     const sha256Hash = sha256(password);
-    console.log('SHA-256 da senha:', sha256Hash);
     
     // Verifica se é um hash SHA-256 puro (backward compatibility)
     if (sha256Hash === this.sha) {
-      console.log('✅ Match com SHA-256 puro');
       return true;
     }
     
@@ -49,17 +44,15 @@ class User extends Model {
       // Converte o prefixo $2y$ para $2a$ se necessário
       if (hashToCompare && hashToCompare.startsWith('$2y$')) {
         hashToCompare = hashToCompare.replace(/^\$2y\$/, '$2a$');
-        console.log('Hash convertido ($2y$ -> $2a$):', hashToCompare);
       }
       
       // Compara SHA-256 da senha com o hash bcrypt
-      const result = bcrypt.compareSync(sha256Hash, hashToCompare);
-      console.log('Resultado bcrypt.compareSync:', result);
-      console.log('===============================');
-      return result;
+      return bcrypt.compareSync(sha256Hash, hashToCompare);
     } catch (error) {
-      console.error('❌ Erro na verificação de senha:', error);
-      console.log('===============================');
+      // Log apenas em desenvolvimento
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Erro na verificação de senha:', error);
+      }
       return false;
     }
   }

@@ -2,6 +2,8 @@ import { Op, literal } from 'sequelize';
 import { startOfMonth, endOfMonth } from 'date-fns';
 import Client from '../models/Client';
 import Invoice from '../models/Invoice';
+import SupportRequest from '../models/SupportRequest';
+import ConnectedUsers from '../models/ConnectedUsers';
 
 class DashboardController {
   async stats(req, res) {
@@ -19,6 +21,8 @@ class DashboardController {
         pendingInvoices,
         overdueInvoices,
         clientInvoiceStats,
+        openRequests,
+        onlineClients,
       ] = await Promise.all([
         // 1. Total de clientes ativos
         Client.count({
@@ -27,7 +31,7 @@ class DashboardController {
           },
         }),
 
-        // 2. Clientes cadastrados no mês atual - tentar múltiplos formatos
+        // 2. Clientes cadastrados no mês atual
         Client.count({
           where: {
             cli_ativado: 's',
@@ -55,7 +59,7 @@ class DashboardController {
           },
         }),
 
-        // 5. Faturas a vencer (status aberto/vencido e data >= hoje) - apenas clientes ativos
+        // 5. Faturas a vencer
         Invoice.count({
           where: {
             status: {
@@ -70,7 +74,7 @@ class DashboardController {
           },
         }),
 
-        // 6. Faturas vencidas (status aberto/vencido e data < hoje) - apenas clientes ativos
+        // 6. Faturas vencidas
         Invoice.count({
           where: {
             status: {
@@ -85,7 +89,7 @@ class DashboardController {
           },
         }),
 
-        // 7. Soma dos campos tit_abertos e tit_vencidos dos clientes ativos
+        // 7. Soma dos títulos dos clientes
         Client.findOne({
           attributes: [
             [literal('SUM(tit_abertos)'), 'tit_abertos'],
@@ -96,14 +100,51 @@ class DashboardController {
           },
           raw: true,
         }),
+
+        // 8. Chamados abertos agrupados por prioridade
+        SupportRequest.findAll({
+          attributes: [
+            'prioridade',
+            [literal('COUNT(*)'), 'total'],
+          ],
+          where: {
+            status: {
+              [Op.notIn]: ['Fechado', 'fechado', 'FECHADO'],
+            },
+          },
+          group: ['prioridade'],
+          raw: true,
+        }),
+
+        // 9. Total de clientes online
+        ConnectedUsers.count(),
       ]);
 
       // Clientes normais = total - bloqueados - com observação
       const normalClients = totalClients - blockedClients - observationClients;
-
+      
       // Converter para número os contadores do cliente
       const clientTitAbertos = parseInt(clientInvoiceStats.tit_abertos) || 0;
       const clientTitVencidos = parseInt(clientInvoiceStats.tit_vencidos) || 0;
+
+      // Processar chamados por prioridade
+      const requestsByPriority = {
+        urgente: 0,
+        alta: 0,
+        normal: 0,
+        baixa: 0,
+        total: 0,
+      };
+
+      openRequests.forEach(item => {
+        const prioridade = (item.prioridade || 'normal').toLowerCase();
+        const total = parseInt(item.total) || 0;
+        
+        if (requestsByPriority.hasOwnProperty(prioridade)) {
+          requestsByPriority[prioridade] = total;
+        }
+        requestsByPriority.total += total;
+      });
 
       const response = {
         clients: {
@@ -112,6 +153,8 @@ class DashboardController {
           normal: normalClients,
           blocked: blockedClients,
           observation: observationClients,
+          online: onlineClients,
+          offline: totalClients - onlineClients,
         },
         invoices: {
           pending: pendingInvoices,
@@ -121,6 +164,7 @@ class DashboardController {
           pending: clientTitAbertos,
           overdue: clientTitVencidos,
         },
+        requests: requestsByPriority,
       };
 
       return res.json(response);
