@@ -8,6 +8,7 @@ class Invoice extends Model {
           type: Sequelize.INTEGER,
           primaryKey: true,
         },
+        uuid_lanc: Sequelize.STRING,
         datavenc: Sequelize.DATE,
         datapag: Sequelize.DATE,
         datadel: Sequelize.DATE,
@@ -16,10 +17,12 @@ class Invoice extends Model {
         login: Sequelize.STRING,
         tipo: Sequelize.STRING,
         obs: Sequelize.STRING,
+        linhadig: Sequelize.STRING,
       },
       {
         sequelize,
         tableName: 'sis_lanc',
+        timestamps: false,
       }
     );
 

@@ -246,6 +246,8 @@ class RequestController {
         equipment_status,
         latitude: parseFloat(latitude),
         longitude: parseFloat(longitude),
+        telefone: response.fone,
+        celular: response.celular,
       };
 
       return res.json(obj);

@@ -60,25 +60,7 @@ const TenantSchema = new mongoose.Schema(
         type: String,
         required: true,
       },
-    },
-    // 🆕 Credenciais da API MK-AUTH
-    api_mka_client: {
-      type: String,
-      required: false,
-    },
-    api_mka_secret: {
-      type: String,
-      required: false,
-    },
-    // 🆕 Webhook MK-AUTH
-    webhook_mka_servidor: {
-      type: String,
-      required: false,
-    },
-    webhook_mka_secret: {
-      type: String,
-      required: false,
-    },
+    }
   },
   {
     timestamps: true,

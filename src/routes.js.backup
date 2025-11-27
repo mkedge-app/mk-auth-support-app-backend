@@ -14,7 +14,6 @@ import NotificationController from './app/controllers/NotificationController';
 import OverdueRequestController from './app/controllers/OverdueRequestController';
 import UserConnectionsController from './app/controllers/UserConnectionsController';
 import AppStructureController from './app/controllers/AppStructureController';
-import DashboardController from './app/controllers/DashboardController';
 
 import authMiddleware from './app/middlewares/auth';
 import permissionMiddleware from './app/middlewares/permission';
@@ -68,9 +67,6 @@ routes.get('/messages', MessageController.show);
 
 routes.get('/requests/history', HistoryController.show);
 routes.get('/requests/overdue', OverdueRequestController.index);
-
-// 📊 Dashboard Stats (requer autenticação)
-routes.get('/dashboard/stats', DashboardController.stats);
 
 routes.use(permissionMiddleware);
 // Verifica se o usuário tem permissão

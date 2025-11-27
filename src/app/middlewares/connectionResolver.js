@@ -9,6 +9,7 @@ import User from '../models/User';
 import Client from '../models/Client';
 import Radacct from '../models/Radacct';
 import Invoice from '../models/Invoice';
+import QRPix from '../models/QRPix';
 import Employee from '../models/Employee';
 import Mensagem from '../models/Mensagem';
 import SystemLog from '../models/SystemLog';
@@ -28,6 +29,7 @@ const models = [
   CTO,
   Radacct,
   Invoice,
+  QRPix,
   Notification,
   InstallationRequest,
   ConnectedUsers,
