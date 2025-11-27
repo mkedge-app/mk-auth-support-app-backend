@@ -12,10 +12,10 @@ import MkAuthAPI from '../helpers/MkAuthAPI';
 class SearchController {
   async index(req, res) {
     const { term, searchmode, filterBy } = req.query;
-    const tenantId = req.headers.tenant_id;
-
-    console.log(`🔍 Busca: termo="${term}", modo="${searchmode}", filtro="${filterBy}"`);
-
+    const tenantId = req.headers.tenant_id || req.query.tenant_id;
+    
+    console.log(`🔍 Busca: termo="${term}", modo="${searchmode}", filtro="${filterBy}", tenantId="${tenantId}"`);
+    
     if (term === '') {
       return res.json({
         results: [],
@@ -27,168 +27,186 @@ class SearchController {
     }
 
     try {
-      // Verificar se deve usar API MK-AUTH
       const tenant = await Tenant.findById(tenantId);
       const useMkAuthAPI = tenant?.use_mka_api === true;
-
+      
       console.log(`🚩 Feature Flag: use_mka_api = ${useMkAuthAPI}`);
-
-      // Se API MK-AUTH estiver ativada, usar ela
+      
       if (useMkAuthAPI) {
         console.log('🌐 Usando API MK-AUTH para busca de clientes');
-        return await this.searchViaMkAuthAPI(req, res, term, searchmode, filterBy, tenantId);
+        return await searchViaMkAuthAPI(req, res, term, searchmode, filterBy, tenantId);
       }
 
-      // Caso contrário, usar banco de dados direto (modo atual)
       console.log('💾 Usando banco de dados direto (modo legado)');
-      return await this.searchViaDatabase(req, res, term, searchmode, filterBy);
+      return await searchViaDatabase(req, res, term, searchmode, filterBy);
     } catch (error) {
       console.error('❌ Erro na busca:', error);
       
-      // Em caso de erro na API, fazer fallback para banco de dados
-      if (error.message.includes('MK-AUTH')) {
+      if (error.message && error.message.includes('MK-AUTH')) {
         console.log('⚠️  Erro na API MK-AUTH, usando fallback para banco de dados');
-        return await this.searchViaDatabase(req, res, term, searchmode, filterBy);
+        return await searchViaDatabase(req, res, term, searchmode, filterBy);
       }
       
-      return res.status(500).json({ error: 'Erro ao realizar busca' });
+      return res.status(500).json({ error: 'Erro na busca de clientes' });
     }
   }
+}
 
-  async searchViaMkAuthAPI(req, res, term, searchmode, filterBy, tenantId) {
-    try {
-      const mkAuth = new MkAuthAPI(tenantId);
+// 🌐 Busca via API MK-AUTH
+async function searchViaMkAuthAPI(req, res, term, searchmode, filterBy, tenantId) {
+  try {
+    const mkAuthAPI = new MkAuthAPI(tenantId);
+    
+    console.log(`�� Chamando API MK-AUTH: listagem/clientes?busca=${term}`);
+    
+    const clientesAPI = await mkAuthAPI.getListagem('clientes', { busca: term });
+    
+    console.log(`✅ API retornou ${clientesAPI?.data?.length || 0} clientes`);
+    
+    const results = (clientesAPI.data || []).map(cliente => ({
+      id: cliente.id_cliente,
+      nome: cliente.nome,
+      login: cliente.login,
+      cpf_cnpj: cliente.cpf_cnpj,
+      endereco_res: cliente.endereco,
+      bairro_res: cliente.bairro,
+      plano: cliente.plano?.nome || '',
+      status: cliente.status,
+      bloqueado: cliente.bloqueado === 'sim' ? 'S' : 'N',
+    }));
 
-      // Buscar clientes na API MK-AUTH
-      const params = {
-        busca: term,
-        ativo: searchmode === 'enable' ? 's' : 'n',
-      };
+    return res.json({
+      results,
+      info: {
+        total: results.length,
+        source: 'mk-auth-api',
+      },
+    });
+  } catch (error) {
+    console.error('❌ Erro ao buscar na API MK-AUTH:', error.message);
+    console.log('⚠️  Fazendo fallback para banco de dados');
+    return await searchViaDatabase(req, res, term, searchmode, filterBy);
+  }
+}
 
-      // Adicionar filtro específico se necessário
-      if (filterBy === '2') {
-        params.caixa_herm = term;
-      } else if (filterBy === '5') {
-        params.ssid = term;
-      }
+// 💾 Busca via banco de dados (modo atual/legado)
+async function searchViaDatabase(req, res, term, searchmode, filterBy) {
+  try {
+    const termWithoutMask = term
+      .replace(/\./g, '')
+      .replace(/\//g, '')
+      .replace(/-/g, '');
 
-      const response = await mkAuth.getClientes(params);
-      let clients = response.data || response || [];
+    const filter = isNaN(Number(termWithoutMask))
+      ? {
+          [Op.or]: [
+            {
+              nome: {
+                [Op.like]: `%${term}%`,
+              },
+            },
+            {
+              fone: {
+                [Op.like]: `%${termWithoutMask}%`,
+              },
+            },
+            {
+              celular: {
+                [Op.like]: `%${termWithoutMask}%`,
+              },
+            },
+            {
+              login: {
+                [Op.like]: `%${term}%`,
+              },
+            },
+            {
+              endereco_res: {
+                [Op.like]: `%${term}%`,
+              },
+            },
+          ],
+        }
+      : {
+          [Op.or]: [
+            {
+              cpf_cnpj: {
+                [Op.like]: `%${termWithoutMask}%`,
+              },
+            },
+            {
+              fone: {
+                [Op.like]: `%${termWithoutMask}%`,
+              },
+            },
+            {
+              celular: {
+                [Op.like]: `%${termWithoutMask}%`,
+              },
+            },
+          ],
+        };
 
-      // Normalizar dados da API para formato esperado
-      clients = clients.map(c => ({
-        id: c.id,
-        nome: c.nome,
-        login: c.login,
-      }));
+    const clients = await Client.findAll({
+      where: filter,
+      attributes: [
+        'id',
+        'nome',
+        'login',
+        'endereco_res',
+        'numero_res',
+        'bairro_res',
+        'complemento_res',
+        'coordenadas',
+        'cpf_cnpj',
+        'fone',
+        'celular',
+        'plano',
+        'bloqueado',
+      ],
+      order: [
+        ['nome', 'ASC'],
+        ['endereco_res', 'ASC'],
+      ],
+      limit: 70,
+    });
 
-      // Buscar status online/offline (ainda usa banco local pois é tempo real)
-      const connectedsArray = await ConnectedUsers.findAll();
+    const info = {
+      offline: 0,
+      online: 0,
+    };
 
-      let online = 0;
-      let offline = 0;
+    const results = await Promise.all(
+      clients.map(async (client) => {
+        const online = await ConnectedUsers.findOne({
+          where: {
+            login: client.login,
+          },
+        });
 
-      clients = clients.map(client => {
-        const isConnected = connectedsArray.find(x => x.login === client.login);
-        
-        if (isConnected) {
-          online += 1;
+        if (online) {
+          info.online += 1;
         } else {
-          offline += 1;
+          info.offline += 1;
         }
 
         return {
-          ...client,
-          equipment_array: isConnected ? 'Online' : 'Offline',
+          ...client.dataValues,
+          online: !!online,
         };
-      });
-
-      // Ordenar por nome
-      clients.sort((a, b) => {
-        if (a.nome < b.nome) return -1;
-        if (a.nome > b.nome) return 1;
-        return 0;
-      });
-
-      console.log(`✅ API MK-AUTH retornou ${clients.length} clientes`);
-
-      return res.json({
-        results: clients,
-        info: {
-          online,
-          offline,
-        },
-        source: 'mk-auth-api',  // Indicador de fonte de dados
-      });
-    } catch (error) {
-      console.error('❌ Erro ao buscar via API MK-AUTH:', error.message);
-      throw error; // Será capturado pelo fallback no index()
-    }
-  }
-
-  async searchViaDatabase(req, res, term, searchmode, filterBy) {
-    const connectedsArray = await ConnectedUsers.findAll();
-
-    let whereClause = {
-      cli_ativado: searchmode === 'enable' ? 's' : 'n',
-    };
-
-    // Filtro por nome ou CPF
-    if (filterBy === '1') {
-      if (isNaN(term)) {
-        whereClause.nome = { [Op.like]: `%${term}%` };
-      } else {
-        whereClause.cpf_cnpj = { [Op.like]: `%${term}%` };
-      }
-    }
-    // Filtro por caixa hermética
-    else if (filterBy === '2') {
-      whereClause.caixa_herm = { [Op.like]: `%${term}%` };
-    }
-    // Filtro por SSID
-    else if (filterBy === '5') {
-      whereClause.ssid = { [Op.like]: `%${term}%` };
-    }
-
-    const clients = await Client.findAll({
-      where: whereClause,
-      attributes: ['id', 'nome', 'login'],
-    });
-
-    clients.sort((a, b) => {
-      if (a.nome < b.nome) return -1;
-      if (a.nome > b.nome) return 1;
-      return 0;
-    });
-
-    let online = 0;
-    let offline = 0;
-
-    const resultsWithStatus = clients.map(client => {
-      const isConnected = connectedsArray.find(x => x.login === client.login);
-
-      if (isConnected) {
-        online += 1;
-      } else {
-        offline += 1;
-      }
-
-      return {
-        ...client.dataValues,
-        equipment_array: isConnected ? 'Online' : 'Offline',
-      };
-    });
-
-    console.log(`✅ Banco de dados retornou ${resultsWithStatus.length} clientes`);
+      })
+    );
 
     return res.json({
-      results: resultsWithStatus,
+      results,
       info: {
-        online,
-        offline,
+        ...info,
+        source: 'database',
       },
-      source: 'database',  // Indicador de fonte de dados
     });
+  } catch (error) {
+    console.error('❌ Erro ao buscar no banco de dados:', error);
+    return res.status(500).json({ error: 'Erro na busca de clientes' });
   }
 }
 
