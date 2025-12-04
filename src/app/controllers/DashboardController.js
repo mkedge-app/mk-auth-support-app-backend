@@ -25,6 +25,10 @@ class DashboardController {
         clientInvoiceStats,
         openRequests,
         onlineClients,
+        todayRequests,
+        overdueRequestsCount,
+        ongoingRequests,
+        completedRequests,
       ] = await Promise.all([
         // 1. Total de clientes ativos
         Client.count({
@@ -120,6 +124,46 @@ class DashboardController {
 
         // 9. Total de clientes online
         ConnectedUsers.count(),
+
+        // 10. Chamados de hoje
+        SupportRequest.count({
+          where: {
+            visita: {
+              [Op.between]: [
+                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0),
+                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59),
+              ],
+            },
+          },
+        }),
+
+        // 11. Chamados atrasados (visita < hoje E status = aberto)
+        SupportRequest.count({
+          where: {
+            visita: {
+              [Op.lt]: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0),
+            },
+            status: 'aberto',
+          },
+        }),
+
+        // 12. Chamados em andamento
+        SupportRequest.count({
+          where: {
+            status: {
+              [Op.notIn]: ['aberto', 'fechado', 'Fechado', 'FECHADO'],
+            },
+          },
+        }),
+
+        // 13. Chamados concluídos
+        SupportRequest.count({
+          where: {
+            status: {
+              [Op.in]: ['fechado', 'Fechado', 'FECHADO'],
+            },
+          },
+        }),
       ]);
 
       // Clientes normais = total - bloqueados - com observação
@@ -138,6 +182,8 @@ class DashboardController {
         total: 0,
       };
 
+      console.log('📋 Chamados abertos encontrados:', openRequests);
+      
       openRequests.forEach(item => {
         const prioridade = (item.prioridade || 'normal').toLowerCase();
         const total = parseInt(item.total) || 0;
@@ -147,6 +193,9 @@ class DashboardController {
         }
         requestsByPriority.total += total;
       });
+      
+      console.log('📊 Requests by priority:', requestsByPriority);
+      console.log('📊 Requests summary:', { today: todayRequests, overdue: overdueRequestsCount, ongoing: ongoingRequests, completed: completedRequests });
 
       const response = {
         clients: {
@@ -167,6 +216,12 @@ class DashboardController {
           overdue: clientTitVencidos,
         },
         requests: requestsByPriority,
+        requestsSummary: {
+          today: todayRequests,
+          overdue: overdueRequestsCount,
+          ongoing: ongoingRequests,
+          completed: completedRequests,
+        },
       };
 
       console.log('✅ Dashboard stats carregado com sucesso');

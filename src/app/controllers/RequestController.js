@@ -20,7 +20,59 @@ import StaticMapHelper from '../helpers/StaticMapHelper';
 class RequestController {
   async index(req, res) {
     try {
-      const { date, tecnico: tecnico_id, isAdmin } = req.body;
+      const { date, tecnico: tecnico_id, isAdmin, summaryOnly } = req.body;
+
+    console.log('📋 RequestController.index - Params:', { date, tecnico_id, isAdmin, summaryOnly });
+
+    // Se summaryOnly=true, retorna apenas contadores por status
+    if (summaryOnly) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const [todayCount, overdueCount, ongoingCount, completedCount] = await Promise.all([
+        // Chamados de hoje (visita = hoje)
+        SupportRequest.count({
+          where: {
+            visita: { [Op.between]: [today, tomorrow] },
+            ...(isAdmin ? {} : { tecnico: tecnico_id })
+          }
+        }),
+        // Chamados atrasados (visita < hoje E status aberto)
+        SupportRequest.count({
+          where: {
+            visita: { [Op.lt]: today },
+            status: 'aberto',
+            ...(isAdmin ? {} : { tecnico: tecnico_id })
+          }
+        }),
+        // Chamados em andamento (status diferente de aberto e fechado)
+        SupportRequest.count({
+          where: {
+            status: { [Op.notIn]: ['aberto', 'fechado', 'Fechado', 'FECHADO'] },
+            ...(isAdmin ? {} : { tecnico: tecnico_id })
+          }
+        }),
+        // Chamados concluídos
+        SupportRequest.count({
+          where: {
+            status: { [Op.in]: ['fechado', 'Fechado', 'FECHADO', 'concluido', 'Concluído', 'CONCLUIDO'] },
+            ...(isAdmin ? {} : { tecnico: tecnico_id })
+          }
+        })
+      ]);
+
+      console.log('📊 Summary counts:', { todayCount, overdueCount, ongoingCount, completedCount });
+
+      return res.json({
+        today: todayCount,
+        overdue: overdueCount,
+        ongoing: ongoingCount,
+        completed: completedCount
+      });
+    }
 
     const timeZoneOffset = new Date().getTimezoneOffset() / 60;
 
@@ -30,6 +82,8 @@ class RequestController {
     dayEnding.setUTCHours(23);
     dayEnding.setUTCMinutes(59);
     dayEnding.setUTCSeconds(59);
+
+    console.log('📅 Date range:', { dayStarting, dayEnding });
 
     let support_requests = null;
     let installation_requests = null;
@@ -59,6 +113,8 @@ class RequestController {
         },
       });
     }
+
+    console.log('📋 Found', support_requests?.length || 0, 'support requests and', installation_requests?.length || 0, 'installation requests');
 
     // Se não existirem chamados de nenhum tipo retorna erro 204
     if (!support_requests && !installation_requests) {
@@ -698,6 +754,66 @@ class RequestController {
     } catch (error) {
       console.error('Erro ao atualizar chamado:', error);
       return res.status(500).json({ error: 'Erro ao atualizar chamado' });
+    }
+  }
+
+  async stats(req, res) {
+    try {
+      console.log('📊 RequestController.stats - Iniciando');
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const [todayCount, completedCount, ongoingCount, overdueCount] = await Promise.all([
+        // Chamados de hoje (visita = hoje)
+        SupportRequest.count({
+          where: {
+            visita: { [Op.between]: [today, tomorrow] },
+          }
+        }),
+        // Chamados concluídos
+        SupportRequest.count({
+          where: {
+            status: { [Op.in]: ['fechado', 'Fechado', 'FECHADO'] },
+          }
+        }),
+        // Chamados em andamento (status diferente de aberto e fechado)
+        SupportRequest.count({
+          where: {
+            status: { [Op.notIn]: ['aberto', 'fechado', 'Fechado', 'FECHADO'] },
+          }
+        }),
+        // Chamados atrasados (visita < hoje E status aberto)
+        SupportRequest.count({
+          where: {
+            visita: { [Op.lt]: today },
+            status: 'aberto',
+          }
+        }),
+      ]);
+
+      const stats = {
+        hoje: todayCount,
+        concluidos: completedCount,
+        emAndamento: ongoingCount,
+        atrasados: overdueCount,
+      };
+
+      console.log('📊 Stats calculados:', stats);
+
+      return res.json(stats);
+    } catch (error) {
+      console.error('❌ Erro ao buscar stats:', error);
+      return res.status(500).json({ 
+        error: 'Erro ao buscar estatísticas',
+        hoje: 0,
+        concluidos: 0,
+        emAndamento: 0,
+        atrasados: 0,
+      });
     }
   }
 }

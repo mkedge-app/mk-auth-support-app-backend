@@ -129,10 +129,10 @@ class OverdueRequestController {
       response.push(obj);
     });
 
-    return res.json(groups);
+    return res.json(response);
     } catch (error) {
       console.error('Erro ao buscar chamados atrasados:', error);
-      return res.status(500).json({ error: 'Erro ao buscar chamados atrasados' });
+      return res.status(500).json([]);
     }
   }
 }

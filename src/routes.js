@@ -132,6 +132,7 @@ routes.get('/tenant', ProviderController.show);
 // Chamados
 routes.post('/requests', RequestController.index);
 routes.get('/request/:id/:request_type', RequestController.show);
+routes.get('/chamados/stats', RequestController.stats);
 
 // Clientes
 routes.get('/client/:id', ClientController.show);
