@@ -38,9 +38,9 @@ class DashboardController {
           where: {
             cli_ativado: 's',
             [Op.or]: [
-              literal(`YEAR(cadastro) = 2025 AND MONTH(cadastro) = 11`),
-              literal(`cadastro LIKE '2025-11%'`),
-              literal(`cadastro LIKE '%/11/2025%'`),
+              literal(`YEAR(cadastro) = ${now.getFullYear()} AND MONTH(cadastro) = ${now.getMonth() + 1}`),
+              literal(`cadastro LIKE '${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}%'`),
+              literal(`cadastro LIKE '%/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}%'`),
             ],
           },
         }),
