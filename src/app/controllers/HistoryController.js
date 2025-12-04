@@ -9,9 +9,10 @@ import InstallationRequest from '../models/InstallationRequest';
 
 class HistoryController {
   async show(req, res) {
-    const { client_id, sort_mode } = req.query;
+    try {
+      const { client_id, sort_mode } = req.query;
 
-    const client = await Client.findByPk(client_id);
+      const client = await Client.findByPk(client_id);
 
     if (!client) {
       return res.status(400).json({ message: 'Client not found' });
@@ -128,6 +129,10 @@ class HistoryController {
     };
 
     return res.json(response);
+    } catch (error) {
+      console.error('Erro ao buscar histórico do cliente:', error);
+      return res.status(500).json({ error: 'Erro ao buscar histórico do cliente' });
+    }
   }
 }
 

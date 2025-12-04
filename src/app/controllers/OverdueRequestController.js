@@ -14,8 +14,9 @@ import User from '../models/User';
 
 class OverdueRequestController {
   async index(req, res) {
-    const { sortMode } = req.query;
-    const orderDirection = sortMode || 'ASC';
+    try {
+      const { sortMode } = req.query;
+      const orderDirection = sortMode || 'ASC';
 
     const overdueArray = await SupportRequest.findAll({
       where: {
@@ -128,7 +129,11 @@ class OverdueRequestController {
       response.push(obj);
     });
 
-    return res.json(response);
+    return res.json(groups);
+    } catch (error) {
+      console.error('Erro ao buscar chamados atrasados:', error);
+      return res.status(500).json({ error: 'Erro ao buscar chamados atrasados' });
+    }
   }
 }
 

@@ -64,13 +64,14 @@ class InvoiceController {
   }
 
   async show(req, res) {
-    const { client_id } = req.params;
+    try {
+      const { client_id } = req.params;
 
-    const client = await Client.findByPk(client_id);
+      const client = await Client.findByPk(client_id);
     
-    if (!client) {
-      return res.status(404).json({ error: 'Cliente não encontrado' });
-    }
+      if (!client) {
+        return res.status(404).json({ error: 'Cliente n\u00e3o encontrado' });
+      }
 
     const { login, observacao, rem_obs } = client;
 
@@ -210,6 +211,10 @@ class InvoiceController {
       rem_obs,
       invoices: response,
     });
+    } catch (error) {
+      console.error('Erro ao buscar faturas do cliente:', error);
+      return res.status(500).json({ error: 'Erro ao buscar faturas do cliente' });
+    }
   }
 }
 

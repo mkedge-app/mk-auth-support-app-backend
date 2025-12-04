@@ -6,13 +6,14 @@ import Client from '../models/Client';
 
 class CTOController {
   async index(req, res) {
-    const CTOs = await CTO.findAll({
-      where: {
-        longitude: {
-          [Op.ne]: '',
+    try {
+      const CTOs = await CTO.findAll({
+        where: {
+          longitude: {
+            [Op.ne]: '',
+          },
         },
-      },
-    });
+      });
 
     // Verifica se exitem CTOs
     if (!CTOs) {
@@ -70,14 +71,19 @@ class CTOController {
     }
 
     return res.json(newCTO_array);
+    } catch (error) {
+      console.error('Erro ao buscar CTOs:', error);
+      return res.status(500).json({ error: 'Erro ao buscar CTOs' });
+    }
   }
 
   async show(req, res) {
-    const cto = await CTO.findOne({
-      where: {
-        nome: req.query.cto_name,
-      },
-    });
+    try {
+      const cto = await CTO.findOne({
+        where: {
+          nome: req.query.cto_name,
+        },
+      });
 
     if (!cto) {
       return res.status(204).json({ message: 'No CTOs to be listed' });
@@ -99,6 +105,10 @@ class CTOController {
     };
 
     return res.json(cto_obj);
+    } catch (error) {
+      console.error('Erro ao buscar CTO:', error);
+      return res.status(500).json({ error: 'Erro ao buscar CTO' });
+    }
   }
 
   async map(req, res) {

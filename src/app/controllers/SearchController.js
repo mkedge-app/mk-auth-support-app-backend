@@ -47,17 +47,18 @@ async function getLocationData(coordenadas) {
 class SearchController {
 
   async index(req, res) {
-    const { term, searchmode, filterBy } = req.query;
+    try {
+      const { term, searchmode, filterBy } = req.query;
 
-    if (term === '') {
-      return res.json({
-        results: [],
-        info: {
-          offline: 0,
-          online: 0,
-        },
-      });
-    }
+      if (term === '') {
+        return res.json({
+          results: [],
+          info: {
+            offline: 0,
+            online: 0,
+          },
+        });
+      }
 
     const filterBYOptions = [
       { id: 1, label: 'Nome ou CPF' },
@@ -305,6 +306,10 @@ class SearchController {
           offline,
         },
       });
+    }
+    } catch (error) {
+      console.error('Erro ao buscar clientes:', error);
+      return res.status(500).json({ error: 'Erro ao buscar clientes' });
     }
   }
 }

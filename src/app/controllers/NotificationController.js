@@ -5,7 +5,8 @@ import Notification from '../models/Notification';
 
 class NotificationController {
   async update(req, res) {
-    const { action, employee_id } = req.body;
+    try {
+      const { action, employee_id } = req.body;
 
     switch (action) {
       case 'markAsViewed': {
@@ -64,13 +65,18 @@ class NotificationController {
     }
 
     return res.json({ ok: true });
+    } catch (error) {
+      console.error('Erro ao atualizar notificações:', error);
+      return res.status(500).json({ error: 'Erro ao atualizar notificações' });
+    }
   }
 
   async show(req, res) {
-    const date = subDays(new Date(), 3);
+    try {
+      const date = subDays(new Date(), 3);
 
-    // eslint-disable-next-line radix
-    const employee_id = parseInt(req.params.employee_id);
+      // eslint-disable-next-line radix
+      const employee_id = parseInt(req.params.employee_id);
 
     const notifications = await Notification.findAll({
       where: {
@@ -83,6 +89,10 @@ class NotificationController {
     });
 
     return res.json({ notifications });
+    } catch (error) {
+      console.error('Erro ao buscar notificações:', error);
+      return res.status(500).json({ error: 'Erro ao buscar notificações' });
+    }
   }
 
   // Admin - Listar todas as notificações

@@ -14,10 +14,11 @@ import Radacct from '../models/Radacct';
 
 class UserConnectionsController {
   async show(req, res) {
-    const { id: client_id } = req.params;
-    const { page = 1, limit = 50 } = req.query;
+    try {
+      const { id: client_id } = req.params;
+      const { page = 1, limit = 50 } = req.query;
 
-    const client = await Client.findByPk(client_id);
+      const client = await Client.findByPk(client_id);
 
     if (!client) {
       return res.status(400).json({ message: 'No client found' });
@@ -140,6 +141,10 @@ class UserConnectionsController {
     });
 
     return res.json(response_obj);
+    } catch (error) {
+      console.error('Erro ao buscar conexões do usuário:', error);
+      return res.status(500).json({ error: 'Erro ao buscar conexões do usuário' });
+    }
   }
 }
 

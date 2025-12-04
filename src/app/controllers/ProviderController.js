@@ -5,7 +5,8 @@ import SisOpcao from '../models/SisOpcao';
 
 class ProviderController {
   async index(req, res) {
-    const tenants = await Tenant.find();
+    try {
+      const tenants = await Tenant.find();
 
     for (const [index, tenant] of tenants.entries()) {
       let dbStatus = false;
@@ -53,13 +54,18 @@ class ProviderController {
     }
 
     return res.json(tenants);
+    } catch (error) {
+      console.error('Erro ao listar provedores:', error);
+      return res.status(500).json({ error: 'Erro ao listar provedores' });
+    }
   }
 
   async create(req, res) {
-    const { cnpj, responsavel, contato } = req.body;
-    const { provedor, database, assinatura } = req.body;
+    try {
+      const { cnpj, responsavel, contato } = req.body;
+      const { provedor, database, assinatura } = req.body;
 
-    const tenantExists = await Tenant.findOne({ cnpj });
+      const tenantExists = await Tenant.findOne({ cnpj });
 
     if (tenantExists) {
       return res.status(400).json({
@@ -107,12 +113,20 @@ class ProviderController {
         dia_vencimento: tenant.assinatura.dia_vencimento
       }
     });
+    } catch (error) {
+      console.error('Erro ao criar provedor:', error);
+      return res.status(500).json({ 
+        error: 'Erro ao criar provedor',
+        message: error.message 
+      });
+    }
   }
 
   async update(req, res) {
-    const { tenant_id } = req.params;
+    try {
+      const { tenant_id } = req.params;
 
-    const isValidTenantId = isValidObjectId(tenant_id);
+      const isValidTenantId = isValidObjectId(tenant_id);
 
     if (!isValidTenantId) {
       return res.status(400).json({
@@ -191,6 +205,13 @@ class ProviderController {
         dia_vencimento: tenant.assinatura.dia_vencimento
       }
     });
+    } catch (error) {
+      console.error('Erro ao atualizar provedor:', error);
+      return res.status(500).json({ 
+        error: 'Erro ao atualizar provedor',
+        message: error.message 
+      });
+    }
   }
 
   async show(req, res) {

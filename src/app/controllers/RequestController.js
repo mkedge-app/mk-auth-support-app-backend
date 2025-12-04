@@ -19,7 +19,8 @@ import StaticMapHelper from '../helpers/StaticMapHelper';
 
 class RequestController {
   async index(req, res) {
-    const { date, tecnico: tecnico_id, isAdmin } = req.body;
+    try {
+      const { date, tecnico: tecnico_id, isAdmin } = req.body;
 
     const timeZoneOffset = new Date().getTimezoneOffset() / 60;
 
@@ -184,10 +185,15 @@ class RequestController {
     });
 
     return res.json(response_object);
+    } catch (error) {
+      console.error('Erro ao buscar chamados:', error);
+      return res.status(500).json({ error: 'Erro ao buscar chamados' });
+    }
   }
 
   async show(req, res) {
-    const { id: request_id, request_type } = req.params;
+    try {
+      const { id: request_id, request_type } = req.params;
 
     if (request_type === 'Suporte') {
       const request = await SupportRequest.findByPk(request_id);
@@ -354,11 +360,16 @@ class RequestController {
     };
 
     return res.json(obj);
+    } catch (error) {
+      console.error('Erro ao buscar detalhes do chamado:', error);
+      return res.status(500).json({ error: 'Erro ao buscar detalhes do chamado' });
+    }
   }
 
   async update(req, res) {
-    const { id: request_id } = req.params;
-    const { request_type, action } = req.body;
+    try {
+      const { id: request_id } = req.params;
+      const { request_type, action } = req.body;
 
     console.log('🔷 [REQUEST_UPDATE] Nova requisição recebida:', {
       request_id,
@@ -684,6 +695,10 @@ class RequestController {
     }
 
     return res.json(log);
+    } catch (error) {
+      console.error('Erro ao atualizar chamado:', error);
+      return res.status(500).json({ error: 'Erro ao atualizar chamado' });
+    }
   }
 }
 

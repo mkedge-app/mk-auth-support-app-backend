@@ -17,13 +17,14 @@ import StaticMapHelper from '../helpers/StaticMapHelper';
 
 class ClientController {
   async show(req, res) {
-    const { id: client_id } = req.params;
+    try {
+      const { id: client_id } = req.params;
 
-    const client = await Client.findByPk(client_id);
+      const client = await Client.findByPk(client_id);
 
-    if (!client) {
-      return res.status(400).json({ message: 'No client not found' });
-    }
+      if (!client) {
+        return res.status(400).json({ message: 'No client not found' });
+      }
 
     const current_month = format(new Date(), 'yyyy-MM-01 00:00:00');
 
@@ -288,24 +289,29 @@ class ClientController {
     };
 
     return res.json(response);
+    } catch (error) {
+      console.error('Erro ao buscar dados do cliente:', error);
+      return res.status(500).json({ error: 'Erro ao buscar dados do cliente' });
+    }
   }
 
   async update(req, res) {
-    const { id: client_id } = req.params;
+    try {
+      const { id: client_id } = req.params;
 
-    const {
-      latitude,
-      longitude,
-      new_cto,
-      observacao,
-      date,
-      celular,
-      fone,
-      endereco_res,
-      numero_res,
-      bairro_res,
-      automac,
-    } = req.body;
+      const {
+        latitude,
+        longitude,
+        new_cto,
+        observacao,
+        date,
+        celular,
+        fone,
+        endereco_res,
+        numero_res,
+        bairro_res,
+        automac,
+      } = req.body;
 
     const client = await Client.findByPk(client_id);
 
@@ -351,6 +357,10 @@ class ClientController {
     await client.save();
 
     return res.json(client);
+    } catch (error) {
+      console.error('Erro ao atualizar cliente:', error);
+      return res.status(500).json({ error: 'Erro ao atualizar cliente' });
+    }
   }
 }
 

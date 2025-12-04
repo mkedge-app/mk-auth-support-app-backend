@@ -10,29 +10,35 @@ import Client from '../models/Client';
 
 class MessageController {
   async store(req, res) {
-    const { chamado } = req.query;
-    const { msg, msg_data } = req.body;
+    try {
+      const { chamado } = req.query;
+      const { msg, msg_data } = req.body;
 
-    const requester = await User.findOne({
-      where: {
-        idacesso: req.idacesso,
-      },
-    });
+      const requester = await User.findOne({
+        where: {
+          idacesso: req.idacesso,
+        },
+      });
 
-    const new_note = await Mensagem.create({
-      chamado,
-      msg,
-      tipo: 'mk-edge',
-      login: requester.login,
-      atendente: requester.nome,
-      msg_data: msg_data || new Date(),
-    });
+      const new_note = await Mensagem.create({
+        chamado,
+        msg,
+        tipo: 'mk-edge',
+        login: requester.login,
+        atendente: requester.nome,
+        msg_data: msg_data || new Date(),
+      });
 
-    return res.json(new_note);
+      return res.json(new_note);
+    } catch (error) {
+      console.error('Erro ao criar mensagem:', error);
+      return res.status(500).json({ error: 'Erro ao criar mensagem' });
+    }
   }
 
   async show(req, res) {
-    const { chamado } = req.query;
+    try {
+      const { chamado } = req.query;
 
     // Busca o usuário uma única vez
     const requester = await User.findOne({
@@ -102,6 +108,10 @@ class MessageController {
     }
 
     return res.json(notes);
+    } catch (error) {
+      console.error('Erro ao buscar mensagens:', error);
+      return res.status(500).json({ error: 'Erro ao buscar mensagens' });
+    }
   }
 }
 
