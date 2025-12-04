@@ -4,10 +4,65 @@ import { Op } from 'sequelize';
 import { createHash } from 'crypto';
 
 import Invoice from '../models/Invoice';
+import InvoiceMongo from '../schemas/Invoice';
 import Client from '../models/Client';
 import QRPix from '../models/QRPix';
 
 class InvoiceController {
+  // Admin - Listar todas as faturas
+  async index(req, res) {
+    try {
+      const { status, page = 1, limit = 50 } = req.query;
+      
+      const filter = {};
+      if (status) {
+        filter.status = status;
+      }
+
+      const invoices = await InvoiceMongo.find(filter)
+        .populate('tenant_id', 'cnpj responsavel contato provedor')
+        .populate('subscription_id', 'plano amount')
+        .limit(limit * 1)
+        .skip((page - 1) * limit)
+        .sort({ createdAt: -1 });
+
+      const total = await InvoiceMongo.countDocuments(filter);
+
+      return res.json({
+        invoices,
+        totalPages: Math.ceil(total / limit),
+        currentPage: page,
+        total,
+      });
+    } catch (error) {
+      console.error('Erro ao listar faturas:', error);
+      return res.status(500).json({ error: 'Erro ao listar faturas' });
+    }
+  }
+
+  // Admin - Marcar fatura como paga
+  async markAsPaid(req, res) {
+    try {
+      const { id } = req.params;
+      
+      const invoice = await InvoiceMongo.findById(id);
+      
+      if (!invoice) {
+        return res.status(404).json({ error: 'Fatura não encontrada' });
+      }
+
+      invoice.status = 'paid';
+      invoice.data_pagamento = new Date();
+      invoice.valor_pago = invoice.valor;
+      await invoice.save();
+
+      return res.json({ success: true, invoice });
+    } catch (error) {
+      console.error('Erro ao marcar fatura como paga:', error);
+      return res.status(500).json({ error: 'Erro ao atualizar fatura' });
+    }
+  }
+
   async show(req, res) {
     const { client_id } = req.params;
 

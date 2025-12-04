@@ -2,7 +2,6 @@ import NotificationSending from '../app/jobs/NotificationSending';
 
 import Queue from '../lib/queue';
 import SocketIO from '../lib/socket';
-import PushNotificationSender from '../lib/oneSignal';
 
 import Notification from '../app/models/Notification';
 
@@ -26,9 +25,6 @@ class DatabaseObserver {
           socketOwner,
         });
       }
-
-      // Envio da push notification
-      PushNotificationSender.pushNotification(message, employee_id);
     }
   }
 }

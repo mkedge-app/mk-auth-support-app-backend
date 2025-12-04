@@ -84,6 +84,65 @@ class NotificationController {
 
     return res.json({ notifications });
   }
+
+  // Admin - Listar todas as notificações
+  async index(req, res) {
+    try {
+      const notifications = await Notification.findAll({
+        order: [['created_at', 'DESC']],
+        limit: 100
+      });
+
+      return res.json(notifications);
+    } catch (error) {
+      console.error('Erro ao listar notificações:', error);
+      return res.status(500).json({ error: 'Erro ao listar notificações' });
+    }
+  }
+
+  // Admin - Criar/enviar notificação
+  async create(req, res) {
+    try {
+      const { title, message, recipients, specificClient } = req.body;
+
+      if (!title || !message) {
+        return res.status(400).json({ error: 'Título e mensagem são obrigatórios' });
+      }
+
+      // Determinar destinatários
+      let targetUsers = [];
+      if (recipients === 'all') {
+        // Aqui você pode buscar todos os usuários do sistema
+        // Por enquanto, criamos uma notificação genérica
+        targetUsers = ['system'];
+      } else if (recipients === 'active') {
+        // Buscar apenas usuários ativos
+        targetUsers = ['active_users'];
+      } else if (recipients === 'specific' && specificClient) {
+        targetUsers = [specificClient];
+      }
+
+      // Criar notificação
+      const notification = await Notification.create({
+        header: title,
+        content: message,
+        user: targetUsers[0] || 'system',
+        recipients: JSON.stringify(targetUsers),
+        created_at: new Date(),
+        is_viewed: false
+      });
+
+      return res.json({ 
+        success: true, 
+        message: 'Notificação enviada com sucesso',
+        notification 
+      });
+
+    } catch (error) {
+      console.error('Erro ao criar notificação:', error);
+      return res.status(500).json({ error: 'Erro ao criar notificação' });
+    }
+  }
 }
 
 export default new NotificationController();

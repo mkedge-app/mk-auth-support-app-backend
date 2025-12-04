@@ -1,0 +1,2521 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Dashboard - Mk-Edge Admin v3.0</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #1e40af;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1f2937;
+            --sidebar-width: 260px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f3f4f6;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(180deg, var(--dark), #111827);
+            color: white;
+            overflow-y: auto;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+        
+        .sidebar-header h3 {
+            margin: 10px 0 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+        
+        .menu-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .menu-item:hover, .menu-item.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .menu-item i {
+            width: 30px;
+            font-size: 18px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .top-bar {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .table-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-top: 25px;
+        }
+        
+        .badge-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .btn-action {
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-shield-alt fa-3x text-primary"></i>
+            <h3>MK-Edge</h3>
+            <small>Painel Admin</small>
+        </div>
+        
+        <div class="sidebar-menu">
+            <a href="#" class="menu-item active" onclick="loadView('dashboard')">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="menu-item" onclick="loadView('clientes')">
+                <i class="fas fa-building"></i>
+                <span>Clientes</span>
+            </a>
+            <a href="#" class="menu-item" onclick="loadView('planos')">
+                <i class="fas fa-tags"></i>
+                <span>Planos</span>
+            </a>
+            <a href="#" class="menu-item" onclick="loadView('subscriptions')">
+                <i class="fas fa-credit-card"></i>
+                <span>Assinaturas</span>
+            </a>
+            <a href="#" class="menu-item" onclick="loadView('invoices')">
+                <i class="fas fa-file-invoice"></i>
+                <span>Faturas</span>
+            </a>
+            <a href="#" class="menu-item" onclick="loadView('notifications')">
+                <i class="fas fa-bell"></i>
+                <span>Notificações</span>
+            </a>
+            <a href="#" class="menu-item" onclick="loadView('settings')">
+                <i class="fas fa-cog"></i>
+                <span>Configurações</span>
+            </a>
+            <a href="#" class="menu-item" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Sair</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-bar">
+            <div>
+                <h4 class="mb-0">Dashboard</h4>
+                <small class="text-muted">Bem-vindo ao painel administrativo</small>
+            </div>
+            <div>
+                <span class="me-3">
+                    <i class="fas fa-user-circle me-2"></i>
+                    <span id="userName">Admin</span>
+                </span>
+            </div>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="stat-value" id="totalTenants">-</div>
+                    <div class="stat-label">Total de Clientes</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-value" id="activeTenants">-</div>
+                    <div class="stat-label">Assinaturas Ativas</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-value" id="pendingInvoices">-</div>
+                    <div class="stat-label">Faturas Pendentes</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white;">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="stat-value" id="monthlyRevenue">R$ -</div>
+                    <div class="stat-label">Receita Mensal</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tenants Table -->
+        <div class="table-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0">
+                    <i class="fas fa-building me-2 text-primary"></i>
+                    Clientes Cadastrados
+                </h5>
+                <button class="btn btn-primary" onclick="showNewTenantModal()">
+                    <i class="fas fa-plus me-2"></i>Novo Tenant
+                </button>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Provedor</th>
+                            <th>CNPJ</th>
+                            <th>Responsável</th>
+                            <th>Status</th>
+                            <th>Status BD</th>
+                            <th>Valor</th>
+                            <th>Vencimento</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tenantsTableBody">
+                        <tr>
+                            <td colspan="8" class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Carregando...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Vincular Plano -->
+    <div class="modal fade" id="linkPlanModal" tabindex="-1" aria-labelledby="linkPlanModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="linkPlanModalLabel">
+                        <i class="fas fa-link me-2"></i>Vincular Plano
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Provedor</label>
+                        <p id="modalTenantName" class="text-muted">-</p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="planSelect" class="form-label fw-bold">Selecionar Plano</label>
+                        <select class="form-select" id="planSelect" required>
+                            <option value="">Carregando planos...</option>
+                        </select>
+                    </div>
+                    <div id="planDetails" class="alert alert-info" style="display: none;">
+                        <h6 class="mb-2">Detalhes do Plano</h6>
+                        <p class="mb-1"><strong>Valor:</strong> R$ <span id="planValor">-</span></p>
+                        <p class="mb-1"><strong>Período:</strong> <span id="planPeriodo">-</span></p>
+                        <p class="mb-0"><strong>Limite de clientes:</strong> <span id="planLimite">-</span></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="savePlanLink()">
+                        <i class="fas fa-save me-2"></i>Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Máscaras de input
+        document.addEventListener('DOMContentLoaded', () => {
+            // Máscara de CNPJ
+            const cnpjInput = document.getElementById('tenantCnpj');
+            if (cnpjInput) {
+                cnpjInput.addEventListener('input', (e) => {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length <= 14) {
+                        value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+                        value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+                        value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+                        value = value.replace(/(\d{4})(\d)/, '$1-$2');
+                        e.target.value = value;
+                    }
+                });
+            }
+            
+            // Máscara de telefone
+            const contatoInput = document.getElementById('tenantContato');
+            if (contatoInput) {
+                contatoInput.addEventListener('input', (e) => {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length <= 11) {
+                        value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+                        value = value.replace(/(\d{5})(\d)/, '$1-$2');
+                        e.target.value = value;
+                    }
+                });
+            }
+        });
+        
+        // Verifica autenticação
+        async function checkAuth() {
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                window.location.href = '/admin/login.html';
+                return false;
+            }
+            
+            try {
+                const response = await fetch('/admin/validate', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    localStorage.removeItem('adminToken');
+                    localStorage.removeItem('adminUser');
+                    window.location.href = '/admin/login.html';
+                    return false;
+                }
+                
+                const data = await response.json();
+                const user = data.user;
+                document.getElementById('userName').textContent = user.name || user.username;
+                return true;
+            } catch (error) {
+                console.error('Erro ao validar token:', error);
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUser');
+                window.location.href = '/admin/login.html';
+                return false;
+            }
+        }
+        
+        // Função para fazer requisições autenticadas
+        async function authFetch(url, options = {}) {
+            const token = localStorage.getItem('adminToken');
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                ...options.headers
+            };
+            
+            const response = await fetch(url, { ...options, headers });
+            
+            if (response.status === 401) {
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUser');
+                window.location.href = '/admin/login.html';
+                throw new Error('Não autenticado');
+            }
+            
+            return response;
+        }
+        
+        // Variáveis globais
+        let tenants = [];
+        let currentTenantId = null;
+        let availablePlans = [];
+        let linkPlanModalInstance = null;
+        
+        // Inicialização
+        (async () => {
+            if (await checkAuth()) {
+                loadDashboard();
+            }
+        })();
+        
+        // Carrega dados do dashboard
+        async function loadDashboard() {
+            try {
+                // Carrega tenants com autenticação
+                const response = await authFetch('/admin/providers');
+                tenants = await response.json();
+                
+                // Atualiza estatísticas
+                document.getElementById('totalTenants').textContent = tenants.length;
+                
+                const activeTenants = tenants.filter(t => t.assinatura?.ativa).length;
+                document.getElementById('activeTenants').textContent = activeTenants;
+                
+                const totalRevenue = tenants
+                    .filter(t => t.assinatura?.ativa)
+                    .reduce((sum, t) => sum + (t.assinatura?.valor || 0), 0);
+                document.getElementById('monthlyRevenue').textContent = `R$ ${totalRevenue.toFixed(2)}`;
+                
+                // Renderiza tabela
+                renderTenantsTable(tenants);
+                
+            } catch (error) {
+                console.error('Erro ao carregar dashboard:', error);
+                alert('Erro ao carregar dados do dashboard');
+            }
+        }
+        
+        function renderTenantsTable(tenants) {
+            const tbody = document.getElementById('tenantsTableBody');
+            
+            if (tenants.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            Nenhum cliente cadastrado
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = tenants.map(tenant => `
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div>
+                                <strong>${tenant.provedor?.nome || '-'}</strong>
+                                ${tenant.database?.conectado ? 
+                                    '<span class="badge bg-success ms-2" style="font-size: 0.7rem;"><i class="fas fa-database me-1"></i>BD Conectado</span>' : 
+                                    '<span class="badge bg-secondary ms-2" style="font-size: 0.7rem;"><i class="fas fa-database me-1"></i>BD Desconectado</span>'
+                                }
+                                <br>
+                                <small class="text-muted">${tenant.id}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${formatCNPJ(tenant.cnpj)}</td>
+                    <td>
+                        ${tenant.responsavel}<br>
+                        <small class="text-muted">${tenant.contato}</small>
+                    </td>
+                    <td>
+                        ${getStatusBadge(tenant.assinatura)}
+                    </td>
+                    <td>
+                        ${getDatabaseStatusBadge(tenant.database)}
+                    </td>
+                    <td>R$ ${(tenant.assinatura?.valor || 0).toFixed(2)}</td>
+                    <td>${formatDate(tenant.assinatura?.data_vencimento)}</td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm ${tenant.assinatura?.ativa ? 'btn-warning' : 'btn-success'}" 
+                                    onclick="toggleTenantStatus('${tenant.id}', ${tenant.assinatura?.ativa})" 
+                                    title="${tenant.assinatura?.ativa ? 'Desativar Tenant' : 'Ativar Tenant'}">
+                                <i class="fas fa-${tenant.assinatura?.ativa ? 'pause' : 'play'}"></i>
+                            </button>
+                            <button class="btn btn-sm btn-primary" onclick="editTenant('${tenant.id}')" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-info" onclick="manageSubscription('${tenant.id}')" title="Gerenciar Plano">
+                                <i class="fas fa-dollar-sign"></i>
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="openIntegrationModal('${tenant.id}')" title="Integrações EFI/Z-API">
+                                <i class="fas fa-plug"></i>
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="syncStatus('${tenant.id}')" title="Sincronizar Status">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteTenant('${tenant.id}')" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function getStatusBadge(assinatura) {
+            if (assinatura?.ativa) {
+                return '<span class="badge bg-success badge-status">Ativa</span>';
+            }
+            return '<span class="badge bg-danger badge-status">Inativa</span>';
+        }
+        
+        function getDatabaseStatusBadge(database) {
+            if (database?.conectado) {
+                return '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Conectado</span>';
+            }
+            return '<span class="badge bg-secondary"><i class="fas fa-times-circle me-1"></i>Desconectado</span>';
+        }
+        
+        function formatCNPJ(cnpj) {
+            if (!cnpj) return '-';
+            return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+        }
+        
+        function formatDate(date) {
+            if (!date) return '-';
+            return new Date(date).toLocaleDateString('pt-BR');
+        }
+        
+        function loadView(view) {
+            // Remove active de todos
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            
+            // Adiciona active no clicado
+            event.target.closest('.menu-item').classList.add('active');
+            
+            const mainContent = document.querySelector('.main-content');
+            
+            switch(view) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'clientes':
+                    loadClientesView();
+                    break;
+                case 'planos':
+                    loadPlanosView();
+                    break;
+                case 'subscriptions':
+                    loadSubscriptionsView();
+                    break;
+                case 'invoices':
+                    loadInvoicesView();
+                    break;
+                case 'notifications':
+                    loadNotificationsView();
+                    break;
+                case 'settings':
+                    loadSettingsView();
+                    break;
+            }
+        }
+        
+        async function loadPlanosView() {
+            const mainContent = document.querySelector('.main-content');
+            mainContent.innerHTML = `
+                <div class="top-bar">
+                    <div>
+                        <h4 class="mb-0">Gestão de Planos</h4>
+                        <small class="text-muted">Gerencie os planos de assinatura</small>
+                    </div>
+                    <button class="btn btn-primary" onclick="showAddPlanModal()">
+                        <i class="fas fa-plus me-2"></i>Novo Plano
+                    </button>
+                </div>
+                
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Valor</th>
+                                    <th>Período</th>
+                                    <th>Limite de Clientes</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="plansTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        <div class="spinner-border text-primary"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            await loadPlansTable();
+        }
+        
+        async function loadPlansTable() {
+            try {
+                const response = await authFetch('/admin/plans');
+                const plans = await response.json();
+                
+                const tbody = document.getElementById('plansTableBody');
+                
+                if (plans.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Nenhum plano cadastrado</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = plans.map(plan => `
+                    <tr>
+                        <td>
+                            <strong>${plan.nome}</strong><br>
+                            <small class="text-muted">${plan.slug}</small>
+                        </td>
+                        <td><strong>R$ ${plan.valor.toFixed(2)}</strong></td>
+                        <td><span class="badge bg-info">${plan.periodo}</span></td>
+                        <td>${plan.limite_clientes || '<span class="text-success">Ilimitado</span>'}</td>
+                        <td>
+                            ${plan.ativo 
+                                ? '<span class="badge bg-success">Ativo</span>' 
+                                : '<span class="badge bg-danger">Inativo</span>'}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-primary me-1" onclick="editPlan('${plan._id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-${plan.ativo ? 'warning' : 'success'} me-1" onclick="togglePlan('${plan._id}', ${plan.ativo})">
+                                <i class="fas fa-${plan.ativo ? 'pause' : 'play'}"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deletePlan('${plan._id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Erro ao carregar planos:', error);
+                document.getElementById('plansTableBody').innerHTML = 
+                    '<tr><td colspan="6" class="text-center text-danger">Erro ao carregar planos</td></tr>';
+            }
+        }
+        
+        async function loadClientesView() {
+            const mainContent = document.querySelector('.main-content');
+            mainContent.innerHTML = `
+                <div class="top-bar">
+                    <div>
+                        <h4 class="mb-0">Gestão de Clientes</h4>
+                        <small class="text-muted">Gerencie os tenants/provedores</small>
+                    </div>
+                    <button class="btn btn-primary" onclick="showNewTenantModal()">
+                        <i class="fas fa-plus me-2"></i>Novo Cliente
+                    </button>
+                </div>
+                
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>CNPJ</th>
+                                    <th>Responsável</th>
+                                    <th>Status</th>
+                                    <th>Status BD</th>
+                                    <th>Valor</th>
+                                    <th>Vencimento</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientesTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center">
+                                        <div class="spinner-border text-primary"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            loadClientesTable();
+        }
+        
+        async function loadClientesTable() {
+            try {
+                const response = await authFetch('/admin/providers');
+                tenants = await response.json();
+                
+                const tbody = document.getElementById('clientesTableBody');
+                
+                if (!tenants || tenants.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                Nenhum cliente cadastrado
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = tenants.map(tenant => `
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div>
+                                    <strong>${tenant.provedor?.nome || '-'}</strong>
+                                    ${tenant.database?.conectado ? 
+                                        '<span class="badge bg-success ms-2" style="font-size: 0.7rem;"><i class="fas fa-database me-1"></i>BD Conectado</span>' : 
+                                        '<span class="badge bg-secondary ms-2" style="font-size: 0.7rem;"><i class="fas fa-database me-1"></i>BD Desconectado</span>'
+                                    }
+                                    <br>
+                                    <small class="text-muted">${tenant.id}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${formatCNPJ(tenant.cnpj)}</td>
+                        <td>
+                            ${tenant.responsavel}<br>
+                            <small class="text-muted">${tenant.contato}</small>
+                        </td>
+                        <td>
+                            ${getStatusBadge(tenant.assinatura)}
+                        </td>
+                        <td>
+                            ${getDatabaseStatusBadge(tenant.database)}
+                        </td>
+                        <td>R$ ${(tenant.assinatura?.valor || 0).toFixed(2)}</td>
+                        <td>${formatDate(tenant.assinatura?.data_vencimento)}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm ${tenant.assinatura?.ativa ? 'btn-warning' : 'btn-success'}" 
+                                        onclick="toggleTenantStatus('${tenant.id}', ${tenant.assinatura?.ativa})" 
+                                        title="${tenant.assinatura?.ativa ? 'Desativar Tenant' : 'Ativar Tenant'}">
+                                    <i class="fas fa-${tenant.assinatura?.ativa ? 'pause' : 'play'}"></i>
+                                </button>
+                                <button class="btn btn-sm btn-primary" onclick="editTenant('${tenant.id}')" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-info" onclick="manageSubscription('${tenant.id}')" title="Gerenciar Plano">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </button>
+                                <button class="btn btn-sm btn-secondary" onclick="openIntegrationModal('${tenant.id}')" title="Integrações EFI/Z-API">
+                                    <i class="fas fa-plug"></i>
+                                </button>
+                                <button class="btn btn-sm btn-secondary" onclick="syncStatus('${tenant.id}')" title="Sincronizar Status">
+                                    <i class="fas fa-sync"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteTenant('${tenant.id}')" title="Excluir">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Erro ao carregar clientes:', error);
+                document.getElementById('clientesTableBody').innerHTML = 
+                    '<tr><td colspan="8" class="text-center text-danger">Erro ao carregar clientes</td></tr>';
+            }
+        }
+        
+        async function loadSubscriptionsView() {
+            const mainContent = document.querySelector('.main-content');
+            mainContent.innerHTML = `
+                <div class="top-bar">
+                    <div>
+                        <h4 class="mb-0">Assinaturas</h4>
+                        <small class="text-muted">Gerencie as assinaturas dos clientes</small>
+                    </div>
+                </div>
+                
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Plano</th>
+                                    <th>Status</th>
+                                    <th>Início</th>
+                                    <th>Próximo Vencimento</th>
+                                    <th>Valor</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subscriptionsTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center">
+                                        <div class="spinner-border text-primary"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            loadSubscriptionsTable();
+        }
+        
+        async function loadSubscriptionsTable() {
+            try {
+                const response = await authFetch('/admin/subscriptions');
+                const data = await response.json();
+                const subscriptions = data.subscriptions || data || [];
+                
+                const tbody = document.getElementById('subscriptionsTableBody');
+                
+                if (!subscriptions || subscriptions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Nenhuma assinatura encontrada</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = subscriptions.map(sub => `
+                    <tr>
+                        <td><strong>${sub.tenant?.name || sub.tenantId}</strong></td>
+                        <td>${sub.plan?.name || '-'}</td>
+                        <td>
+                            <span class="badge bg-${sub.status === 'active' ? 'success' : sub.status === 'trial' ? 'info' : 'danger'}">
+                                ${sub.status === 'active' ? 'Ativa' : sub.status === 'trial' ? 'Trial' : 'Inativa'}
+                            </span>
+                        </td>
+                        <td>${formatDate(sub.startDate)}</td>
+                        <td>${formatDate(sub.nextBillingDate)}</td>
+                        <td>R$ ${(sub.amount || 0).toFixed(2)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="viewSubscriptionDetails('${sub._id}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Erro ao carregar assinaturas:', error);
+                document.getElementById('subscriptionsTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="text-center text-danger">Erro ao carregar assinaturas</td></tr>';
+            }
+        }
+        
+        function viewSubscriptionDetails(id) {
+            alert('Detalhes da assinatura: ' + id);
+        }
+        
+        async function loadInvoicesView() {
+            const mainContent = document.querySelector('.main-content');
+            mainContent.innerHTML = `
+                <div class="top-bar">
+                    <div>
+                        <h4 class="mb-0">Faturas</h4>
+                        <small class="text-muted">Histórico de cobranças</small>
+                    </div>
+                    <button class="btn btn-primary" onclick="generateInvoices()">
+                        <i class="fas fa-file-invoice me-2"></i>Gerar Faturas
+                    </button>
+                </div>
+                
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Número</th>
+                                    <th>Valor</th>
+                                    <th>Vencimento</th>
+                                    <th>Status</th>
+                                    <th>Pagamento</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoicesTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center">
+                                        <div class="spinner-border text-primary"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            loadInvoicesTable();
+        }
+        
+        async function loadInvoicesTable() {
+            try {
+                // Buscar faturas reais do banco de dados
+                const response = await authFetch('/admin/invoices');
+                const data = await response.json();
+                const invoices = data.invoices || [];
+                
+                const tbody = document.getElementById('invoicesTableBody');
+                
+                if (!invoices || invoices.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Nenhuma fatura encontrada</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = invoices.map(inv => {
+                    const isPaid = inv.status === 'paid';
+                    const isOverdue = inv.status === 'overdue';
+                    const isPending = inv.status === 'pending';
+                    
+                    const statusMap = {
+                        'paid': { label: 'Paga', color: 'success' },
+                        'pending': { label: 'Pendente', color: 'warning' },
+                        'overdue': { label: 'Vencida', color: 'danger' },
+                        'cancelled': { label: 'Cancelada', color: 'secondary' },
+                        'refunded': { label: 'Reembolsada', color: 'info' }
+                    };
+                    
+                    const statusInfo = statusMap[inv.status] || { label: inv.status, color: 'secondary' };
+                    
+                    return `
+                        <tr>
+                            <td><strong>${inv.tenant_id?.provedor?.nome || 'N/A'}</strong></td>
+                            <td>#${inv.numero_fatura || inv._id.slice(-8)}</td>
+                            <td>R$ ${(inv.valor || 0).toFixed(2)}</td>
+                            <td>${formatDate(inv.data_vencimento)}</td>
+                            <td>
+                                <span class="badge bg-${statusInfo.color}">
+                                    ${statusInfo.label}
+                                </span>
+                            </td>
+                            <td>${inv.data_pagamento ? formatDate(inv.data_pagamento) : '-'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="viewInvoice('${inv._id}')" title="Ver detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                ${!isPaid ? `
+                                    <button class="btn btn-sm btn-success" onclick="markAsPaid('${inv._id}')" title="Marcar como paga">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                ` : ''}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Erro ao carregar faturas:', error);
+                document.getElementById('invoicesTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="text-center text-danger">Erro ao carregar faturas</td></tr>';
+            }
+        }
+        
+        function viewInvoice(id) {
+            window.open(`/admin/invoice/${id}`, '_blank');
+        }
+        
+        async function markAsPaid(id) {
+            if (!confirm('Marcar fatura como paga?')) return;
+            
+            try {
+                const response = await authFetch(`/admin/invoice/${id}/pay`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    alert('Fatura marcada como paga!');
+                    loadInvoicesTable();
+                } else {
+                    alert('Erro ao atualizar fatura');
+                }
+            } catch (error) {
+                alert('Erro ao atualizar fatura');
+            }
+        }
+        
+        async function generateInvoiceForSubscription(subscriptionId) {
+            if (!confirm('Gerar fatura para esta assinatura?')) return;
+            
+            try {
+                const response = await authFetch(`/admin/subscription/${subscriptionId}/invoice`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alert('Fatura gerada com sucesso!');
+                    loadInvoicesTable();
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Erro ao gerar fatura');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao gerar fatura');
+            }
+        }
+        
+        async function generateInvoices() {
+            if (!confirm('Gerar faturas para todas as assinaturas ativas?')) return;
+            
+            try {
+                // Buscar todas assinaturas e gerar faturas
+                const response = await authFetch('/admin/subscriptions');
+                const subscriptions = await response.json();
+                
+                let generated = 0;
+                for (const sub of subscriptions) {
+                    if (sub.status === 'active') {
+                        try {
+                            const res = await authFetch(`/admin/subscription/${sub._id}/invoice`, {
+                                method: 'POST'
+                            });
+                            if (res.ok) generated++;
+                        } catch (e) {
+                            console.error('Erro ao gerar fatura:', e);
+                        }
+                    }
+                }
+                
+                alert(`${generated} fatura(s) gerada(s) com sucesso!`);
+                loadInvoicesTable();
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao gerar faturas');
+            }
+        }
+        
+        async function loadNotificationsView() {
+            const mainContent = document.querySelector('.main-content');
+            mainContent.innerHTML = `
+                <div class="top-bar">
+                    <div>
+                        <h4 class="mb-0">Notificações</h4>
+                        <small class="text-muted">Gerenciar notificações do sistema</small>
+                    </div>
+                    <button class="btn btn-primary" onclick="openSendNotificationModal()">
+                        <i class="fas fa-paper-plane"></i> Enviar Notificação
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Data/Hora</th>
+                                        <th>Título</th>
+                                        <th>Mensagem</th>
+                                        <th>Destinatários</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="notificationsTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Carregando...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            loadNotificationsTable();
+        }
+        
+        async function loadNotificationsTable() {
+            try {
+                const response = await authFetch('/admin/notifications');
+                const notifications = await response.json();
+                
+                const tbody = document.getElementById('notificationsTableBody');
+                
+                if (notifications.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">Nenhuma notificação encontrada</td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = notifications.map(notif => `
+                    <tr>
+                        <td>${new Date(notif.created_at).toLocaleString('pt-BR')}</td>
+                        <td>${notif.header || '-'}</td>
+                        <td>${notif.content}</td>
+                        <td>${notif.recipients || 'Todos'}</td>
+                        <td>
+                            <span class="badge bg-${notif.read ? 'secondary' : 'success'}">
+                                ${notif.read ? 'Lida' : 'Nova'}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Erro ao carregar notificações:', error);
+                document.getElementById('notificationsTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center text-danger">
+                            Erro ao carregar notificações
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        function openSendNotificationModal() {
+            const modal = new bootstrap.Modal(document.getElementById('sendNotificationModal'));
+            modal.show();
+        }
+        
+        async function loadSettingsView() {
+            const mainContent = document.querySelector('.main-content');
+            mainContent.innerHTML = `
+                <div class="top-bar">
+                    <div>
+                        <h4 class="mb-0">Configurações</h4>
+                        <small class="text-muted">Configurações do sistema</small>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="stat-card">
+                            <h5 class="mb-3"><i class="fas fa-key me-2"></i>Integrações</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Chave API EFI (Gerencianet)</label>
+                                <input type="text" class="form-control" id="efiApiKey" placeholder="client_id">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Secret EFI</label>
+                                <input type="password" class="form-control" id="efiApiSecret" placeholder="client_secret">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Ambiente EFI</label>
+                                <select class="form-select" id="efiEnvironment">
+                                    <option value="sandbox">Sandbox (Homologação)</option>
+                                    <option value="production">Produção</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" onclick="saveEfiConfig()">
+                                <i class="fas fa-save me-2"></i>Salvar Configurações EFI
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
+                        <div class="stat-card">
+                            <h5 class="mb-3"><i class="fas fa-whatsapp me-2"></i>Z-API (WhatsApp)</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Instance ID</label>
+                                <input type="text" class="form-control" id="zapiInstanceId" placeholder="instance_id">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Token Z-API</label>
+                                <input type="password" class="form-control" id="zapiToken" placeholder="token">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">URL Base Z-API</label>
+                                <input type="text" class="form-control" id="zapiBaseUrl" placeholder="https://api.z-api.io" value="https://api.z-api.io">
+                            </div>
+                            <button class="btn btn-primary" onclick="saveZapiConfig()">
+                                <i class="fas fa-save me-2"></i>Salvar Configurações Z-API
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
+                        <div class="stat-card">
+                            <h5 class="mb-3"><i class="fas fa-bell me-2"></i>OneSignal (Notificações)</h5>
+                            <div class="mb-3">
+                                <label class="form-label">App ID</label>
+                                <input type="text" class="form-control" id="oneSignalAppId" placeholder="app_id">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">REST API Key</label>
+                                <input type="password" class="form-control" id="oneSignalApiKey" placeholder="rest_api_key">
+                            </div>
+                            <button class="btn btn-primary" onclick="saveOneSignalConfig()">
+                                <i class="fas fa-save me-2"></i>Salvar Configurações OneSignal
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
+                        <div class="stat-card">
+                            <h5 class="mb-3"><i class="fas fa-user-shield me-2"></i>Segurança</h5>
+                            <div class="mb-3">
+                                <label class="form-label">JWT Secret</label>
+                                <input type="password" class="form-control" id="jwtSecret" placeholder="Chave secreta JWT">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Expiração do Token (dias)</label>
+                                <input type="number" class="form-control" id="jwtExpiration" value="7" min="1" max="30">
+                            </div>
+                            <button class="btn btn-primary" onclick="saveSecurityConfig()">
+                                <i class="fas fa-save me-2"></i>Salvar Configurações de Segurança
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            loadSettingsData();
+        }
+        
+        async function loadSettingsData() {
+            // Carregar configurações do localStorage como fallback
+            try {
+                const savedSettings = localStorage.getItem('adminSettings');
+                if (savedSettings) {
+                    const settings = JSON.parse(savedSettings);
+                    
+                    if (settings.efi) {
+                        document.getElementById('efiApiKey').value = settings.efi.clientId || '';
+                        document.getElementById('efiEnvironment').value = settings.efi.environment || 'sandbox';
+                    }
+                    
+                    if (settings.zapi) {
+                        document.getElementById('zapiInstanceId').value = settings.zapi.instanceId || '';
+                        document.getElementById('zapiBaseUrl').value = settings.zapi.baseUrl || 'https://api.z-api.io';
+                    }
+                    
+                    if (settings.onesignal) {
+                        document.getElementById('oneSignalAppId').value = settings.onesignal.appId || '';
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar configurações:', error);
+            }
+        }
+        
+        async function saveEfiConfig() {
+            const config = {
+                clientId: document.getElementById('efiApiKey').value,
+                clientSecret: document.getElementById('efiApiSecret').value,
+                environment: document.getElementById('efiEnvironment').value
+            };
+            
+            await saveConfig('efi', config);
+        }
+        
+        async function saveZapiConfig() {
+            const config = {
+                instanceId: document.getElementById('zapiInstanceId').value,
+                token: document.getElementById('zapiToken').value,
+                baseUrl: document.getElementById('zapiBaseUrl').value
+            };
+            
+            await saveConfig('zapi', config);
+        }
+        
+        async function saveOneSignalConfig() {
+            const config = {
+                appId: document.getElementById('oneSignalAppId').value,
+                apiKey: document.getElementById('oneSignalApiKey').value
+            };
+            
+            await saveConfig('onesignal', config);
+        }
+        
+        async function saveSecurityConfig() {
+            const config = {
+                jwtSecret: document.getElementById('jwtSecret').value,
+                jwtExpiration: document.getElementById('jwtExpiration').value
+            };
+            
+            await saveConfig('security', config);
+        }
+        
+        async function saveConfig(type, config) {
+            try {
+                // Salvar no localStorage temporariamente
+                const savedSettings = localStorage.getItem('adminSettings');
+                const settings = savedSettings ? JSON.parse(savedSettings) : {};
+                settings[type] = config;
+                localStorage.setItem('adminSettings', JSON.stringify(settings));
+                
+                // TODO: Implementar endpoint /admin/settings no backend
+                // const response = await authFetch('/admin/settings', {
+                //     method: 'POST',
+                //     body: JSON.stringify({ type, config })
+                // });
+                
+                alert('Configurações salvas localmente com sucesso!\n\nNota: As configurações serão perdidas ao limpar o navegador. Implemente o endpoint /admin/settings para persistência permanente.');
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao salvar configurações');
+            }
+        }
+        
+        async function togglePlan(planId, isActive) {
+            if (!confirm(`Deseja ${isActive ? 'desativar' : 'ativar'} este plano?`)) return;
+            
+            try {
+                const response = await authFetch(`/admin/plan/${planId}/toggle`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    alert('Status do plano atualizado!');
+                    loadPlansTable();
+                } else {
+                    alert('Erro ao atualizar plano');
+                }
+            } catch (error) {
+                alert('Erro ao atualizar plano');
+            }
+        }
+        
+        async function deletePlan(planId) {
+            if (!confirm('Tem certeza que deseja excluir este plano?')) return;
+            
+            try {
+                const response = await authFetch(`/admin/plan/${planId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Plano excluído com sucesso!');
+                    loadPlansTable();
+                } else {
+                    alert(data.error || 'Erro ao excluir plano');
+                }
+            } catch (error) {
+                alert('Erro ao excluir plano');
+            }
+        }
+        
+        function showAddPlanModal() {
+            // Limpar formulário
+            document.getElementById('planForm').reset();
+            document.getElementById('planModalTitle').textContent = 'Novo Plano';
+            document.getElementById('planId').value = '';
+            
+            const modalElement = document.getElementById('planModal');
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        }
+        
+        async function editPlan(planId) {
+            try {
+                const response = await authFetch(`/admin/plan/${planId}`);
+                const plan = await response.json();
+                
+                document.getElementById('planModalTitle').textContent = 'Editar Plano';
+                document.getElementById('planId').value = plan._id;
+                document.getElementById('planName').value = plan.name;
+                document.getElementById('planPrice').value = plan.price;
+                document.getElementById('planPeriod').value = plan.billingPeriod || 'monthly';
+                document.getElementById('planClientsLimit').value = plan.clientsLimit || '';
+                document.getElementById('planDescription').value = plan.description || '';
+                document.getElementById('planActive').checked = plan.active;
+                
+                const modalElement = document.getElementById('planModal');
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            } catch (error) {
+                alert('Erro ao carregar dados do plano');
+            }
+        }
+        
+        async function savePlan() {
+            const planId = document.getElementById('planId').value;
+            const planData = {
+                name: document.getElementById('planName').value,
+                price: parseFloat(document.getElementById('planPrice').value),
+                billingPeriod: document.getElementById('planPeriod').value,
+                clientsLimit: parseInt(document.getElementById('planClientsLimit').value) || null,
+                description: document.getElementById('planDescription').value,
+                active: document.getElementById('planActive').checked
+            };
+            
+            try {
+                const url = planId ? `/admin/plan/${planId}` : '/admin/plan';
+                const method = planId ? 'PUT' : 'POST';
+                
+                const response = await authFetch(url, {
+                    method: method,
+                    body: JSON.stringify(planData)
+                });
+                
+                if (response.ok) {
+                    alert('Plano salvo com sucesso!');
+                    bootstrap.Modal.getInstance(document.getElementById('planModal')).hide();
+                    loadPlansTable();
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Erro ao salvar plano');
+                }
+            } catch (error) {
+                alert('Erro ao salvar plano');
+            }
+        }
+        
+        function showNewTenantModal() {
+            // Limpar formulário
+            document.getElementById('tenantForm').reset();
+            document.getElementById('tenantModalTitle').textContent = 'Novo Cliente/Tenant';
+            document.getElementById('tenantIdField').value = '';
+            
+            const modalElement = document.getElementById('tenantModal');
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        }
+
+        async function editTenant(id) {
+            try {
+                const response = await authFetch(`/admin/provider/${id}`);
+                const tenant = await response.json();
+                
+                document.getElementById('tenantModalTitle').textContent = 'Editar Cliente/Tenant';
+                document.getElementById('tenantIdField').value = tenant.id || tenant._id;
+                document.getElementById('tenantCnpj').value = tenant.cnpj || '';
+                document.getElementById('tenantNome').value = tenant.provedor?.nome || '';
+                document.getElementById('tenantResponsavel').value = tenant.responsavel || '';
+                document.getElementById('tenantEmail').value = tenant.email || '';
+                document.getElementById('tenantContato').value = tenant.contato || '';
+                
+                const modalElement = document.getElementById('tenantModal');
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            } catch (error) {
+                console.error('Erro ao carregar tenant:', error);
+                alert('Erro ao carregar dados do cliente');
+            }
+        }
+        
+        async function saveTenant() {
+            const tenantId = document.getElementById('tenantIdField').value;
+            const tenantData = {
+                cnpj: document.getElementById('tenantCnpj').value,
+                provedor: {
+                    nome: document.getElementById('tenantNome').value
+                },
+                responsavel: document.getElementById('tenantResponsavel').value,
+                email: document.getElementById('tenantEmail').value,
+                contato: document.getElementById('tenantContato').value
+            };
+            
+            // Validação básica
+            if (!tenantData.cnpj || !tenantData.provedor.nome) {
+                alert('CNPJ e Nome são obrigatórios');
+                return;
+            }
+            
+            try {
+                const url = tenantId ? `/admin/provider/${tenantId}` : '/admin/provider';
+                const method = tenantId ? 'PUT' : 'POST';
+                
+                const response = await authFetch(url, {
+                    method: method,
+                    body: JSON.stringify(tenantData)
+                });
+                
+                if (response.ok) {
+                    alert('Cliente salvo com sucesso!');
+                    bootstrap.Modal.getInstance(document.getElementById('tenantModal')).hide();
+                    
+                    // Recarregar a view apropriada
+                    const activeMenu = document.querySelector('.menu-item.active');
+                    if (activeMenu && activeMenu.textContent.includes('Clientes')) {
+                        loadClientesView();
+                    } else {
+                        loadDashboard();
+                    }
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Erro ao salvar cliente');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao salvar cliente');
+            }
+        }
+        
+        async function manageSubscription(id) {
+            console.log('🔵 manageSubscription chamada com ID:', id);
+            currentTenantId = id;
+            
+            // Buscar dados do tenant
+            const tenant = tenants.find(t => t.id === id);
+            console.log('🔵 Tenant encontrado:', tenant);
+            if (!tenant) {
+                alert('Tenant não encontrado');
+                return;
+            }
+            
+            // Atualizar nome no modal
+            document.getElementById('modalTenantName').textContent = tenant.provedor?.nome || tenant.id;
+            
+            // Carregar planos disponíveis
+            console.log('🔵 Carregando planos...');
+            await loadPlans();
+            
+            // Abrir modal
+            const modalElement = document.getElementById('linkPlanModal');
+            linkPlanModalInstance = new bootstrap.Modal(modalElement);
+            linkPlanModalInstance.show();
+            console.log('🔵 Modal aberto');
+        }
+        
+        async function loadPlans() {
+            try {
+                console.log('🔵 Fazendo fetch de planos...');
+                const response = await authFetch('/admin/plans?active_only=true');
+                availablePlans = await response.json();
+                console.log('🔵 Planos recebidos:', availablePlans);
+                
+                const selectElement = document.getElementById('planSelect');
+                console.log('🔵 Select element:', selectElement);
+                
+                if (availablePlans.length === 0) {
+                    selectElement.innerHTML = '<option value="">Nenhum plano disponível</option>';
+                    console.log('⚠️ Nenhum plano disponível');
+                    return;
+                }
+                
+                selectElement.innerHTML = '<option value="">Selecione um plano...</option>' +
+                    availablePlans.map(plan => 
+                        `<option value="${plan._id}">${plan.nome} - R$ ${plan.valor.toFixed(2)}/${plan.periodo}</option>`
+                    ).join('');
+                console.log('✅ Select populado com', availablePlans.length, 'planos');
+                    
+            } catch (error) {
+                console.error('❌ Erro ao carregar planos:', error);
+                document.getElementById('planSelect').innerHTML = '<option value="">Erro ao carregar planos</option>';
+            }
+        }
+        
+        // Mostrar detalhes do plano ao selecionar
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('planSelect')?.addEventListener('change', (e) => {
+                const planId = e.target.value;
+                const planDetails = document.getElementById('planDetails');
+                
+                if (!planId) {
+                    planDetails.style.display = 'none';
+                    return;
+                }
+                
+                const plan = availablePlans.find(p => p._id === planId);
+                if (plan) {
+                    document.getElementById('planValor').textContent = plan.valor.toFixed(2);
+                    document.getElementById('planPeriodo').textContent = plan.periodo;
+                    document.getElementById('planLimite').textContent = plan.limite_clientes || 'Ilimitado';
+                    planDetails.style.display = 'block';
+                }
+            });
+        });
+        
+        async function savePlanLink() {
+            const planId = document.getElementById('planSelect').value;
+            
+            if (!planId) {
+                alert('Selecione um plano');
+                return;
+            }
+            
+            try {
+                const response = await authFetch(`/admin/tenant/${currentTenantId}/plan`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ plan_id: planId })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Plano vinculado com sucesso!');
+                    linkPlanModalInstance.hide();
+                    loadDashboard(); // Recarregar dados
+                } else {
+                    alert(data.error || 'Erro ao vincular plano');
+                }
+            } catch (error) {
+                console.error('Erro ao vincular plano:', error);
+                alert('Erro ao vincular plano');
+            }
+        }
+        
+        async function deleteTenant(id) {
+            if (!confirm('Tem certeza que deseja excluir este tenant?')) return;
+            
+            try {
+                const response = await authFetch(`/admin/provider/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('Tenant excluído com sucesso!');
+                    const activeMenu = document.querySelector('.menu-item.active');
+                    if (activeMenu && activeMenu.textContent.includes('Clientes')) {
+                        loadClientesView();
+                    } else {
+                        loadDashboard();
+                    }
+                } else {
+                    alert('Erro ao excluir tenant');
+                }
+            } catch (error) {
+                alert('Erro ao excluir tenant');
+            }
+        }
+        
+        async function toggleTenantStatus(id, isActive) {
+            const action = isActive ? 'desativar' : 'ativar';
+            if (!confirm(`Deseja ${action} este tenant? ${!isActive ? 'O banco de dados será conectado automaticamente após 2 segundos.' : 'O banco de dados será desconectado.'}`)) return;
+            
+            try {
+                // Mostrar mensagem de loading
+                const loadingMessage = isActive ? 'Desativando tenant...' : 'Ativando tenant e conectando banco de dados...';
+                showLoadingMessage(loadingMessage);
+                
+                // Usar rota admin específica
+                const endpoint = isActive 
+                    ? `/admin/tenant/${id}/deactivate` 
+                    : `/admin/tenant/${id}/activate`;
+                
+                const response = await authFetch(endpoint, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    hideLoadingMessage();
+                    
+                    const successMessage = isActive 
+                        ? 'Tenant desativado com sucesso!' 
+                        : 'Tenant ativado e banco de dados conectado com sucesso!';
+                    alert(successMessage);
+                    
+                    // Recarregar a view apropriada
+                    const activeMenu = document.querySelector('.menu-item.active');
+                    if (activeMenu && activeMenu.textContent.includes('Clientes')) {
+                        loadClientesView();
+                    } else {
+                        loadDashboard();
+                    }
+                } else {
+                    hideLoadingMessage();
+                    const error = await response.json();
+                    alert(error.error || error.message || `Erro ao ${action} tenant`);
+                }
+            } catch (error) {
+                hideLoadingMessage();
+                console.error('Erro:', error);
+                alert(`Erro ao ${action} tenant`);
+            }
+        }
+        
+        function showLoadingMessage(message) {
+            // Criar overlay de loading
+            const overlay = document.createElement('div');
+            overlay.id = 'loadingOverlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            `;
+            
+            overlay.innerHTML = `
+                <div style="background: white; padding: 30px; border-radius: 10px; text-align: center;">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <p class="mb-0">${message}</p>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+        }
+        
+        function hideLoadingMessage() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+        
+        async function connectDatabase(id) {
+            if (!confirm('Conectar banco de dados deste cliente?')) return;
+            
+            try {
+                const response = await authFetch(`/admin/tenant/${id}/connect-database`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(data.message || 'Banco de dados conectado com sucesso!');
+                    
+                    // Recarregar a view apropriada
+                    const activeMenu = document.querySelector('.menu-item.active');
+                    if (activeMenu && activeMenu.textContent.includes('Clientes')) {
+                        loadClientesView();
+                    } else {
+                        loadDashboard();
+                    }
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Erro ao conectar banco de dados');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao conectar banco de dados');
+            }
+        }
+        
+        async function disconnectDatabase(id) {
+            if (!confirm('Desconectar banco de dados deste cliente? Esta ação desativará o acesso ao sistema.')) return;
+            
+            try {
+                const response = await authFetch(`/admin/tenant/${id}/disconnect-database`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(data.message || 'Banco de dados desconectado com sucesso!');
+                    
+                    // Recarregar a view apropriada
+                    const activeMenu = document.querySelector('.menu-item.active');
+                    if (activeMenu && activeMenu.textContent.includes('Clientes')) {
+                        loadClientesView();
+                    } else {
+                        loadDashboard();
+                    }
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Erro ao desconectar banco de dados');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao desconectar banco de dados');
+            }
+        }
+        
+        async function syncStatus(id) {
+            try {
+                const response = await authFetch(`/admin/tenant/${id}/sync-status`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(data.message || 'Status sincronizado com sucesso!');
+                    
+                    // Recarregar a view apropriada
+                    const activeMenu = document.querySelector('.menu-item.active');
+                    if (activeMenu && activeMenu.textContent.includes('Clientes')) {
+                        loadClientesView();
+                    } else {
+                        loadDashboard();
+                    }
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Erro ao sincronizar status');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao sincronizar status');
+            }
+        }
+        
+        async function sendNotification() {
+            const title = document.getElementById('notificationTitle').value;
+            const message = document.getElementById('notificationMessage').value;
+            const recipients = document.getElementById('notificationRecipients').value;
+            const specificClient = document.getElementById('specificClient').value;
+            
+            if (!title || !message) {
+                alert('Preencha todos os campos obrigatórios');
+                return;
+            }
+            
+            try {
+                const response = await authFetch('/admin/notifications', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title,
+                        message,
+                        recipients,
+                        specificClient: recipients === 'specific' ? specificClient : null
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('Notificação enviada com sucesso!');
+                    bootstrap.Modal.getInstance(document.getElementById('sendNotificationModal')).hide();
+                    document.getElementById('notificationForm').reset();
+                    loadNotificationsTable();
+                } else {
+                    const error = await response.json();
+                    alert('Erro ao enviar notificação: ' + (error.message || 'Erro desconhecido'));
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao enviar notificação');
+            }
+        }
+        
+        // Event listener para mostrar/ocultar select de cliente específico
+        document.addEventListener('DOMContentLoaded', () => {
+            const recipientsSelect = document.getElementById('notificationRecipients');
+            if (recipientsSelect) {
+                recipientsSelect.addEventListener('change', async (e) => {
+                    const specificDiv = document.getElementById('specificClientDiv');
+                    if (e.target.value === 'specific') {
+                        specificDiv.style.display = 'block';
+                        // Carregar lista de clientes
+                        const response = await authFetch('/admin/providers');
+                        const tenants = await response.json();
+                        const select = document.getElementById('specificClient');
+                        select.innerHTML = tenants.map(t => 
+                            `<option value="${t._id}">${t.provedor.nome}</option>`
+                        ).join('');
+                    } else {
+                        specificDiv.style.display = 'none';
+                    }
+                });
+            }
+        });
+        
+        function logout() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            window.location.href = '/admin/login.html';
+        }
+
+        // ========== FUNÇÕES DE INTEGRAÇÃO EFI E Z-API ==========
+
+        async function openIntegrationModal(tenantId) {
+            document.getElementById('integrationTenantId').value = tenantId;
+            
+            // Carregar configurações atuais
+            try {
+                const response = await authFetch(`/admin/integration/${tenantId}`);
+                if (response.ok) {
+                    const config = await response.json();
+                    
+                    // Limpar formulários
+                    document.getElementById('efiForm').reset();
+                    document.getElementById('zapiForm').reset();
+                    
+                    // Configurar EFI status
+                    if (config.efi.configured) {
+                        document.getElementById('efiStatus').innerHTML = `
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i> EFI configurada
+                                ${config.efi.sandbox ? '<span class="badge bg-warning ms-2">Sandbox</span>' : '<span class="badge bg-success ms-2">Produção</span>'}
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('efiStatus').innerHTML = `
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i> EFI não configurada
+                            </div>
+                        `;
+                    }
+                    
+                    // Configurar Z-API status
+                    if (config.zapi.configured) {
+                        document.getElementById('zapiStatus').innerHTML = `
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i> Z-API configurada
+                                <br><small>Instância: ${config.zapi.instance}</small>
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('zapiStatus').innerHTML = `
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i> Z-API não configurada
+                            </div>
+                        `;
+                    }
+                    
+                    // Configurar notificações
+                    const notif = config.notifications;
+                    document.getElementById('whatsapp_enabled').checked = notif.whatsapp_enabled;
+                    document.getElementById('email_enabled').checked = notif.email_enabled;
+                    document.getElementById('dias_aviso').value = notif.dias_aviso_vencimento.join(',');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar configurações:', error);
+            }
+            
+            // Abrir modal
+            const modal = new bootstrap.Modal(document.getElementById('integrationModal'));
+            modal.show();
+        }
+
+        async function saveEfiConfig() {
+            const tenantId = document.getElementById('integrationTenantId').value;
+            const client_id = document.getElementById('efi_client_id').value;
+            const client_secret = document.getElementById('efi_client_secret').value;
+            const certificate = document.getElementById('efi_certificate').value;
+            const pix_key = document.getElementById('efi_pix_key').value;
+            const sandbox = document.getElementById('efi_sandbox').checked;
+            
+            if (!client_id || !client_secret || !certificate) {
+                alert('Preencha todos os campos obrigatórios');
+                return;
+            }
+            
+            try {
+                const response = await authFetch(`/admin/integration/${tenantId}/efi`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        client_id,
+                        client_secret,
+                        certificate,
+                        pix_key,
+                        sandbox
+                    })
+                });
+                
+                if (response.ok) {
+                    document.getElementById('efiStatus').innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> Credenciais EFI salvas com sucesso!
+                        </div>
+                    `;
+                    document.getElementById('efiForm').reset();
+                    setTimeout(() => openIntegrationModal(tenantId), 1500);
+                } else {
+                    const error = await response.json();
+                    alert('Erro: ' + error.error);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao salvar configurações EFI');
+            }
+        }
+
+        async function testEfiConfig() {
+            const tenantId = document.getElementById('integrationTenantId').value;
+            
+            document.getElementById('efiStatus').innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin"></i> Testando conexão...
+                </div>
+            `;
+            
+            try {
+                const response = await authFetch(`/admin/integration/${tenantId}/efi/test`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('efiStatus').innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> ${result.message}
+                            ${result.sandbox ? '<span class="badge bg-warning ms-2">Sandbox</span>' : '<span class="badge bg-success ms-2">Produção</span>'}
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('efiStatus').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle"></i> ${result.error}
+                            <br><small>${result.details || ''}</small>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('efiStatus').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle"></i> Erro ao testar conexão
+                    </div>
+                `;
+            }
+        }
+
+        async function saveZapiConfig() {
+            const tenantId = document.getElementById('integrationTenantId').value;
+            const instance = document.getElementById('zapi_instance').value;
+            const token = document.getElementById('zapi_token').value;
+            const client_token = document.getElementById('zapi_client_token').value;
+            
+            if (!instance || !token || !client_token) {
+                alert('Preencha todos os campos obrigatórios');
+                return;
+            }
+            
+            try {
+                const response = await authFetch(`/admin/integration/${tenantId}/zapi`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        instance,
+                        token,
+                        client_token
+                    })
+                });
+                
+                if (response.ok) {
+                    document.getElementById('zapiStatus').innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> Credenciais Z-API salvas com sucesso!
+                        </div>
+                    `;
+                    document.getElementById('zapiForm').reset();
+                    setTimeout(() => openIntegrationModal(tenantId), 1500);
+                } else {
+                    const error = await response.json();
+                    alert('Erro: ' + error.error);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao salvar configurações Z-API');
+            }
+        }
+
+        async function testZapiConfig() {
+            const tenantId = document.getElementById('integrationTenantId').value;
+            
+            document.getElementById('zapiStatus').innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin"></i> Testando conexão...
+                </div>
+            `;
+            
+            try {
+                const response = await authFetch(`/admin/integration/${tenantId}/zapi/test`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('zapiStatus').innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> ${result.message}
+                            <br><small>Instância: ${result.instance}</small>
+                            <br><small>Status: ${JSON.stringify(result.status)}</small>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('zapiStatus').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle"></i> ${result.error}
+                            <br><small>${result.details || ''}</small>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('zapiStatus').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle"></i> Erro ao testar conexão
+                    </div>
+                `;
+            }
+        }
+
+        async function sendTestMessage() {
+            const tenantId = document.getElementById('integrationTenantId').value;
+            const phone = prompt('Digite o número de WhatsApp para teste (com DDD):', '');
+            
+            if (!phone) return;
+            
+            try {
+                const response = await authFetch(`/admin/integration/${tenantId}/test-message`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`✅ Mensagem de teste enviada para ${result.phone}`);
+                } else {
+                    alert(`❌ ${result.error}\n${result.details || ''}`);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao enviar mensagem de teste');
+            }
+        }
+
+        async function saveNotificationsConfig() {
+            const tenantId = document.getElementById('integrationTenantId').value;
+            const whatsapp_enabled = document.getElementById('whatsapp_enabled').checked;
+            const email_enabled = document.getElementById('email_enabled').checked;
+            const dias_aviso = document.getElementById('dias_aviso').value
+                .split(',')
+                .map(d => parseInt(d.trim()))
+                .filter(d => !isNaN(d));
+            
+            try {
+                const response = await authFetch(`/admin/integration/${tenantId}/notifications`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        whatsapp_enabled,
+                        email_enabled,
+                        dias_aviso_vencimento: dias_aviso
+                    })
+                });
+                
+                if (response.ok) {
+                    document.getElementById('notificationsStatus').innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> Configurações de notificação salvas!
+                        </div>
+                    `;
+                } else {
+                    const error = await response.json();
+                    alert('Erro: ' + error.error);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao salvar configurações');
+            }
+        }
+
+        async function removeIntegration(type) {
+            if (!confirm(`Tem certeza que deseja remover a integração ${type.toUpperCase()}?`)) {
+                return;
+            }
+            
+            const tenantId = document.getElementById('integrationTenantId').value;
+            
+            try {
+                const response = await authFetch(`/admin/integration/${tenantId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ integration: type })
+                });
+                
+                if (response.ok) {
+                    alert(`Integração ${type.toUpperCase()} removida com sucesso`);
+                    openIntegrationModal(tenantId);
+                } else {
+                    const error = await response.json();
+                    alert('Erro: ' + error.error);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao remover integração');
+            }
+        }
+    </script>
+    
+    <!-- Modal de Plano -->
+    <div class="modal fade" id="planModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="planModalTitle">Novo Plano</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="planForm">
+                        <input type="hidden" id="planId">
+                        
+                        <div class="mb-3">
+                            <label for="planName" class="form-label">Nome do Plano *</label>
+                            <input type="text" class="form-control" id="planName" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="planPrice" class="form-label">Valor (R$) *</label>
+                                <input type="number" class="form-control" id="planPrice" step="0.01" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="planPeriod" class="form-label">Período *</label>
+                                <select class="form-select" id="planPeriod" required>
+                                    <option value="monthly">Mensal</option>
+                                    <option value="quarterly">Trimestral</option>
+                                    <option value="semiannual">Semestral</option>
+                                    <option value="yearly">Anual</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="planClientsLimit" class="form-label">Limite de Clientes</label>
+                            <input type="number" class="form-control" id="planClientsLimit" placeholder="Deixe vazio para ilimitado">
+                            <small class="text-muted">Quantidade máxima de clientes que podem usar este plano</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="planDescription" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="planDescription" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="planActive" checked>
+                            <label class="form-check-label" for="planActive">
+                                Plano ativo
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="savePlan()">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Cliente/Tenant -->
+    <div class="modal fade" id="tenantModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tenantModalTitle">Novo Cliente/Tenant</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="tenantForm">
+                        <input type="hidden" id="tenantIdField">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="tenantCnpj" class="form-label">CNPJ *</label>
+                                <input type="text" class="form-control" id="tenantCnpj" required 
+                                       placeholder="00.000.000/0000-00" maxlength="18">
+                                <small class="text-muted">Formato: 00.000.000/0000-00</small>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="tenantNome" class="form-label">Nome/Razão Social *</label>
+                                <input type="text" class="form-control" id="tenantNome" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="tenantResponsavel" class="form-label">Responsável</label>
+                                <input type="text" class="form-control" id="tenantResponsavel">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="tenantEmail" class="form-label">E-mail</label>
+                                <input type="email" class="form-control" id="tenantEmail">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="tenantContato" class="form-label">Contato/Telefone</label>
+                                <input type="text" class="form-control" id="tenantContato" 
+                                       placeholder="(00) 00000-0000">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveTenant()">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Enviar Notificação -->
+    <div class="modal fade" id="sendNotificationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Enviar Notificação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="notificationForm">
+                        <div class="mb-3">
+                            <label class="form-label">Título</label>
+                            <input type="text" class="form-control" id="notificationTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mensagem</label>
+                            <textarea class="form-control" id="notificationMessage" rows="4" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Destinatários</label>
+                            <select class="form-select" id="notificationRecipients">
+                                <option value="all">Todos os clientes</option>
+                                <option value="active">Apenas clientes ativos</option>
+                                <option value="specific">Cliente específico</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="specificClientDiv" style="display: none;">
+                            <label class="form-label">Selecione o Cliente</label>
+                            <select class="form-select" id="specificClient"></select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="sendNotification()">
+                        <i class="fas fa-paper-plane"></i> Enviar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Configurar Integrações -->
+    <div class="modal fade" id="integrationModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plug"></i> Configurar Integrações
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="integrationTenantId">
+                    
+                    <!-- Tabs -->
+                    <ul class="nav nav-tabs mb-4" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="efi-tab" data-bs-toggle="tab" data-bs-target="#efi-config" type="button">
+                                <i class="fas fa-dollar-sign"></i> EFI (Pagamentos)
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="zapi-tab" data-bs-toggle="tab" data-bs-target="#zapi-config" type="button">
+                                <i class="fab fa-whatsapp"></i> Z-API (WhatsApp)
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications-config" type="button">
+                                <i class="fas fa-bell"></i> Notificações
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content">
+                        <!-- EFI Configuration -->
+                        <div class="tab-pane fade show active" id="efi-config">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> Configure as credenciais da EFI (Gerencianet) para processar pagamentos via Pix e Boleto.
+                            </div>
+                            
+                            <form id="efiForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Client ID *</label>
+                                    <input type="text" class="form-control" id="efi_client_id" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Client Secret *</label>
+                                    <input type="password" class="form-control" id="efi_client_secret" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Caminho do Certificado (.p12) *</label>
+                                    <input type="text" class="form-control" id="efi_certificate" placeholder="/path/to/certificate.p12" required>
+                                    <small class="text-muted">Caminho absoluto do arquivo de certificado</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Chave PIX</label>
+                                    <input type="text" class="form-control" id="efi_pix_key" placeholder="email@exemplo.com ou CPF/CNPJ">
+                                    <small class="text-muted">Chave Pix cadastrada na EFI</small>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="efi_sandbox" checked>
+                                        <label class="form-check-label" for="efi_sandbox">Modo Sandbox (Testes)</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-primary" onclick="saveEfiConfig()">
+                                        <i class="fas fa-save"></i> Salvar
+                                    </button>
+                                    <button type="button" class="btn btn-info" onclick="testEfiConfig()">
+                                        <i class="fas fa-check"></i> Testar Conexão
+                                    </button>
+                                    <button type="button" class="btn btn-danger" onclick="removeIntegration('efi')">
+                                        <i class="fas fa-trash"></i> Remover
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            <div id="efiStatus" class="mt-3"></div>
+                        </div>
+
+                        <!-- Z-API Configuration -->
+                        <div class="tab-pane fade" id="zapi-config">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> Configure as credenciais da Z-API para enviar notificações via WhatsApp.
+                            </div>
+                            
+                            <form id="zapiForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Instância *</label>
+                                    <input type="text" class="form-control" id="zapi_instance" placeholder="instance123" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Token *</label>
+                                    <input type="password" class="form-control" id="zapi_token" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Client Token *</label>
+                                    <input type="password" class="form-control" id="zapi_client_token" required>
+                                </div>
+                                
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-primary" onclick="saveZapiConfig()">
+                                        <i class="fas fa-save"></i> Salvar
+                                    </button>
+                                    <button type="button" class="btn btn-info" onclick="testZapiConfig()">
+                                        <i class="fas fa-check"></i> Testar Conexão
+                                    </button>
+                                    <button type="button" class="btn btn-success" onclick="sendTestMessage()">
+                                        <i class="fas fa-paper-plane"></i> Enviar Teste
+                                    </button>
+                                    <button type="button" class="btn btn-danger" onclick="removeIntegration('zapi')">
+                                        <i class="fas fa-trash"></i> Remover
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            <div id="zapiStatus" class="mt-3"></div>
+                        </div>
+
+                        <!-- Notifications Configuration -->
+                        <div class="tab-pane fade" id="notifications-config">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> Configure como e quando as notificações serão enviadas.
+                            </div>
+                            
+                            <form id="notificationsForm">
+                                <div class="mb-3">
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="whatsapp_enabled">
+                                        <label class="form-check-label" for="whatsapp_enabled">
+                                            <i class="fab fa-whatsapp"></i> Notificações via WhatsApp
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="email_enabled" checked>
+                                        <label class="form-check-label" for="email_enabled">
+                                            <i class="fas fa-envelope"></i> Notificações via E-mail
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Dias para Aviso de Vencimento</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="dias_aviso" placeholder="7,3,1" value="7,3,1">
+                                        <span class="input-group-text">dias antes</span>
+                                    </div>
+                                    <small class="text-muted">Separe os dias com vírgula. Ex: 7,3,1</small>
+                                </div>
+                                
+                                <button type="button" class="btn btn-primary" onclick="saveNotificationsConfig()">
+                                    <i class="fas fa-save"></i> Salvar Configurações
+                                </button>
+                            </form>
+                            
+                            <div id="notificationsStatus" class="mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

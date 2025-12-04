@@ -1,7 +1,9 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-restricted-syntax */
+import { format, addHours } from 'date-fns';
 import Client from '../models/Client';
 import Employee from '../models/Employee';
+import Mensagem from '../models/Mensagem';
 import SupportRequest from '../models/SupportRequest';
 import InstallationRequest from '../models/InstallationRequest';
 
@@ -15,12 +17,15 @@ class HistoryController {
       return res.status(400).json({ message: 'Client not found' });
     }
 
+    const timeZoneOffset = new Date().getTimezoneOffset() / 60;
+    const orderDirection = sort_mode || 'ASC';
+
     const opened_support_requests = await SupportRequest.findAll({
       where: {
         login: client.login,
         status: 'aberto',
       },
-      order: [['visita', sort_mode]],
+      order: [['visita', orderDirection]],
     });
 
     const opened_installation_requests = await InstallationRequest.findAll({
@@ -28,7 +33,7 @@ class HistoryController {
         status: 'aberto',
         login: client.login,
       },
-      order: [['visita', sort_mode]],
+      order: [['visita', orderDirection]],
     });
 
     for (const [, request] of opened_support_requests.entries()) {
@@ -36,10 +41,32 @@ class HistoryController {
         const func = await Employee.findByPk(request.tecnico);
         request.dataValues.tecnico = func ? func.nome : null;
       }
+
+      // Buscar mensagem do chamado
+      const msg = await Mensagem.findOne({
+        where: {
+          chamado: request.chamado,
+        },
+      });
+
+      // Adicionar campos mensagem, data_visita e visita
+      request.dataValues.mensagem = msg ? msg.msg : null;
+      request.dataValues.data_visita = request.visita
+        ? format(
+            new Date(
+              request.visita.valueOf() +
+                request.visita.getTimezoneOffset() * 60000
+            ),
+            'dd/MM/yyyy'
+          )
+        : null;
+      request.dataValues.visita = request.visita
+        ? format(addHours(request.visita, timeZoneOffset), 'HH:mm')
+        : null;
     }
 
     const opened_array =
-      sort_mode === 'DESC'
+      orderDirection === 'DESC'
         ? [...opened_support_requests, ...opened_installation_requests]
         : [...opened_installation_requests, ...opened_support_requests];
 
@@ -48,7 +75,7 @@ class HistoryController {
         login: client.login,
         status: 'fechado',
       },
-      order: [['visita', sort_mode]],
+      order: [['visita', orderDirection]],
     });
 
     const closed_installation_requests = await InstallationRequest.findAll({
@@ -56,7 +83,7 @@ class HistoryController {
         // status: 'conluido',
         login: client.login,
       },
-      order: [['visita', sort_mode]],
+      order: [['visita', orderDirection]],
     });
 
     for (const [, request] of closed_support_requests.entries()) {
@@ -65,10 +92,32 @@ class HistoryController {
 
         request.dataValues.tecnico = func ? func.nome : null;
       }
+
+      // Buscar mensagem do chamado
+      const msg = await Mensagem.findOne({
+        where: {
+          chamado: request.chamado,
+        },
+      });
+
+      // Adicionar campos mensagem, data_visita e visita
+      request.dataValues.mensagem = msg ? msg.msg : null;
+      request.dataValues.data_visita = request.visita
+        ? format(
+            new Date(
+              request.visita.valueOf() +
+                request.visita.getTimezoneOffset() * 60000
+            ),
+            'dd/MM/yyyy'
+          )
+        : null;
+      request.dataValues.visita = request.visita
+        ? format(addHours(request.visita, timeZoneOffset), 'HH:mm')
+        : null;
     }
 
     const closed_array =
-      sort_mode === 'DESC'
+      orderDirection === 'DESC'
         ? [...closed_support_requests, ...closed_installation_requests]
         : [...closed_installation_requests, ...closed_support_requests];
 

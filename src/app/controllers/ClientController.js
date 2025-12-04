@@ -1,4 +1,4 @@
-import { Op, literal } from 'sequelize';
+import { Op } from 'sequelize';
 import {
   subMonths,
   format,
@@ -13,8 +13,7 @@ import { ptBR } from 'date-fns/locale';
 import CTO from '../models/CTO';
 import Client from '../models/Client';
 import Radacct from '../models/Radacct';
-import SupportRequest from '../models/SupportRequest';
-import Invoice from '../models/Invoice';
+import StaticMapHelper from '../helpers/StaticMapHelper';
 
 class ClientController {
   async show(req, res) {
@@ -26,119 +25,204 @@ class ClientController {
       return res.status(400).json({ message: 'No client not found' });
     }
 
-    // Calcular datas dos últimos 6 meses
-    const months = [];
-    for (let i = 0; i < 6; i++) {
-      months.push({
-        start: format(subMonths(new Date(), i), 'yyyy-MM-01 00:00:00'),
-        end: i === 0 ? format(new Date(), 'yyyy-MM-dd HH:mm:ss') : format(subMonths(new Date(), i - 1), 'yyyy-MM-01 00:00:00'),
-        label: format(subMonths(new Date(), i), 'MMM', { locale: ptBR }).charAt(0).toUpperCase() + format(subMonths(new Date(), i), 'MMM', { locale: ptBR }).slice(1),
-      });
-    }
+    const current_month = format(new Date(), 'yyyy-MM-01 00:00:00');
 
-    // Buscar todos os dados em paralelo
-    const [connections, lastConnection, cto, recentRequests, pendingInvoices] = await Promise.all([
-      // Conexões dos últimos 6 meses em uma query
-      Radacct.findAll({
-        attributes: [
-          [literal('DATE_FORMAT(acctstarttime, "%Y-%m")'), 'month'],
-          [literal('SUM(acctinputoctets + acctoutputoctets)'), 'total_bytes'],
-        ],
-        where: {
-          username: client.login,
-          acctstarttime: {
-            [Op.gte]: months[5].start,
-          },
+    const client_connections = await Radacct.findAll({
+      where: {
+        username: client.login,
+        acctstarttime: {
+          [Op.gt]: current_month,
         },
-        group: [literal('DATE_FORMAT(acctstarttime, "%Y-%m")')],
-        raw: true,
-      }),
-
-      // Última conexão
-      Radacct.findOne({
-        where: {
-          username: client.login,
-          acctstarttime: {
-            [Op.lte]: endOfYear(new Date()),
-          },
-        },
-        order: [['acctstarttime', 'DESC']],
-        attributes: ['acctstarttime', 'acctstoptime'],
-      }),
-
-      // CTO
-      CTO.findOne({
-        where: {
-          nome: client.caixa_herm,
-        },
-      }),
-
-      // Últimos 5 chamados
-      SupportRequest.findAll({
-        where: {
-          login: client.login,
-        },
-        order: [['id', 'DESC']],
-        limit: 5,
-        attributes: ['id', 'chamado', 'assunto', 'status', 'visita', 'prioridade'],
-        raw: true,
-      }),
-
-      // Faturas pendentes
-      Invoice.findAll({
-        where: {
-          login: client.login,
-          status: {
-            [Op.in]: ['aberto', 'vencido'],
-          },
-        },
-        order: [['datavenc', 'ASC']],
-        limit: 3,
-        attributes: ['id', 'datavenc', 'valor', 'status'],
-        raw: true,
-      }),
-    ]);
-
-    // Criar mapa de consumo por mês
-    const consumptionMap = {};
-    connections.forEach(conn => {
-      consumptionMap[conn.month] = parseInt(conn.total_bytes) || 0;
+      },
     });
 
-    // Calcular consumo dos últimos 6 meses
-    const monthlyData = months.reverse().map(month => {
-      const monthKey = format(new Date(month.start), 'yyyy-MM');
-      const bytes = consumptionMap[monthKey] || 0;
-      return {
-        label: month.label,
-        gb: (bytes / 1024 / 1024 / 1024).toFixed(2),
-        bytes,
-      };
+    let dataUsage = 0;
+    // eslint-disable-next-line array-callback-return
+    client_connections.map(item => {
+      dataUsage = dataUsage + item.acctinputoctets + item.acctoutputoctets;
     });
 
-    // Consumo do mês atual
-    const currentMonthData = monthlyData[monthlyData.length - 1];
-    const dataUsage = currentMonthData.bytes;
+    const second_to_last_month = format(
+      subMonths(new Date(), 1),
+      'yyyy-MM-01 00:00:00'
+    );
 
-    // Calcular médias
-    const days_in_current_month = getDate(new Date());
-    const consuption_average = (dataUsage / 1024 / 1024 / 1024 / days_in_current_month).toFixed(2);
+    const second_to_last_month_connections = await Radacct.findAll({
+      where: {
+        username: client.login,
+        acctstarttime: {
+          [Op.between]: [second_to_last_month, current_month],
+        },
+      },
+    });
 
-    // Processar última conexão
+    let secondToLastDataUsage = 0;
+    // eslint-disable-next-line array-callback-return
+    second_to_last_month_connections.map(item => {
+      secondToLastDataUsage =
+        secondToLastDataUsage + item.acctinputoctets + item.acctoutputoctets;
+    });
+
+    const third_to_last_month = format(
+      subMonths(new Date(), 2),
+      'yyyy-MM-01 00:00:00'
+    );
+
+    const third_to_last_month_connections = await Radacct.findAll({
+      where: {
+        username: client.login,
+        acctstarttime: {
+          [Op.between]: [third_to_last_month, second_to_last_month],
+        },
+      },
+    });
+
+    let thirdToLastDataUsage = 0;
+    // eslint-disable-next-line array-callback-return
+    third_to_last_month_connections.map(item => {
+      thirdToLastDataUsage =
+        thirdToLastDataUsage + item.acctinputoctets + item.acctoutputoctets;
+    });
+
+    const forth_to_last_month = format(
+      subMonths(new Date(), 3),
+      'yyyy-MM-01 00:00:00'
+    );
+
+    const forth_to_last_month_connections = await Radacct.findAll({
+      where: {
+        username: client.login,
+        acctstarttime: {
+          [Op.between]: [forth_to_last_month, third_to_last_month],
+        },
+      },
+    });
+
+    let forthToLastDataUsage = 0;
+    // eslint-disable-next-line array-callback-return
+    forth_to_last_month_connections.map(item => {
+      forthToLastDataUsage =
+        forthToLastDataUsage + item.acctinputoctets + item.acctoutputoctets;
+    });
+
+    const fifith_to_last_month = format(
+      subMonths(new Date(), 4),
+      'yyyy-MM-01 00:00:00'
+    );
+
+    const fifith_to_last_month_connections = await Radacct.findAll({
+      where: {
+        username: client.login,
+        acctstarttime: {
+          [Op.between]: [fifith_to_last_month, forth_to_last_month],
+        },
+      },
+    });
+
+    let fifithToLastDataUsage = 0;
+    // eslint-disable-next-line array-callback-return
+    fifith_to_last_month_connections.map(item => {
+      fifithToLastDataUsage =
+        fifithToLastDataUsage + item.acctinputoctets + item.acctoutputoctets;
+    });
+
+    const sixth_to_last_month = format(
+      subMonths(new Date(), 5),
+      'yyyy-MM-01 00:00:00'
+    );
+
+    const sixth_to_last_month_connections = await Radacct.findAll({
+      where: {
+        username: client.login,
+        acctstarttime: {
+          [Op.between]: [sixth_to_last_month, fifith_to_last_month],
+        },
+      },
+    });
+
+    let sixthToLastDataUsage = 0;
+    // eslint-disable-next-line array-callback-return
+    sixth_to_last_month_connections.map(item => {
+      sixthToLastDataUsage =
+        sixthToLastDataUsage + item.acctinputoctets + item.acctoutputoctets;
+    });
+
+    const current_user_connection = await Radacct.findAll({
+      where: {
+        username: client.login,
+        acctstarttime: {
+          [Op.lte]: endOfYear(new Date()),
+        },
+      },
+      limit: 1,
+      order: [['acctstarttime', 'DESC']],
+      attributes: ['acctstarttime', 'acctstoptime'],
+    });
+
     const timeZoneOffset = new Date().getTimezoneOffset() / 60;
+
     let parsedDate = null;
     let parsedTime = null;
-    let equipment_status = 'Offline';
 
-    if (lastConnection) {
-      const parsedAcctStartTime = addHours(lastConnection.acctstarttime, timeZoneOffset);
+    if (current_user_connection.length !== 0) {
+      const parsedAcctStartTime = addHours(
+        current_user_connection[0].acctstarttime,
+        timeZoneOffset
+      );
+
       parsedDate = format(parsedAcctStartTime, 'dd/MM/yyyy');
+
       parsedTime = format(parsedAcctStartTime, 'HH:mm');
-      equipment_status = lastConnection.acctstoptime === null ? 'Online' : 'Offline';
     }
 
-    // Estado financeiro
+    const days_in_current_month = getDate(new Date());
+
+    const consuption_average = (
+      dataUsage /
+      1024 /
+      1024 /
+      1024 /
+      days_in_current_month
+    ).toFixed(2);
+
+    const graph_obj = {
+      labels: [
+        format(subMonths(new Date(), 5), 'MMM', { locale: ptBR })
+          .charAt(0)
+          .toUpperCase() +
+        format(subMonths(new Date(), 5), 'MMM', { locale: ptBR }).slice(1),
+        format(subMonths(new Date(), 4), 'MMM', { locale: ptBR })
+          .charAt(0)
+          .toUpperCase() +
+        format(subMonths(new Date(), 4), 'MMM', { locale: ptBR }).slice(1),
+        format(subMonths(new Date(), 3), 'MMM', { locale: ptBR })
+          .charAt(0)
+          .toUpperCase() +
+        format(subMonths(new Date(), 3), 'MMM', { locale: ptBR }).slice(1),
+        format(subMonths(new Date(), 2), 'MMM', { locale: ptBR })
+          .charAt(0)
+          .toUpperCase() +
+        format(subMonths(new Date(), 2), 'MMM', { locale: ptBR }).slice(1),
+        format(subMonths(new Date(), 1), 'MMM', { locale: ptBR })
+          .charAt(0)
+          .toUpperCase() +
+        format(subMonths(new Date(), 1), 'MMM', { locale: ptBR }).slice(1),
+      ],
+      datasets: [
+        {
+          data: [
+            (sixthToLastDataUsage / 1024 / 1024 / 1024).toFixed(2),
+            (fifithToLastDataUsage / 1024 / 1024 / 1024).toFixed(2),
+            (forthToLastDataUsage / 1024 / 1024 / 1024).toFixed(2),
+            (thirdToLastDataUsage / 1024 / 1024 / 1024).toFixed(2),
+            (secondToLastDataUsage / 1024 / 1024 / 1024).toFixed(2),
+          ],
+        },
+      ],
+    };
+
     let finance_state = null;
+
     if (client.bloqueado === 'sim') {
       finance_state = 'Bloqueado';
     } else if (client.observacao === 'sim') {
@@ -147,30 +231,60 @@ class ClientController {
       finance_state = 'Liberado';
     }
 
-    // Objeto do gráfico
-    const graph_obj = {
-      labels: monthlyData.map(m => m.label),
-      datasets: [
-        {
-          data: monthlyData.map(m => m.gb),
-        },
-      ],
-    };
+    let equipment_status = 'Offline';
+    if (current_user_connection.length !== 0) {
+      const nullConnection = current_user_connection.find(connection => {
+        if (connection.acctstoptime === null) {
+          return connection;
+        }
+      });
+
+      equipment_status = nullConnection ? 'Online' : 'Offline';
+    }
+
+    // Verifica se a caixa hermética do cliente é uma caixa cadastrada na MP_Caixas
+    const cto = await CTO.findOne({
+      where: {
+        nome: client.caixa_herm,
+      },
+    });
+
+    client.caixa_herm = cto ? client.caixa_herm : null;
+
+    // Extrair latitude e longitude das coordenadas
+    let latitude = null;
+    let longitude = null;
+    if (client.coordenadas) {
+      [latitude, longitude] = client.coordenadas.split(',');
+      latitude = parseFloat(latitude);
+      longitude = parseFloat(longitude);
+    }
+
+    // Gerar URL do mapa estático
+    const static_map_url = await StaticMapHelper.generateStaticMapUrl(
+      latitude,
+      longitude
+    );
 
     const response = {
       ...client.dataValues,
-      caixa_herm: cto ? client.caixa_herm : null,
       finance_state,
       current_data_usage: (dataUsage / 1024 / 1024 / 1024).toFixed(2),
       consuption_average,
-      expected_consuption: (consuption_average * getDaysInMonth(new Date())).toFixed(2),
-      current_user_connection: parsedDate !== null ? `${parsedDate} às ${parsedTime}` : 'Não há conexões',
+      expected_consuption: (
+        consuption_average * getDaysInMonth(new Date())
+      ).toFixed(2),
+      second_to_last_data_usage: secondToLastDataUsage / 1024 / 1024 / 1024,
+      third_to_last_data_usage: thirdToLastDataUsage / 1024 / 1024 / 1024,
+      current_user_connection:
+        parsedDate !== null
+          ? `${parsedDate} às ${parsedTime}`
+          : 'Não há conexões',
       equipment_status,
       graph_obj,
-      chamados_recentes: recentRequests,
-      faturas_pendentes: pendingInvoices,
-      total_chamados: recentRequests.length,
-      total_faturas_pendentes: pendingInvoices.length,
+      latitude,
+      longitude,
+      static_map_url,
     };
 
     return res.json(response);

@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import http from 'http';
+import path from 'path';
 import routes from './routes';
 
 import './database';
@@ -20,7 +21,10 @@ class App {
   middlewares() {
     // Security Headers
     this.app.use(helmet({
-      contentSecurityPolicy: false, // Desabilita apenas se necessário para o app
+      contentSecurityPolicy: false,
+      crossOriginOpenerPolicy: false, // Desabilita COOP para evitar avisos em HTTP
+      crossOriginResourcePolicy: false, // Desabilita CORP para evitar avisos em HTTP
+      originAgentCluster: false, // Desabilita Origin-Agent-Cluster
     }));
 
     // CORS configurado
@@ -43,6 +47,9 @@ class App {
       credentials: true,
       optionsSuccessStatus: 200,
     }));
+
+    // Configurar trust proxy para funcionar atrás do Apache
+    this.app.set('trust proxy', 1);
 
     // Rate Limiting Global
     const globalLimiter = rateLimit({
@@ -68,14 +75,36 @@ class App {
 
     // Desabilita header X-Powered-By
     this.app.disable('x-powered-by');
+
+    // Serve arquivos estáticos (Landing Page, Admin, Portal)
+    this.app.use(express.static(path.join(__dirname, '..', 'public')));
   }
 
   routes() {
+    // Serve arquivos estáticos primeiro (antes das rotas de API)
+    // Já configurado em middlewares()
+    
+    // Ignora favicon.ico para evitar erro 401
+    this.app.get('/favicon.ico', (req, res) => {
+      res.status(204).end();
+    });
+    
+    // Redireciona /admin para /admin/login.html
+    this.app.get('/admin', (req, res) => {
+      res.redirect('/admin/login.html');
+    });
+    
+    // Redireciona /portal para /portal/index.html  
+    this.app.get('/portal', (req, res) => {
+      res.redirect('/portal/index.html');
+    });
+    
+    // Rotas da API (com ou sem /api)
     this.app.use(routes);
 
-    // 404 handler
-    this.app.use((req, res) => {
-      res.status(404).json({ error: 'Endpoint not found' });
+    // 404 handler para rotas de API
+    this.app.use('/api/*', (req, res) => {
+      res.status(404).json({ error: 'API endpoint not found' });
     });
 
     // Error handler

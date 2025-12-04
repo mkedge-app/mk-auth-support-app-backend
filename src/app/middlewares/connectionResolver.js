@@ -18,6 +18,8 @@ import Notification from '../models/Notification';
 import ConnectedUsers from '../models/ConnectedUsers';
 import SupportRequest from '../models/SupportRequest';
 import InstallationRequest from '../models/InstallationRequest';
+import SisProvedor from '../models/SisProvedor';
+import SisOpcao from '../models/SisOpcao';
 
 const models = [
   User,
@@ -34,6 +36,8 @@ const models = [
   InstallationRequest,
   ConnectedUsers,
   Permissions,
+  SisProvedor,
+  SisOpcao,
 ];
 
 const tenantDatabaseConnections = {};
@@ -61,36 +65,46 @@ function connectNewTenantsDB(tenant) {
       reject('Tenant is not active');
     }
 
-    const connection = new Sequelize({
-      dialect: tenant.database.dialect,
-      host: tenant.database.host,
-      username: tenant.database.username,
-      password: tenant.database.password,
-      database: tenant.database.name,
-      define: {
-        timestamps: false,
-        underscored: true,
-        underscoredAll: true,
-      },
-    });
-    
     try {
+      const connection = new Sequelize({
+        dialect: tenant.database.dialect,
+        host: tenant.database.host,
+        username: tenant.database.username,
+        password: tenant.database.password,
+        database: tenant.database.name,
+        define: {
+          timestamps: false,
+          underscored: true,
+          underscoredAll: true,
+        },
+      });
+      
       await connection.authenticate();
       tenantDatabaseConnections[id] = connection;
       resolve();
     } catch (error) {
-      reject('Database params are invalid');
+      console.log('Erro ao conectar tenant DB:', error.message);
+      reject('Database params are invalid or mysql2 not installed');
     }
   })
 }
 
+// Carregar conexões de tenants ativos na inicialização
 loadTenantConnections();
 
 async function ConnectionResolver(req, res, next) {
-  const { tenant_id } = req.query;
+  let { tenant_id } = req.query;
 
+  // Se não tiver tenant_id, usa o Updata como padrão (para compatibilidade com painel Angular antigo)
   if (!tenant_id) {
-    return res.status(401).json({ message: 'No key provided' });
+    const defaultTenant = await Tenant.findOne({ cnpj: '04038227000187' }); // Updata
+    if (defaultTenant) {
+      tenant_id = defaultTenant._id.toString();
+      req.query.tenant_id = tenant_id;
+      console.log(`⚠️ ConnectionResolver: Usando tenant padrão (Updata: ${tenant_id})`);
+    } else {
+      return res.status(401).json({ message: 'No key provided' });
+    }
   }
 
   const tenant = await Tenant.findOne({ _id: tenant_id });
@@ -104,7 +118,22 @@ async function ConnectionResolver(req, res, next) {
 
   const sequelizeConnection = tenantDatabaseConnections[tenant_id];
 
+  // Se não tem conexão, tenta criar (para compatibilidade com mysql2 não instalado)
   if (!sequelizeConnection) {
+    console.log(`⚠️ ConnectionResolver: Tentando conectar tenant ${tenant.provedor.nome}...`);
+    try {
+      await connectNewTenantsDB(tenant);
+      const newConnection = tenantDatabaseConnections[tenant_id];
+      if (newConnection) {
+        models.map(model => model.init(newConnection));
+        console.log(`✅ ConnectionResolver: Tenant ${tenant.provedor.nome} conectado com sucesso`);
+        return next();
+      }
+    } catch (error) {
+      console.log(`❌ ConnectionResolver: Erro ao conectar tenant - ${error.message}`);
+    }
+    
+    // Se ainda não conseguiu conectar, retorna erro
     return res
       .status(401)
       .json({ message: 'Tenant database is not connected' });
@@ -114,6 +143,19 @@ async function ConnectionResolver(req, res, next) {
     models.map(model => model.init(sequelizeConnection));
     next();
   }
+}
+
+// Versão opcional do ConnectionResolver (não retorna erro se não tiver tenant_id)
+async function OptionalConnectionResolver(req, res, next) {
+  const { tenant_id } = req.query;
+
+  // Se não tem tenant_id, apenas continua
+  if (!tenant_id) {
+    return next();
+  }
+
+  // Se tem, aplica a lógica normal
+  return ConnectionResolver(req, res, next);
 }
 
 async function resolveDbConnection(tenant) {
@@ -134,4 +176,4 @@ async function resolveDbConnection(tenant) {
   });
 }
 
-export { ConnectionResolver, connectNewTenantsDB, tenantDatabaseConnections, resolveDbConnection };
+export { ConnectionResolver, OptionalConnectionResolver, connectNewTenantsDB, tenantDatabaseConnections, resolveDbConnection };

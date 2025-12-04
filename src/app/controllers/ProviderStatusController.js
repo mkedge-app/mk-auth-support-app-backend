@@ -12,6 +12,7 @@ class ProviderStatusController {
         const tenant = await Tenant.findOne({ cnpj });
 
         if (tenant.assinatura.ativa) {
+            // Desativando: desconecta o banco
             tenant.assinatura.ativa = false;
             await tenant.save();
             const connection = tenantDatabaseConnections[tenant.id];
@@ -20,8 +21,15 @@ class ProviderStatusController {
                 delete tenantDatabaseConnections[tenant.id];
             }
         } else {
+            // Ativando: aguarda 2 segundos e conecta automaticamente o banco
             tenant.assinatura.ativa = true;
             await tenant.save();
+            
+            // Aguarda 2 segundos antes de conectar
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Conecta o banco automaticamente
+            await connectNewTenantsDB(tenant);
         }
 
         const dbStatus = await resolveDbConnection(tenant);

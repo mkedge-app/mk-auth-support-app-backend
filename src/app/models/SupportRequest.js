@@ -18,6 +18,8 @@ class SupportRequest extends Model {
         fechamento: Sequelize.STRING,
         motivo_fechar: Sequelize.STRING,
         prioridade: Sequelize.STRING,
+        atendente: Sequelize.STRING,
+        login_atend: Sequelize.STRING,
       },
       {
         sequelize,

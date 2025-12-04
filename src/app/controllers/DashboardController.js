@@ -8,10 +8,12 @@ import ConnectedUsers from '../models/ConnectedUsers';
 class DashboardController {
   async stats(req, res) {
     try {
+      console.log('📊 DashboardController.stats - Início');
       const now = new Date();
       const startMonth = startOfMonth(now);
       const endMonth = endOfMonth(now);
 
+      console.log('📊 Buscando estatísticas...');
       // Queries em paralelo para melhor performance
       const [
         totalClients,
@@ -167,10 +169,15 @@ class DashboardController {
         requests: requestsByPriority,
       };
 
+      console.log('✅ Dashboard stats carregado com sucesso');
       return res.json(response);
     } catch (error) {
-      console.error('Erro no DashboardController.stats:', error);
-      return res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+      console.error('❌ Erro no DashboardController.stats:', error);
+      console.error('Stack:', error.stack);
+      return res.status(500).json({ 
+        error: 'Erro ao buscar estatísticas',
+        message: error.message 
+      });
     }
   }
 }

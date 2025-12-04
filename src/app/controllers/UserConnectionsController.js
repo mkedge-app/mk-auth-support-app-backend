@@ -15,13 +15,17 @@ import Radacct from '../models/Radacct';
 class UserConnectionsController {
   async show(req, res) {
     const { id: client_id } = req.params;
-    const { page } = req.query;
+    const { page = 1, limit = 50 } = req.query;
 
     const client = await Client.findByPk(client_id);
 
     if (!client) {
       return res.status(400).json({ message: 'No client found' });
     }
+
+    // Converter para número e validar
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = Math.min(parseInt(limit, 10), 100); // Máximo 100 por página
 
     const client_connections = await Radacct.findAll({
       where: {
@@ -30,8 +34,8 @@ class UserConnectionsController {
           [Op.lte]: endOfYear(new Date()),
         },
       },
-      limit: 10,
-      offset: 10 * (page - 1),
+      limit: limitNumber,
+      offset: limitNumber * (pageNumber - 1),
       order: [['acctstarttime', 'DESC']],
     });
 
