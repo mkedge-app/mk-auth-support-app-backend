@@ -688,6 +688,49 @@ class RequestController {
         break;
       }
 
+      case 'update_title': {
+        const { new_title, madeBy } = req.body;
+
+        if (!new_title || !new_title.trim()) {
+          return res.status(400).json({ error: 'Título é obrigatório' });
+        }
+
+        const oldTitle = request.assunto;
+        request.assunto = new_title.trim();
+        await request.save();
+
+        // Recuperação do login do técnico que fez a alteração
+        const employee = await Employee.findByPk(madeBy);
+        if (!employee) {
+          console.error(`❌ Funcionário não encontrado com ID: ${madeBy}`);
+          return res.status(404).json({ error: 'Funcionário não encontrado' });
+        }
+        
+        const { email } = employee;
+        const user = await User.findOne({
+          where: { email },
+        });
+        
+        if (!user) {
+          console.error(`❌ Usuário não encontrado com email: ${email}`);
+          return res.status(404).json({ error: 'Usuário não encontrado' });
+        }
+        
+        const { login } = user;
+        const { chamado } = request;
+        const logDate = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
+
+        log = await SystemLog.create({
+          registro: `alterou o título do chamado ${chamado} de "${oldTitle}" para "${new_title}" via MK-Edge`,
+          data: logDate,
+          login,
+          tipo: 'app',
+          operacao: 'OPERNULL',
+        });
+
+        break;
+      }
+
       case 'update_visita_date': {
         const new_visita_date = format(
           parseISO(req.body.new_visita_date),
