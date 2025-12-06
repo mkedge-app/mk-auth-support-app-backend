@@ -216,6 +216,81 @@ class InvoiceController {
       return res.status(500).json({ error: 'Erro ao buscar faturas do cliente' });
     }
   }
+
+  async payInvoice(req, res) {
+    try {
+      const { invoice_id, titulo, uuid_lanc } = req.body;
+      
+      console.log('💰 InvoiceController.payInvoice - Dando baixa na fatura');
+      console.log('📦 Payload:', { invoice_id, titulo, uuid_lanc });
+
+      // Identificar fatura (aceita id, titulo ou uuid_lanc)
+      const invoiceIdentifier = invoice_id || titulo;
+      
+      if (!invoiceIdentifier) {
+        return res.status(400).json({ 
+          error: 'ID da fatura é obrigatório (invoice_id, titulo ou uuid_lanc)' 
+        });
+      }
+
+      // Buscar fatura
+      const invoice = await Invoice.findOne({
+        where: {
+          [Op.or]: [
+            { id: invoiceIdentifier },
+            { uuid_lanc: invoiceIdentifier }
+          ]
+        }
+      });
+
+      if (!invoice) {
+        return res.status(404).json({ error: 'Fatura não encontrada' });
+      }
+
+      // Verificar se já está paga
+      if (invoice.status === 'pago') {
+        return res.status(400).json({ 
+          error: 'Fatura já está paga',
+          invoice: {
+            id: invoice.id,
+            uuid_lanc: invoice.uuid_lanc,
+            status: invoice.status,
+            datapag: invoice.datapag
+          }
+        });
+      }
+
+      // Atualizar status e data de pagamento
+      const now = new Date();
+      invoice.status = 'pago';
+      invoice.datapag = now;
+      await invoice.save();
+
+      console.log('✅ Fatura paga com sucesso:', invoice.id);
+
+      return res.json({
+        success: true,
+        message: 'Fatura paga com sucesso',
+        invoice: {
+          id: invoice.id,
+          uuid_lanc: invoice.uuid_lanc,
+          login: invoice.login,
+          valor: invoice.valor,
+          status: invoice.status,
+          datavenc: invoice.datavenc,
+          datapag: invoice.datapag,
+          tipo: invoice.tipo,
+          obs: invoice.obs
+        }
+      });
+    } catch (error) {
+      console.error('❌ Erro ao dar baixa na fatura:', error);
+      return res.status(500).json({ 
+        error: 'Erro ao dar baixa na fatura',
+        details: error.message 
+      });
+    }
+  }
 }
 
 export default new InvoiceController();

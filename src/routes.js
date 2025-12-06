@@ -156,6 +156,7 @@ routes.get('/connections/:id', UserConnectionsController.show);
 
 // Faturas
 routes.get('/invoices/:client_id', InvoiceController.show);
+routes.post('/invoice/pay', InvoiceController.payInvoice); // Dar baixa em fatura
 
 // Notificações
 routes.get('/notification/:employee_id', NotificationController.show);
