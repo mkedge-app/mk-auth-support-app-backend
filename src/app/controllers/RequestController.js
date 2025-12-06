@@ -816,6 +816,136 @@ class RequestController {
       });
     }
   }
+
+  async store(req, res) {
+    try {
+      console.log('🆕 RequestController.store - Criando novo chamado');
+      console.log('📦 Payload recebido:', req.body);
+
+      const {
+        client_id,
+        id_cliente,
+        uuid_cliente,
+        assunto,
+        mensagem,
+        msg,
+        tecnico,
+        employee_id,
+        prioridade,
+        visita_data,
+        visita_hora,
+        data_visita,
+        visita,
+        ramal,
+        atendente,
+        status = 'aberto'
+      } = req.body;
+
+      // Validações básicas
+      if (!assunto || !assunto.trim()) {
+        return res.status(400).json({ error: 'O assunto é obrigatório' });
+      }
+
+      // Determinar o login do cliente (aceita diferentes formatos)
+      const clientLogin = client_id || id_cliente || uuid_cliente;
+      if (!clientLogin) {
+        return res.status(400).json({ error: 'ID do cliente é obrigatório (client_id, id_cliente ou uuid_cliente)' });
+      }
+
+      // Buscar dados do cliente
+      const client = await Client.findOne({ where: { login: clientLogin } });
+      if (!client) {
+        return res.status(404).json({ error: 'Cliente não encontrado' });
+      }
+
+      // Determinar técnico (aceita employee_id ou tecnico)
+      const tecnicoId = employee_id || tecnico;
+
+      // Validar se técnico existe
+      if (tecnicoId) {
+        const employee = await Employee.findByPk(tecnicoId);
+        if (!employee) {
+          return res.status(404).json({ error: 'Técnico não encontrado' });
+        }
+      }
+
+      // Processar data/hora da visita
+      let visitaDateTime = null;
+      if (visita) {
+        visitaDateTime = new Date(visita);
+      } else if (data_visita || visita_data) {
+        const dataStr = data_visita || visita_data;
+        const horaStr = visita_hora || '00:00';
+        visitaDateTime = new Date(`${dataStr}T${horaStr}`);
+      }
+
+      // Gerar número do chamado (formato: DDMMYYHHMMSSSS)
+      const now = new Date();
+      const chamadoNumber = format(now, 'ddMMyyHHmmssSSS');
+
+      // Criar chamado
+      const newRequest = await SupportRequest.create({
+        login: client.login,
+        nome: client.nome,
+        chamado: chamadoNumber,
+        assunto: assunto.trim(),
+        tecnico: tecnicoId || 0,
+        prioridade: prioridade || 'normal',
+        status: status || 'aberto',
+        visita: visitaDateTime,
+        atendente: atendente || ramal || null,
+      });
+
+      console.log('✅ Chamado criado:', newRequest.id);
+
+      // Criar mensagem inicial se fornecida
+      const messageText = msg || mensagem;
+      if (messageText && messageText.trim()) {
+        await Mensagem.create({
+          chamado: chamadoNumber,
+          msg: messageText.trim(),
+          atendente: atendente || ramal || 'Sistema',
+          msg_data: now,
+          login: client.login,
+          tipo: 'T', // Tipo técnico
+        });
+        console.log('💬 Mensagem inicial criada');
+      }
+
+      // Buscar chamado completo com dados do cliente e técnico
+      const employee = tecnicoId ? await Employee.findByPk(tecnicoId) : null;
+      
+      const response = {
+        id: newRequest.id,
+        chamado: newRequest.chamado,
+        login: newRequest.login,
+        nome: client.nome,
+        assunto: newRequest.assunto,
+        status: newRequest.status,
+        prioridade: newRequest.prioridade,
+        visita: newRequest.visita,
+        tecnico: newRequest.tecnico,
+        employee_name: employee ? employee.nome : null,
+        atendente: newRequest.atendente,
+        endereco: client.endereco_res,
+        numero: client.numero_res,
+        bairro: client.bairro_res,
+        telefone: client.fone || client.telefone || null,
+        celular: client.celular || null,
+        created_at: now,
+      };
+
+      console.log('✅ Chamado criado com sucesso:', response.chamado);
+
+      return res.status(201).json(response);
+    } catch (error) {
+      console.error('❌ Erro ao criar chamado:', error);
+      return res.status(500).json({ 
+        error: 'Erro ao criar chamado',
+        details: error.message 
+      });
+    }
+  }
 }
 
 export default new RequestController();

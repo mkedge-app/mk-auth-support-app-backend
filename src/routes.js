@@ -131,6 +131,7 @@ routes.get('/tenant', ProviderController.show);
 
 // Chamados
 routes.post('/requests', RequestController.index);
+routes.post('/request', RequestController.store); // Criar novo chamado
 routes.get('/request/:id/:request_type', RequestController.show);
 routes.get('/chamados/stats', RequestController.stats);
 
@@ -144,6 +145,7 @@ routes.get('/cto', CTOController.show);
 
 // Funcionários
 routes.get('/employees', EmployeeController.index);
+routes.get('/technicians', EmployeeController.index); // Alias para /employees
 routes.get('/employee/:id', EmployeeController.show);
 
 // Busca
