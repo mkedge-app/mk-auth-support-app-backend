@@ -50,6 +50,10 @@ class SearchController {
     try {
       const { term, searchmode, filterBy } = req.query;
 
+      console.log('🔍 SearchController.index - Iniciando busca');
+      console.log('📦 Params:', { term, searchmode, filterBy });
+      console.log('🔐 Query completa:', req.query);
+
       if (term === '') {
         return res.json({
           results: [],
@@ -308,8 +312,14 @@ class SearchController {
       });
     }
     } catch (error) {
-      console.error('Erro ao buscar clientes:', error);
-      return res.status(500).json({ error: 'Erro ao buscar clientes' });
+      console.error('❌ Erro ao buscar clientes:', error);
+      console.error('❌ Stack trace:', error.stack);
+      console.error('❌ Query params:', req.query);
+      return res.status(500).json({ 
+        error: 'Erro ao buscar clientes',
+        message: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
     }
   }
 }

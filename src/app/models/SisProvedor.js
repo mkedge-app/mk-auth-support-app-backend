@@ -9,6 +9,7 @@ class SisProvedor extends Model {
           primaryKey: true,
         },
         nome: Sequelize.STRING,
+        google_maps_api_key: Sequelize.STRING,
       },
       {
         sequelize,

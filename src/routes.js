@@ -128,18 +128,22 @@ routes.use(authMiddleware);
 
 // Dados do tenant/provedor
 routes.get('/tenant', ProviderController.show);
+routes.get('/provedor', ProviderController.show); // Alias em português
 
 // Chamados
 routes.post('/requests', RequestController.index);
 routes.post('/request', RequestController.store); // Criar novo chamado
+routes.get('/request/form/:client_id', RequestController.getFormData); // Dados para formulário de abertura
 routes.get('/request/:id/:request_type', RequestController.show);
 routes.get('/chamados/stats', RequestController.stats);
 
 // Clientes
 routes.get('/client/:id', ClientController.show);
+routes.get('/cliente/:id', ClientController.show); // Alias em português
 
 // CTOs
 routes.get('/cto/:latitude/:longitude', CTOController.index);
+routes.get('/cto/:lat/:lng', CTOController.index); // Alias com lat/lng
 routes.get('/cto/map/:latitude/:longitude', CTOController.map);
 routes.get('/cto', CTOController.show);
 
@@ -156,6 +160,7 @@ routes.get('/connections/:id', UserConnectionsController.show);
 
 // Faturas
 routes.get('/invoices/:client_id', InvoiceController.show);
+routes.get('/invoice/:id', InvoiceController.getById); // Buscar fatura por ID
 routes.post('/invoice/pay', InvoiceController.payInvoice); // Dar baixa em fatura
 
 // Notificações
@@ -178,5 +183,7 @@ routes.use(permissionMiddleware);
 routes.post('/request/:id', RequestController.update);
 routes.post('/messages', MessageController.store);
 routes.post('/client/:id', ClientController.update);
+routes.put('/client/:id', ClientController.update); // Método PUT também
+routes.put('/cliente/:id', ClientController.update); // Alias em português com PUT
 
 export default routes;

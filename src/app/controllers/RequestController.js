@@ -4,6 +4,7 @@
 /* eslint-disable radix */
 import { parseISO, format, endOfYear, addHours, subHours } from 'date-fns';
 import { Op } from 'sequelize';
+import { randomUUID } from 'crypto';
 
 import CTO from '../models/CTO';
 import User from '../models/User';
@@ -16,6 +17,7 @@ import SupportRequest from '../models/SupportRequest';
 import InstallationRequest from '../models/InstallationRequest';
 import ConnectedUsers from '../models/ConnectedUsers';
 import StaticMapHelper from '../helpers/StaticMapHelper';
+import SisOpcao from '../models/SisOpcao';
 
 class RequestController {
   async index(req, res) {
@@ -116,118 +118,125 @@ class RequestController {
 
     console.log('📋 Found', support_requests?.length || 0, 'support requests and', installation_requests?.length || 0, 'installation requests');
 
-    // Se não existirem chamados de nenhum tipo retorna erro 204
-    if (!support_requests && !installation_requests) {
-      return res.status(204).json({ message: 'No requests for this user!' });
+    // Se não existirem chamados de nenhum tipo retorna vazio
+    if ((!support_requests || support_requests.length === 0) && 
+        (!installation_requests || installation_requests.length === 0)) {
+      return res.json([]);
     }
 
     const response_object = [];
 
-    for (const [, request] of support_requests.entries()) {
-      const { login, chamado, tecnico } = request;
+    // Processar support_requests apenas se existir e tiver itens
+    if (support_requests && support_requests.length > 0) {
+      for (const [, request] of support_requests.entries()) {
+        const { login, chamado, tecnico } = request;
 
-      const response = await Client.findOne({
-        where: {
-          login,
-        },
-      });
-
-      // Buscar primeira mensagem para a lista
-      const msg = await Mensagem.findOne({
-        where: {
-          chamado,
-        },
-        order: [['msg_data', 'DESC']],
-      });
-
-      const employee = await Employee.findByPk(tecnico);
-
-      // Verificar se cliente está online
-      const isConnected = await ConnectedUsers.findOne({
-        where: { login },
-      });
-
-      // Buscar usuário que abriu o chamado
-      let opened_by_name = null;
-      if (request.atendente) {
-        const openedByUser = await User.findOne({
-          where: { login: request.atendente },
+        const response = await Client.findOne({
+          where: {
+            login,
+          },
         });
-        opened_by_name = openedByUser ? openedByUser.nome : request.atendente;
-      }
 
-      // Buscar usuário que fechou o chamado (se foi fechado)
-      let closed_by_name = null;
-      if (request.login_atend) {
-        const closedByUser = await User.findOne({
-          where: { login: request.login_atend },
+        // Buscar primeira mensagem para a lista
+        const msg = await Mensagem.findOne({
+          where: {
+            chamado,
+          },
+          order: [['msg_data', 'DESC']],
         });
-        closed_by_name = closedByUser ? closedByUser.nome : request.login_atend;
-      }
 
-      response_object.push({
-        id: request.id,
-        visita: format(addHours(request.visita, timeZoneOffset), 'HH:mm'),
-        nome: request.nome,
-        login: response.login,
-        senha: response.senha,
-        plano: response.plano,
-        tipo: response.tipo,
-        ip: response.ip,
-        status: request.status,
-        prioridade: request.prioridade,
-        assunto: request.assunto,
-        endereco: response.endereco_res,
-        numero: response.numero_res,
-        bairro: response.bairro_res,
-        mensagem: msg ? msg.msg : null,
-        employee_name: employee === null ? null : employee.nome,
-        cliente_status_online: isConnected ? 'Online' : 'Offline',
-        aberto_por: opened_by_name,
-        fechado_por: closed_by_name,
-      });
+        const employee = await Employee.findByPk(tecnico);
+
+        // Verificar se cliente está online
+        const isConnected = await ConnectedUsers.findOne({
+          where: { login },
+        });
+
+        // Buscar usuário que abriu o chamado
+        let opened_by_name = null;
+        if (request.atendente) {
+          const openedByUser = await User.findOne({
+            where: { login: request.atendente },
+          });
+          opened_by_name = openedByUser ? openedByUser.nome : request.atendente;
+        }
+
+        // Buscar usuário que fechou o chamado (se foi fechado)
+        let closed_by_name = null;
+        if (request.login_atend) {
+          const closedByUser = await User.findOne({
+            where: { login: request.login_atend },
+          });
+          closed_by_name = closedByUser ? closedByUser.nome : request.login_atend;
+        }
+
+        response_object.push({
+          id: request.id,
+          visita: format(addHours(request.visita, timeZoneOffset), 'HH:mm'),
+          nome: request.nome,
+          login: response.login,
+          senha: response.senha,
+          plano: response.plano,
+          tipo: response.tipo,
+          ip: response.ip,
+          status: request.status,
+          prioridade: request.prioridade,
+          assunto: request.assunto,
+          endereco: response.endereco_res,
+          numero: response.numero_res,
+          bairro: response.bairro_res,
+          mensagem: msg ? msg.msg : null,
+          employee_name: employee === null ? null : employee.nome,
+          cliente_status_online: isConnected ? 'Online' : 'Offline',
+          aberto_por: opened_by_name,
+          fechado_por: closed_by_name,
+        });
+      }
     }
 
-    for (const [idx, request] of installation_requests.entries()) {
-      const { tecnico, coordenadas, login } = request;
+    // Processar installation_requests apenas se existir e tiver itens
+    if (installation_requests && installation_requests.length > 0) {
+      for (const [idx, request] of installation_requests.entries()) {
+        const { tecnico, coordenadas, login } = request;
 
-      const employee = await Employee.findOne({
-        where: {
-          nome: tecnico,
-        },
-      });
+        const employee = await Employee.findOne({
+          where: {
+            nome: tecnico,
+          },
+        });
 
-      let latitude = null;
-      let longitude = null;
+        let latitude = null;
+        let longitude = null;
 
-      if (coordenadas) {
-        [latitude, longitude] = coordenadas.split(',');
-        longitude = parseFloat(longitude.replace(/\s+/, ' '));
+        if (coordenadas) {
+          [latitude, longitude] = coordenadas.split(',');
+          longitude = parseFloat(longitude.replace(/\s+/, ' '));
+        }
+
+        // Verificar se cliente está online
+        const isConnected = await ConnectedUsers.findOne({
+          where: { login },
+        });
+
+        response_object.push({
+          id: request.id,
+          visita: format(addHours(request.visita, timeZoneOffset), 'HH:mm'),
+          nome: request.nome,
+          assunto: 'Ativação',
+          ip: request.ip,
+          plano: request.plano,
+          status: request.instalado === 'sim' ? 'fechado' : 'aberto',
+          endereco: request.endereco_res,
+          numero: request.numero_res,
+          bairro: request.bairro_res,
+          employee_name: employee === null ? null : employee.nome,
+          latitude,
+          longitude,
+          cliente_status_online: isConnected ? 'Online' : 'Offline',
+          aberto_por: null, // Installation requests não têm este campo
+          fechado_por: null, // Installation requests não têm este campo
+        });
       }
-
-      // Verificar se cliente está online
-      const isConnected = await ConnectedUsers.findOne({
-        where: { login },
-      });
-
-      response_object.push({
-        id: request.id,
-        visita: format(addHours(request.visita, timeZoneOffset), 'HH:mm'),
-        nome: request.nome,
-        assunto: 'Ativação',
-        ip: request.ip,
-        plano: request.plano,
-        status: request.instalado === 'sim' ? 'fechado' : 'aberto',
-        endereco: request.endereco_res,
-        numero: request.numero_res,
-        bairro: request.bairro_res,
-        employee_name: employee === null ? null : employee.nome,
-        latitude,
-        longitude,
-        cliente_status_online: isConnected ? 'Online' : 'Offline',
-        aberto_por: null, // Installation requests não têm este campo
-        fechado_por: null, // Installation requests não têm este campo
-      });
     }
 
     // Organizando array em ordem crescente de visita
@@ -242,8 +251,10 @@ class RequestController {
 
     return res.json(response_object);
     } catch (error) {
-      console.error('Erro ao buscar chamados:', error);
-      return res.status(500).json({ error: 'Erro ao buscar chamados' });
+      console.error('❌ Erro ao buscar chamados:', error);
+      console.error('❌ Stack:', error.stack);
+      console.error('❌ Message:', error.message);
+      return res.status(500).json({ error: 'Erro ao buscar chamados', details: error.message });
     }
   }
 
@@ -864,6 +875,7 @@ class RequestController {
     try {
       console.log('🆕 RequestController.store - Criando novo chamado');
       console.log('📦 Payload recebido:', req.body);
+      console.log('👤 UserId do token (req.idacesso):', req.idacesso);
 
       const {
         client_id,
@@ -881,6 +893,7 @@ class RequestController {
         visita,
         ramal,
         atendente,
+        login_atend,
         status = 'aberto'
       } = req.body;
 
@@ -919,24 +932,72 @@ class RequestController {
       } else if (data_visita || visita_data) {
         const dataStr = data_visita || visita_data;
         const horaStr = visita_hora || '00:00';
-        visitaDateTime = new Date(`${dataStr}T${horaStr}`);
+        
+        // O app envia horário local de Manaus (UTC-4)
+        // O servidor está em UTC, então precisa subtrair 4 horas
+        const localDateTime = `${dataStr}T${horaStr}:00-04:00`; // Especifica timezone -04:00
+        visitaDateTime = new Date(localDateTime);
+        
+        console.log('📅 Data/hora da visita:', {
+          entrada: { data: dataStr, hora: horaStr },
+          comTimezone: localDateTime,
+          interpretada: visitaDateTime.toISOString(),
+          verificacao: visitaDateTime.toLocaleString('pt-BR', { timeZone: 'America/Manaus' })
+        });
       }
 
-      // Gerar número do chamado (formato: DDMMYYHHMMSSSS)
+      // Gerar número do chamado (formato: DDMMYYHHMMSS + 2 dígitos de milissegundos)
       const now = new Date();
-      const chamadoNumber = format(now, 'ddMMyyHHmmssSSS');
+      const ms = Math.floor(now.getMilliseconds() / 10); // 0-99
+      const chamadoNumber = format(now, 'ddMMyyHHmmss') + ms.toString().padStart(2, '0');
+
+      // Gerar UUID único para o chamado usando crypto nativo
+      const uuidSuporte = randomUUID();
+
+      // Buscar nome do atendente
+      let atendenteNome = atendente;
+      let atendenteLogin = login_atend;
+      
+      // Se não foi fornecido, buscar do usuário logado (do token JWT)
+      if (!atendenteNome || !atendenteLogin) {
+        const userId = req.idacesso; // Vem do middleware de autenticação
+        if (userId) {
+          const userLogado = await User.findByPk(userId);
+          if (userLogado) {
+            atendenteNome = atendenteNome || userLogado.nome;
+            atendenteLogin = atendenteLogin || userLogado.login;
+          }
+        }
+      }
+      
+      // Se foi fornecido login_atend mas não o nome, buscar o nome
+      if (atendenteLogin && !atendenteNome) {
+        const userAtendente = await User.findOne({ where: { login: atendenteLogin } });
+        if (userAtendente) {
+          atendenteNome = userAtendente.nome;
+        }
+      }
+
+      console.log('👤 Atendente:', { nome: atendenteNome, login: atendenteLogin, userId: req.idacesso });
 
       // Criar chamado
       const newRequest = await SupportRequest.create({
         login: client.login,
         nome: client.nome,
         chamado: chamadoNumber,
+        uuid_suporte: uuidSuporte,
         assunto: assunto.trim(),
         tecnico: tecnicoId || 0,
         prioridade: prioridade || 'normal',
         status: status || 'aberto',
         visita: visitaDateTime,
-        atendente: atendente || ramal || null,
+        abertura: now,
+        atendente: atendenteNome || 'Sistema',
+        login_atend: atendenteLogin || null,
+        email: client.email || null,
+        ramal: ramal || client.ramal || null,
+        // telefone: client.celular || client.fone || null, // Campo não existe ainda
+        // ramal_cto: ramal || client.caixa_herm || client.ssid || null, // Campo não existe ainda
       });
 
       console.log('✅ Chamado criado:', newRequest.id);
@@ -973,7 +1034,7 @@ class RequestController {
         endereco: client.endereco_res,
         numero: client.numero_res,
         bairro: client.bairro_res,
-        telefone: client.fone || client.telefone || null,
+        // telefone: client.fone || null, // Campo não existe ainda
         celular: client.celular || null,
         created_at: now,
       };
@@ -985,6 +1046,162 @@ class RequestController {
       console.error('❌ Erro ao criar chamado:', error);
       return res.status(500).json({ 
         error: 'Erro ao criar chamado',
+        details: error.message 
+      });
+    }
+  }
+
+  // Retorna dados pré-preenchidos para formulário de abertura de chamado
+  async getFormData(req, res) {
+    try {
+      const { client_id } = req.params;
+
+      console.log('📋 RequestController.getFormData - Cliente:', client_id);
+
+      // Buscar dados do cliente
+      const client = await Client.findOne({ where: { login: client_id } });
+      if (!client) {
+        return res.status(404).json({ error: 'Cliente não encontrado' });
+      }
+
+      // Buscar lista de técnicos
+      const technicians = await Employee.findAll({
+        attributes: ['id', 'nome'],
+        order: [['nome', 'ASC']]
+      });
+
+      // Buscar assuntos do banco de dados
+      let assuntos = [];
+      try {
+        console.log('🔍 Buscando assuntos...');
+        
+        // Primeiro tenta buscar de sis_opcao
+        const assuntosOpcao = await SisOpcao.findOne({
+          where: { nome: 'assunto_suporte' }
+        });
+        
+        console.log('📋 sis_opcao encontrado:', assuntosOpcao ? 'SIM' : 'NÃO');
+        
+        if (assuntosOpcao && assuntosOpcao.valor) {
+          // Os assuntos estão separados por vírgula ou quebra de linha
+          assuntos = assuntosOpcao.valor
+            .split(/[,\n]+/)
+            .map(a => a.trim())
+            .filter(a => a.length > 0);
+          console.log('✅ Assuntos de sis_opcao:', assuntos.length);
+        }
+        
+        // Se não encontrou em sis_opcao, buscar assuntos únicos já usados em sis_suporte
+        if (assuntos.length === 0) {
+          console.log('🔍 Buscando assuntos DISTINCT de sis_suporte...');
+          const assuntosUsados = await SupportRequest.findAll({
+            attributes: [[SupportRequest.sequelize.fn('DISTINCT', SupportRequest.sequelize.col('assunto')), 'assunto']],
+            where: {
+              assunto: { [Op.ne]: null }
+            },
+            order: [['assunto', 'ASC']],
+            raw: true
+          });
+          
+          console.log('📊 Assuntos encontrados em sis_suporte:', assuntosUsados.length);
+          
+          assuntos = assuntosUsados
+            .map(a => a.assunto)
+            .filter(a => a && a.trim().length > 0);
+            
+          console.log('✅ Assuntos únicos:', assuntos.length);
+        }
+      } catch (error) {
+        console.error('❌ Erro ao buscar assuntos:', error.message);
+      }
+      
+      // Se ainda não encontrou, usar lista padrão
+      if (assuntos.length === 0) {
+        console.log('⚠️ Usando lista padrão de assuntos');
+        assuntos = [
+          'Financeiro',
+          'Sem internet',
+          'Lentidão',
+          'Instalação',
+          'Manutenção',
+          'Mudança de endereço',
+          'Cancelamento',
+          'Retirada de equipamento',
+          'Reinstalação',
+          'Troca de equipamento',
+          'Upgrade de plano',
+          'Downgrade de plano',
+          'Problema no equipamento',
+          'Configuração WiFi',
+          'Suporte técnico',
+          'Outros'
+        ];
+      }
+
+      // Gerar número do chamado (formato: DDMMYYHHMMSS + 2 dígitos de milissegundos)
+      const now = new Date();
+      const ms = Math.floor(now.getMilliseconds() / 10); // 0-99
+      const chamadoNumber = format(now, 'ddMMyyHHmmss') + ms.toString().padStart(2, '0');
+      
+      // Data/hora atual formatada
+      const dataAbertura = format(now, 'dd/MM/yy HH:mm:ss');
+      
+      // Sugerir data de visita (3 dias úteis à frente)
+      const visitaSugerida = new Date(now);
+      visitaSugerida.setDate(visitaSugerida.getDate() + 3);
+      const dataVisita = format(visitaSugerida, 'yyyy-MM-dd');
+      const horaVisita = format(now, 'HH:mm');
+
+      // Prioridades
+      const prioridades = [
+        { value: 'baixa', label: 'Baixa' },
+        { value: 'normal', label: 'Média' },
+        { value: 'alta', label: 'Alta' },
+        { value: 'urgente', label: 'Urgente' }
+      ];
+
+      return res.json({
+        // Dados do cliente
+        cliente: {
+          id: client.id,
+          login: client.login,
+          nome: client.nome,
+          telefone: client.fone,
+          celular: client.celular,
+          endereco: `${client.endereco_res}, ${client.numero_res}${client.complemento_res ? ' - ' + client.complemento_res : ''}`,
+          bairro: client.bairro_res,
+          ramal: client.caixa_herm || client.ssid || 'Não informado',
+          plano: client.plano,
+        },
+        
+        // Dados do chamado
+        chamado: {
+          numero: chamadoNumber,
+          data_abertura: dataAbertura,
+          data_abertura_iso: now.toISOString(),
+        },
+        
+        // Valores sugeridos
+        sugestoes: {
+          visita_data: dataVisita,
+          visita_hora: horaVisita,
+          prioridade: 'normal',
+        },
+        
+        // Listas para selects
+        opcoes: {
+          tecnicos: technicians.map(t => ({
+            value: t.id,
+            label: t.nome
+          })),
+          assuntos: assuntos,
+          prioridades: prioridades
+        }
+      });
+    } catch (error) {
+      console.error('❌ Erro ao buscar dados do formulário:', error);
+      return res.status(500).json({ 
+        error: 'Erro ao buscar dados do formulário',
         details: error.message 
       });
     }

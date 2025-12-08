@@ -9,8 +9,8 @@ class CTO extends Model {
           primaryKey: true,
         },
         nome: Sequelize.STRING,
-        latitude: Sequelize.STRING,
-        longitude: Sequelize.STRING,
+        latitude: Sequelize.DECIMAL(10, 8),
+        longitude: Sequelize.DECIMAL(11, 8),
       },
       {
         sequelize,

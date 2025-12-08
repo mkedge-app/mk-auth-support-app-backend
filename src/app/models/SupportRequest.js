@@ -20,6 +20,12 @@ class SupportRequest extends Model {
         prioridade: Sequelize.STRING,
         atendente: Sequelize.STRING,
         login_atend: Sequelize.STRING,
+        abertura: Sequelize.DATE,
+        email: Sequelize.STRING,
+        // telefone: Sequelize.STRING, // Campo não existe na tabela ainda
+        // ramal_cto: Sequelize.STRING, // Campo não existe na tabela ainda
+        uuid_suporte: Sequelize.STRING,
+        ramal: Sequelize.STRING,
       },
       {
         sequelize,

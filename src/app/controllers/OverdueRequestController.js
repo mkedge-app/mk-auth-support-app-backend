@@ -97,7 +97,7 @@ class OverdueRequestController {
         numero: response.numero_res,
         bairro: response.bairro_res,
         // Campos de contato do cliente
-        telefone: response.fone || response.telefone || null,
+        // telefone: response.fone || null, // Campo não existe em SupportRequest
         celular: response.celular || null,
         mensagem: msg ? msg.msg : null,
         employee_name: employee === null ? null : employee.nome,

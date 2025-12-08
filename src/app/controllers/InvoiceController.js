@@ -2,6 +2,9 @@
 import { format, addHours } from 'date-fns';
 import { Op } from 'sequelize';
 import { createHash } from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import axios from 'axios';
 
 import Invoice from '../models/Invoice';
 import InvoiceMongo from '../schemas/Invoice';
@@ -75,6 +78,8 @@ class InvoiceController {
 
     const { login, observacao, rem_obs } = client;
 
+    console.log(`📋 Buscando faturas para login: ${login}`);
+
     const pendingInvoices = await Invoice.findAll({
       where: {
         login,
@@ -84,6 +89,8 @@ class InvoiceController {
         },
       },
     });
+
+    console.log(`📊 Faturas pendentes encontradas: ${pendingInvoices.length}`);
 
     pendingInvoices.sort((a, b) => {
       const key1 = new Date(a.datavenc).getTime();
@@ -217,12 +224,80 @@ class InvoiceController {
     }
   }
 
+  // Buscar fatura específica por ID
+  async getById(req, res) {
+    try {
+      const { id } = req.params;
+      
+      console.log('🔍 Buscando fatura ID:', id);
+
+      const invoice = await Invoice.findOne({
+        where: {
+          [Op.or]: [
+            { id: id },
+            { uuid_lanc: id }
+          ]
+        }
+      });
+
+      if (!invoice) {
+        return res.status(404).json({ error: 'Fatura não encontrada' });
+      }
+
+      console.log('📄 Fatura encontrada:', {
+        id: invoice.id,
+        uuid_lanc: invoice.uuid_lanc,
+        status: invoice.status,
+        datapag: invoice.datapag,
+        valor: invoice.valor,
+        datavenc: invoice.datavenc
+      });
+
+      return res.json({
+        id: invoice.id,
+        uuid_lanc: invoice.uuid_lanc,
+        login: invoice.login,
+        valor: invoice.valor,
+        status: invoice.status,
+        datavenc: invoice.datavenc,
+        datapag: invoice.datapag,
+        tipo: invoice.tipo,
+        obs: invoice.obs,
+        coletor: invoice.coletor,
+        formapag: invoice.formapag
+      });
+    } catch (error) {
+      console.error('❌ Erro ao buscar fatura:', error);
+      return res.status(500).json({ 
+        error: 'Erro ao buscar fatura',
+        details: error.message 
+      });
+    }
+  }
+
   async payInvoice(req, res) {
     try {
-      const { invoice_id, titulo, uuid_lanc } = req.body;
+      const { 
+        invoice_id, 
+        titulo, 
+        uuid_lanc,
+        data_pagamento,
+        formapag = 'dinheiro',
+        acrescimo = 0,
+        multa_mora = 0,
+        desconto = 0,
+        valor_pago,
+        cartao_bandeira,
+        cartao_numero,
+        cheque_banco,
+        cheque_numero,
+        cheque_agcc,
+        insnext,
+        excluir_efipay,
+      } = req.body;
       
       console.log('💰 InvoiceController.payInvoice - Dando baixa na fatura');
-      console.log('📦 Payload:', { invoice_id, titulo, uuid_lanc });
+      console.log('📦 Payload:', { invoice_id, titulo, uuid_lanc, formapag, acrescimo, multa_mora, desconto });
 
       // Identificar fatura (aceita id, titulo ou uuid_lanc)
       const invoiceIdentifier = invoice_id || titulo;
@@ -260,13 +335,59 @@ class InvoiceController {
         });
       }
 
-      // Atualizar status e data de pagamento
-      const now = new Date();
+      // Calcular valor final
+      const valorOriginal = parseFloat(invoice.valor) || 0;
+      const valorAcrescimo = parseFloat(acrescimo) || 0;
+      const valorMultaMora = parseFloat(multa_mora) || 0;
+      const valorDesconto = parseFloat(desconto) || 0;
+      const valorFinal = valorOriginal + valorAcrescimo + valorMultaMora - valorDesconto;
+
+      console.log('💵 Cálculo:', { valorOriginal, valorAcrescimo, valorMultaMora, valorDesconto, valorFinal });
+
+      // Atualizar status e dados de pagamento
+      const dataPagamento = data_pagamento ? new Date(data_pagamento) : new Date();
+      
+      // Pegar o login do usuário autenticado (do token JWT) ou usar o login do cliente
+      const coletor = invoice.login || 'api';
+      
       invoice.status = 'pago';
-      invoice.datapag = now;
+      invoice.datapag = dataPagamento;
+      invoice.coletor = coletor;
+      invoice.formapag = formapag || 'dinheiro';
+      // NOTA: Campos abaixo comentados até executar migrations
+      // invoice.formapag = formapag;
+      // invoice.acrescimo = valorAcrescimo;
+      // invoice.multa_mora = valorMultaMora;
+      // invoice.desconto = valorDesconto;
+      // invoice.valor_pago = valor_pago ? parseFloat(valor_pago) : valorFinal;
+
+      // Salvar dados específicos de pagamento (quando migrations forem executadas)
+      // if (formapag === 'cartao' || formapag === 'Cartao') {
+      //   invoice.cartao_bandeira = cartao_bandeira || null;
+      //   invoice.cartao_numero = cartao_numero || null;
+      // }
+
+      // if (formapag === 'cheque') {
+      //   invoice.cheque_banco = cheque_banco || null;
+      //   invoice.cheque_numero = cheque_numero || null;
+      //   invoice.cheque_agcc = cheque_agcc || null;
+      // }
+
       await invoice.save();
 
       console.log('✅ Fatura paga com sucesso:', invoice.id);
+
+      // TODO: Implementar lógica de juros para próxima mensalidade
+      if (insnext === 'sim' && (valorMultaMora > 0 || valorAcrescimo > 0)) {
+        console.log('⚠️ TODO: Adicionar juros na próxima mensalidade');
+        // Lógica para criar lançamento adicional na próxima fatura
+      }
+
+      // TODO: Implementar integração com EfiPay
+      if (excluir_efipay === 's') {
+        console.log('⚠️ TODO: Excluir título na EfiPay');
+        // Chamar API da EfiPay para cancelar o título
+      }
 
       return res.json({
         success: true,
@@ -276,11 +397,17 @@ class InvoiceController {
           uuid_lanc: invoice.uuid_lanc,
           login: invoice.login,
           valor: invoice.valor,
+          valor_pago: valor_pago || valorFinal,
+          acrescimo: valorAcrescimo,
+          multa_mora: valorMultaMora,
+          desconto: valorDesconto,
+          formapag: formapag,
           status: invoice.status,
           datavenc: invoice.datavenc,
           datapag: invoice.datapag,
           tipo: invoice.tipo,
-          obs: invoice.obs
+          obs: invoice.obs,
+          _nota: 'Campos financeiros serão salvos após execução das migrations'
         }
       });
     } catch (error) {

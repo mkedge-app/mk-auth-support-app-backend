@@ -12,6 +12,9 @@ class CTOController {
           longitude: {
             [Op.ne]: '',
           },
+          capacidade: {
+            [Op.gt]: 0, // Apenas CTOs com capacidade > 0
+          },
         },
       });
 
@@ -120,6 +123,7 @@ class CTOController {
     const CTOs = await CTO.findAll({
       where: {
         longitude: { [Op.ne]: '' },
+        capacidade: { [Op.gt]: 0 }, // Apenas CTOs com capacidade > 0
       },
     });
 
