@@ -20,12 +20,12 @@ class ClientController {
     try {
       const { id: client_id } = req.params;
 
-      // Busca por ID (numérico) ou login (string)
-      let client;
-      if (!isNaN(client_id)) {
+      // Busca por login primeiro, depois por ID se não encontrar
+      let client = await Client.findOne({ where: { login: client_id } });
+      
+      // Se não encontrou por login e client_id é numérico, tenta buscar por ID
+      if (!client && !isNaN(client_id)) {
         client = await Client.findByPk(client_id);
-      } else {
-        client = await Client.findOne({ where: { login: client_id } });
       }
 
       if (!client) {
@@ -354,12 +354,12 @@ class ClientController {
       automac
     });
 
-    // Busca por ID (numérico) ou login (string)
-    let client;
-    if (!isNaN(client_id)) {
+    // Busca por login primeiro, depois por ID se não encontrar
+    let client = await Client.findOne({ where: { login: client_id } });
+    
+    // Se não encontrou por login e client_id é numérico, tenta buscar por ID
+    if (!client && !isNaN(client_id)) {
       client = await Client.findByPk(client_id);
-    } else {
-      client = await Client.findOne({ where: { login: client_id } });
     }
 
     if (!client) {
