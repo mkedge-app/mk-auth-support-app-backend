@@ -20,7 +20,13 @@ class ClientController {
     try {
       const { id: client_id } = req.params;
 
-      const client = await Client.findByPk(client_id);
+      // Busca por ID (numérico) ou login (string)
+      let client;
+      if (!isNaN(client_id)) {
+        client = await Client.findByPk(client_id);
+      } else {
+        client = await Client.findOne({ where: { login: client_id } });
+      }
 
       if (!client) {
         return res.status(400).json({ message: 'No client not found' });
@@ -299,10 +305,13 @@ class ClientController {
     try {
       const { id: client_id } = req.params;
 
-      const {
+      console.log(`📥 req.body completo:`, JSON.stringify(req.body, null, 2));
+
+      let {
         latitude,
         longitude,
         new_cto,
+        caixa_herm,  // Frontend pode enviar com este nome
         observacao,
         date,
         celular,
@@ -310,43 +319,102 @@ class ClientController {
         endereco_res,
         numero_res,
         bairro_res,
+        complemento_res,
         automac,
+        coordenadas,
       } = req.body;
 
-    const client = await Client.findByPk(client_id);
+    // Normalizar o nome do campo CTO (aceita tanto new_cto quanto caixa_herm)
+    if (!new_cto && caixa_herm) {
+      new_cto = caixa_herm;
+    }
+
+    // Se coordenadas vier como string única, separar em latitude e longitude
+    if (coordenadas && typeof coordenadas === 'string' && coordenadas.includes(',')) {
+      const [lat, lng] = coordenadas.split(',').map(c => c.trim());
+      latitude = latitude || parseFloat(lat);
+      longitude = longitude || parseFloat(lng);
+      console.log(`📍 Coordenadas parseadas: lat=${latitude}, lng=${longitude}`);
+    }
+
+    console.log(`🔄 Atualizando cliente ID ${client_id}:`, {
+      endereco_res,
+      numero_res,
+      bairro_res,
+      complemento_res,
+      celular,
+      fone,
+      latitude,
+      longitude,
+      coordenadas,
+      new_cto,
+      caixa_herm,
+      observacao,
+      date,
+      automac
+    });
+
+    // Busca por ID (numérico) ou login (string)
+    let client;
+    if (!isNaN(client_id)) {
+      client = await Client.findByPk(client_id);
+    } else {
+      client = await Client.findOne({ where: { login: client_id } });
+    }
 
     if (!client) {
       return res.status(400).json({ message: 'No client not found' });
     }
 
-    if (new_cto) {
+    console.log(`📋 Cliente encontrado: ID=${client.id}, Login=${client.login}, Nome=${client.nome}`);
+
+    if (new_cto !== undefined && new_cto !== null) {
       client.caixa_herm = new_cto;
     }
 
-    if (latitude && longitude) {
+    if ((latitude !== undefined && latitude !== null) && (longitude !== undefined && longitude !== null)) {
       client.coordenadas = `${latitude},${longitude}`;
     }
 
-    if (observacao) {
+    if (observacao !== undefined && observacao !== null) {
       client.observacao = observacao;
 
-      if (date !== null) {
-        client.rem_obs = format(parseISO(date), 'yyyy-MM-dd 00:00:00');
+      if (date !== null && date !== undefined && date !== '') {
+        try {
+          const parsedDate = parseISO(date);
+          // Verifica se a data é válida
+          if (!isNaN(parsedDate.getTime())) {
+            client.rem_obs = format(parsedDate, 'yyyy-MM-dd 00:00:00');
+          }
+        } catch (err) {
+          console.error('Erro ao parsear data:', err);
+        }
       }
     }
 
-    if (celular) {
+    if (celular !== undefined && celular !== null) {
       client.celular = celular;
     }
 
-    if (fone) {
+    if (fone !== undefined && fone !== null) {
       client.fone = fone;
     }
 
-    if (endereco_res && numero_res && bairro_res) {
+    // Atualiza campos de endereço individualmente se fornecidos
+    if (endereco_res !== undefined && endereco_res !== null) {
       client.endereco_res = endereco_res;
+    }
+
+    if (numero_res !== undefined && numero_res !== null) {
       client.numero_res = numero_res;
+    }
+
+    if (bairro_res !== undefined && bairro_res !== null) {
       client.bairro_res = bairro_res;
+    }
+
+    if (complemento_res !== undefined && complemento_res !== null) {
+      client.complemento_res = complemento_res;
     }
 
     if (automac) {
@@ -355,6 +423,8 @@ class ClientController {
     }
 
     await client.save();
+
+    console.log(`✅ Cliente ${client_id} atualizado com sucesso`);
 
     return res.json(client);
     } catch (error) {

@@ -1091,19 +1091,25 @@ class RequestController {
           console.log('✅ Assuntos de sis_opcao:', assuntos.length);
         }
         
-        // Se não encontrou em sis_opcao, buscar assuntos únicos já usados em sis_suporte
+        // Se não encontrou em sis_opcao, buscar assuntos únicos já usados em sis_suporte (últimos 3 meses)
         if (assuntos.length === 0) {
-          console.log('🔍 Buscando assuntos DISTINCT de sis_suporte...');
+          console.log('🔍 Buscando assuntos DISTINCT de sis_suporte (últimos 3 meses)...');
+          
+          // Data de 3 meses atrás
+          const treseMesesAtras = new Date();
+          treseMesesAtras.setMonth(treseMesesAtras.getMonth() - 3);
+          
           const assuntosUsados = await SupportRequest.findAll({
             attributes: [[SupportRequest.sequelize.fn('DISTINCT', SupportRequest.sequelize.col('assunto')), 'assunto']],
             where: {
-              assunto: { [Op.ne]: null }
+              assunto: { [Op.ne]: null },
+              abertura: { [Op.gte]: treseMesesAtras }
             },
             order: [['assunto', 'ASC']],
             raw: true
           });
           
-          console.log('📊 Assuntos encontrados em sis_suporte:', assuntosUsados.length);
+          console.log('📊 Assuntos encontrados em sis_suporte (últimos 3 meses):', assuntosUsados.length);
           
           assuntos = assuntosUsados
             .map(a => a.assunto)
