@@ -2,10 +2,61 @@ import jwt from 'jsonwebtoken';
 
 import User from '../models/User';
 import Employee from '../models/Employee';
+import Tenant from '../schemas/Tenant';
 
 import authConfig from '../../config/auth';
 
 class SessionController {
+  // Login do portal do cliente (CNPJ + Email)
+  async storePortal(req, res) {
+    try {
+      const { cnpj, email } = req.body;
+
+      if (!cnpj || !email) {
+        return res.status(400).json({ error: 'CNPJ e Email são obrigatórios' });
+      }
+
+      // Buscar tenant por CNPJ e Email
+      const tenant = await Tenant.findOne({ 
+        cnpj: cnpj.replace(/\D/g, ''),
+        email: email.toLowerCase()
+      });
+
+      if (!tenant) {
+        return res.status(401).json({ error: 'CNPJ ou Email incorretos' });
+      }
+
+      // Gerar token JWT
+      const token = jwt.sign(
+        { 
+          tenant_id: tenant._id,
+          cnpj: tenant.cnpj,
+          type: 'client'
+        },
+        authConfig.secret,
+        {
+          expiresIn: authConfig.expiresIn,
+        }
+      );
+
+      return res.json({
+        token,
+        tenant: {
+          id: tenant._id,
+          nome: tenant.provedor?.nome || tenant.razao_social,
+          cnpj: tenant.cnpj,
+          email: tenant.email,
+          status: tenant.status,
+          cortesia: tenant.cortesia || false,
+          assinatura: tenant.assinatura
+        }
+      });
+    } catch (error) {
+      console.error('Erro no login do portal:', error);
+      return res.status(500).json({ error: 'Erro ao realizar login' });
+    }
+  }
+
   async store(req, res) {
     try {
       const { login, password } = req.body;

@@ -4,99 +4,307 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal do Cliente - MK-Edge</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary: #2563eb;
-            --secondary: #1e40af;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
+
         body {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
-        
-        .portal-card {
+
+        .login-container {
             background: white;
+            padding: 40px;
             border-radius: 20px;
-            padding: 60px 40px;
-            text-align: center;
-            max-width: 600px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
         }
-        
-        .portal-card i {
-            font-size: 5rem;
-            color: var(--primary);
+
+        .login-header {
+            text-align: center;
             margin-bottom: 30px;
         }
-        
-        .portal-card h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            color: var(--primary);
+
+        .login-header i {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 15px;
         }
-        
-        .btn-custom {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border: none;
-            padding: 15px 40px;
-            border-radius: 50px;
-            color: white;
+
+        .login-header h1 {
+            color: #333;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
             font-weight: 600;
-            margin: 10px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
             transition: all 0.3s;
         }
-        
-        .btn-custom:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .footer-links {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer-links a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin: 0 10px;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <div class="portal-card">
-            <i class="fas fa-tools"></i>
+    <div class="login-container">
+        <div class="login-header">
+            <i class="fas fa-user-circle"></i>
             <h1>Portal do Cliente</h1>
-            <p class="lead text-muted mb-4">
-                Área exclusiva para gerenciar sua assinatura, faturas e configurações.
-            </p>
-            
-            <div class="alert alert-info mb-4">
-                <i class="fas fa-info-circle me-2"></i>
-                <strong>Em Desenvolvimento</strong><br>
-                Esta funcionalidade estará disponível em breve!
+            <p>Gerencie sua assinatura e faturas</p>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label>CNPJ</label>
+                <input 
+                    type="text" 
+                    id="cnpj" 
+                    placeholder="04038227000187"
+                    required
+                    maxlength="18"
+                    value="04038227000187"
+                >
             </div>
-            
-            <p class="text-muted mb-4">
-                Enquanto isso, você pode:
-            </p>
-            
-            <div class="d-grid gap-3">
-                <a href="/" class="btn btn-custom">
-                    <i class="fas fa-home me-2"></i>Voltar para Home
-                </a>
-                <a href="/admin/" class="btn btn-outline-primary btn-custom" style="background: white; color: var(--primary);">
-                    <i class="fas fa-user-shield me-2"></i>Acessar Painel Admin
-                </a>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    placeholder="brito@updata.com.br"
+                    required
+                    value="brito@updata.com.br"
+                >
             </div>
-            
-            <div class="mt-5">
-                <p class="text-muted small mb-2">Precisa de ajuda?</p>
-                <p class="text-muted small">
-                    <i class="fas fa-envelope me-2"></i>suporte@mkedge.com.br<br>
-                    <i class="fas fa-phone me-2"></i>(11) 99999-9999
-                </p>
-            </div>
+
+            <button type="submit" class="btn-login" id="btnLogin">
+                <i class="fas fa-sign-in-alt"></i> Entrar
+            </button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px; color: #666;">Validando...</p>
+        </div>
+
+        <div class="footer-links">
+            <a href="/"><i class="fas fa-home"></i> Voltar</a>
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Usa o mesmo protocolo e host da página (HTTPS + mk-edge.com.br)
+        const API_URL = `${window.location.protocol}//${window.location.hostname}/api`;
+
+        // Máscara de CNPJ
+        document.getElementById('cnpj').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length <= 14) {
+                value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+                value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+                value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+                value = value.replace(/(\d{4})(\d)/, '$1-$2');
+            }
+            e.target.value = value;
+        });
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const cnpj = document.getElementById('cnpj').value.replace(/\D/g, '');
+            const email = document.getElementById('email').value;
+            const btnLogin = document.getElementById('btnLogin');
+            const loading = document.getElementById('loading');
+            const alertContainer = document.getElementById('alert-container');
+
+            if (cnpj.length !== 14) {
+                showAlert('CNPJ deve ter 14 dígitos', 'error');
+                return;
+            }
+
+            btnLogin.disabled = true;
+            loading.classList.add('active');
+            alertContainer.innerHTML = '';
+
+            try {
+                console.log('Enviando requisição para:', API_URL + '/portal/login');
+                console.log('CNPJ:', cnpj);
+                console.log('Email:', email);
+
+                const response = await fetch(`${API_URL}/portal/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ cnpj, email })
+                });
+
+                console.log('Status da resposta:', response.status);
+                console.log('Response OK?', response.ok);
+
+                const data = await response.json();
+                console.log('Dados recebidos:', data);
+
+                if (response.ok && data.token) {
+                    // Salvar dados
+                    localStorage.setItem('client_token', data.token);
+                    localStorage.setItem('client_data', JSON.stringify(data.tenant));
+                    
+                    showAlert('✅ Login realizado com sucesso!', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = '/portal/dashboard.html';
+                    }, 1000);
+                } else {
+                    const errorMsg = data.error || 'CNPJ ou Email incorretos';
+                    console.error('Erro do servidor:', errorMsg);
+                    showAlert(errorMsg, 'error');
+                }
+            } catch (error) {
+                console.error('Erro completo:', error);
+                console.error('Tipo do erro:', error.name);
+                console.error('Mensagem:', error.message);
+                showAlert('Erro ao conectar: ' + error.message, 'error');
+            } finally {
+                btnLogin.disabled = false;
+                loading.classList.remove('active');
+            }
+        });
+
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alert-container');
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type}">
+                    <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
+                    ${message}
+                </div>
+            `;
+        }
+    </script>
 </body>
 </html>

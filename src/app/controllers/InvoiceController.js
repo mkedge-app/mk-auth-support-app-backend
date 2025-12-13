@@ -10,6 +10,7 @@ import Invoice from '../models/Invoice';
 import InvoiceMongo from '../schemas/Invoice';
 import Client from '../models/Client';
 import QRPix from '../models/QRPix';
+import User from '../models/User';
 
 class InvoiceController {
   // Admin - Listar todas as faturas
@@ -300,7 +301,7 @@ class InvoiceController {
       console.log('📦 Payload:', { invoice_id, titulo, uuid_lanc, formapag, acrescimo, multa_mora, desconto });
 
       // Identificar fatura (aceita id, titulo ou uuid_lanc)
-      const invoiceIdentifier = invoice_id || titulo;
+      const invoiceIdentifier = invoice_id || titulo || uuid_lanc;
       
       if (!invoiceIdentifier) {
         return res.status(400).json({ 
@@ -347,12 +348,20 @@ class InvoiceController {
       // Atualizar status e dados de pagamento
       const dataPagamento = data_pagamento ? new Date(data_pagamento) : new Date();
       
-      // Pegar o login do usuário autenticado (do token JWT) ou usar o login do cliente
-      const coletor = invoice.login || 'api';
+      // Pegar o login do usuário autenticado (funcionário que está dando baixa)
+      let coletorLogin = 'api';
+      if (req.idacesso) {
+        const userLogado = await User.findByPk(req.idacesso);
+        if (userLogado && userLogado.login) {
+          coletorLogin = userLogado.login;
+        }
+      }
+      
+      console.log('👤 Coletor (usuário autenticado):', coletorLogin);
       
       invoice.status = 'pago';
       invoice.datapag = dataPagamento;
-      invoice.coletor = coletor;
+      invoice.coletor = coletorLogin;
       invoice.formapag = formapag || 'dinheiro';
       // NOTA: Campos abaixo comentados até executar migrations
       // invoice.formapag = formapag;

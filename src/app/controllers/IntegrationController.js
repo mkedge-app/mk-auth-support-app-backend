@@ -162,6 +162,93 @@ class IntegrationController {
       });
     }
   }
+
+  /**
+   * Atualiza configurações de integração (atualiza arquivo .env)
+   * NOTA: Requer reinicialização do servidor para aplicar mudanças
+   */
+  async updateConfig(req, res) {
+    try {
+      const { type, config } = req.body;
+      const fs = require('fs');
+      const path = require('path');
+      const envPath = path.resolve(process.cwd(), '.env');
+
+      if (!['efi', 'zapi'].includes(type)) {
+        return res.status(400).json({
+          error: 'Tipo de integração inválido. Use "efi" ou "zapi"',
+        });
+      }
+
+      // Lê o arquivo .env
+      let envContent = fs.readFileSync(envPath, 'utf8');
+
+      if (type === 'efi') {
+        // Atualiza variáveis EFI
+        if (config.client_id) {
+          envContent = envContent.replace(
+            /EFI_CLIENT_ID=.*/,
+            `EFI_CLIENT_ID=${config.client_id}`
+          );
+        }
+        if (config.client_secret) {
+          envContent = envContent.replace(
+            /EFI_CLIENT_SECRET=.*/,
+            `EFI_CLIENT_SECRET=${config.client_secret}`
+          );
+        }
+        if (config.pix_key !== undefined) {
+          envContent = envContent.replace(
+            /EFI_PIX_KEY=.*/,
+            `EFI_PIX_KEY=${config.pix_key || ''}`
+          );
+        }
+        if (config.sandbox !== undefined) {
+          envContent = envContent.replace(
+            /EFI_SANDBOX=.*/,
+            `EFI_SANDBOX=${config.sandbox}`
+          );
+        }
+      } else if (type === 'zapi') {
+        // Atualiza variáveis Z-API
+        if (config.instance) {
+          envContent = envContent.replace(
+            /ZAPI_INSTANCE=.*/,
+            `ZAPI_INSTANCE=${config.instance}`
+          );
+        }
+        if (config.token) {
+          envContent = envContent.replace(
+            /ZAPI_TOKEN=.*/,
+            `ZAPI_TOKEN=${config.token}`
+          );
+        }
+        if (config.security_token !== undefined) {
+          envContent = envContent.replace(
+            /ZAPI_CLIENT_TOKEN=.*/,
+            `ZAPI_CLIENT_TOKEN=${config.security_token || ''}`
+          );
+        }
+      }
+
+      // Salva o arquivo .env
+      fs.writeFileSync(envPath, envContent, 'utf8');
+
+      logger.info(`Configurações de ${type.toUpperCase()} atualizadas no .env`);
+
+      return res.json({
+        success: true,
+        message: 'Configurações salvas com sucesso. Reinicie o servidor para aplicar as mudanças.',
+        requires_restart: true,
+      });
+    } catch (error) {
+      logger.error('Erro ao atualizar configurações:', error);
+      return res.status(500).json({
+        error: 'Erro ao salvar configurações',
+        details: error.message,
+      });
+    }
+  }
 }
 
 export default new IntegrationController();

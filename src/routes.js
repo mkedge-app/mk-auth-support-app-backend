@@ -17,10 +17,14 @@ import AppStructureController from './app/controllers/AppStructureController';
 import DashboardController from './app/controllers/DashboardController';
 import SubscriptionController from './app/controllers/SubscriptionController';
 import WebhookController from './app/controllers/WebhookController';
+import WebhookEfiController from './app/controllers/WebhookEfiController';
 import PlanController from './app/controllers/PlanController';
 import AdminSessionController from './app/controllers/AdminSessionController';
 import SignupController from './app/controllers/SignupController';
 import IntegrationController from './app/controllers/IntegrationController';
+import IntegrationStatusController from './app/controllers/IntegrationStatusController';
+import MessageTemplateController from './app/controllers/MessageTemplateController';
+import NotificationLogController from './app/controllers/NotificationLogController';
 
 import authMiddleware from './app/middlewares/auth';
 import adminAuthMiddleware from './app/middlewares/adminAuth';
@@ -37,6 +41,7 @@ const routes = new Router();
 // Webhooks (EFI e Z-API)
 routes.post('/webhook/efi/pix', WebhookController.efiPix);
 routes.post('/webhook/efi/boleto', WebhookController.efiBoleto);
+routes.post('/webhook/efi', WebhookEfiController.notification); // Novo webhook unificado EFI
 routes.post('/webhook/zapi', WebhookController.zapiStatus);
 
 // Assinaturas e Pagamentos (antigos - manter compatibilidade)
@@ -47,8 +52,15 @@ routes.post('/payment', PaymentController.index);
 // Cadastro público de novos clientes
 routes.post('/signup', SignupController.store);
 
+// Criação de assinatura pública (para processo de signup)
+routes.post('/subscription/create', SubscriptionController.create);
+routes.get('/subscription/:id', SubscriptionController.show);
+
 // ===== ADMIN - AUTENTICAÇÃO =====
 routes.post('/admin/login', AdminSessionController.store);
+
+// ===== PORTAL DO CLIENTE - AUTENTICAÇÃO =====
+routes.post('/portal/login', SessionController.storePortal);
 
 // ===== ADMIN - ROTAS PROTEGIDAS =====
 // Todas as rotas admin requerem autenticação
@@ -63,13 +75,16 @@ routes.get('/admin/provider/:tenant_id', ProviderController.show);
 routes.delete('/admin/provider/:tenant_id', ProviderController.delete);
 
 // Sistema de Assinaturas (Admin)
-routes.get('/admin/subscriptions', SubscriptionController.index);
+// routes.get('/admin/subscriptions', SubscriptionController.index); // TODO: Implementar no novo controller
 routes.get('/admin/subscription/:id', SubscriptionController.show);
 routes.post('/admin/subscription', SubscriptionController.create);
-routes.post('/admin/subscription/:subscription_id/invoice', SubscriptionController.generateInvoice);
+// routes.post('/admin/subscription/:subscription_id/invoice', SubscriptionController.generateInvoice); // TODO: Implementar no novo controller
 routes.post('/admin/subscription/:id/cancel', SubscriptionController.cancel);
-routes.post('/admin/subscription/:id/suspend', SubscriptionController.suspend);
-routes.post('/admin/subscription/:id/reactivate', SubscriptionController.reactivate);
+// routes.post('/admin/subscription/:id/suspend', SubscriptionController.suspend); // TODO: Implementar no novo controller
+// routes.post('/admin/subscription/:id/reactivate', SubscriptionController.reactivate); // TODO: Implementar no novo controller
+
+// Gerenciamento de assinaturas EFI por tenant (Admin)
+routes.get('/admin/subscription/tenant/:tenant_id', SubscriptionController.listByTenant);
 
 // Controle de status do tenant (Admin)
 routes.post('/admin/tenant/:id/activate', ProviderController.activate);
@@ -106,7 +121,29 @@ routes.post('/admin/invoice/:id/pay', InvoiceController.markAsPaid);
 routes.get('/admin/integrations/status', IntegrationController.status);
 routes.post('/admin/integrations/efi/test', IntegrationController.testEfi);
 routes.post('/admin/integrations/zapi/test', IntegrationController.testZapi);
+routes.put('/admin/integrations/config', IntegrationController.updateConfig);
+
+// Novos endpoints de status de integração
+routes.get('/admin/integrations/efi/test', IntegrationStatusController.testEfi);
+routes.get('/admin/integrations/zapi/test', IntegrationStatusController.testZapi);
+routes.get('/admin/integrations/database/status', IntegrationStatusController.databaseStatus);
+routes.get('/admin/integrations/webhook/logs', IntegrationStatusController.webhookLogs);
+
+// Templates de Mensagens (Admin)
+routes.get('/admin/message-templates', MessageTemplateController.index);
+routes.post('/admin/message-templates', MessageTemplateController.store);
+routes.get('/admin/message-templates/:type', MessageTemplateController.show);
+routes.post('/admin/message-templates/:type/render', MessageTemplateController.render);
+routes.delete('/admin/message-templates/:type', MessageTemplateController.delete);
 routes.post('/admin/integrations/test-message', IntegrationController.sendTestMessage);
+
+// Histórico de Notificações (Admin)
+routes.get('/admin/notifications', NotificationLogController.index);
+routes.post('/admin/notifications', NotificationLogController.store);
+routes.put('/admin/notifications/:id/status', NotificationLogController.updateStatus);
+routes.post('/admin/notifications/:id/resend', NotificationLogController.resend);
+routes.post('/admin/notifications/send-manual', NotificationLogController.sendManual);
+routes.delete('/admin/notifications/:id', NotificationLogController.delete);
 
 // ===== ROTAS PÚBLICAS DE VISUALIZAÇÃO =====
 // Essas rotas são públicas para landing page, etc

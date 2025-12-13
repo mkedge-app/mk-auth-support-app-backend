@@ -202,6 +202,88 @@
             margin-right: 10px;
         }
         
+        /* Screenshots Section */
+        .screenshots {
+            padding: 80px 0;
+            background: white;
+        }
+        
+        .screenshot-item {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .screenshot-item img {
+            max-width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            transition: transform 0.3s;
+        }
+        
+        .screenshot-item img:hover {
+            transform: scale(1.05);
+        }
+        
+        .screenshot-item h5 {
+            margin-top: 20px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .screenshots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .screenshots-hidden {
+            display: none;
+        }
+        
+        .screenshots-hidden.show {
+            display: grid;
+        }
+        
+        .btn-show-more {
+            background: white;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 12px 40px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-show-more:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* Video Section */
+        .video-section {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+        
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+        }
+        
         /* CTA Section */
         .cta {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
@@ -344,57 +426,183 @@
                             <i class="fas fa-mobile-alt"></i>
                         </div>
                         <h4>App Mobile Nativo</h4>
-                        <p class="text-muted">Aplicativo completo para iOS e Android. Técnicos acessam chamados em tempo real, mesmo offline.</p>
+                        <p class="text-muted">Aplicativo completo para iOS e Android. Técnicos e clientes acessam chamados e faturas em tempo real.</p>
                     </div>
                 </div>
                 
                 <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
                     <div class="feature-card">
                         <div class="feature-icon">
-                            <i class="fas fa-map-marked-alt"></i>
+                            <i class="fas fa-qrcode"></i>
                         </div>
-                        <h4>Geolocalização</h4>
-                        <p class="text-muted">Rastreie a localização dos técnicos e otimize rotas automaticamente com Google Maps integrado.</p>
+                        <h4>Pagamento PIX e Boleto</h4>
+                        <p class="text-muted">Clientes visualizam faturas com QR Code PIX e linha digitável. Baixa automática de boletos em PDF.</p>
                     </div>
                 </div>
                 
                 <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
                     <div class="feature-card">
                         <div class="feature-icon">
-                            <i class="fas fa-bell"></i>
+                            <i class="fas fa-ticket-alt"></i>
                         </div>
-                        <h4>Notificações Push</h4>
-                        <p class="text-muted">Alertas instantâneos para novos chamados, mudanças de status e atualizações importantes.</p>
+                        <h4>Abertura de Chamados</h4>
+                        <p class="text-muted">Clientes abrem tickets direto pelo app com seleção de técnico, prioridade e agendamento de visita.</p>
                     </div>
                 </div>
                 
                 <div class="col-md-4" data-aos="fade-up" data-aos-delay="400">
                     <div class="feature-card">
                         <div class="feature-icon">
-                            <i class="fas fa-chart-line"></i>
+                            <i class="fas fa-map-marked-alt"></i>
                         </div>
-                        <h4>Relatórios Completos</h4>
-                        <p class="text-muted">Dashboards intuitivos com métricas de desempenho, tempo médio de atendimento e SLAs.</p>
+                        <h4>CTOs Inteligentes</h4>
+                        <p class="text-muted">Mapa com caixas de fibra óptica filtradas por capacidade disponível e distância do cliente.</p>
                     </div>
                 </div>
                 
                 <div class="col-md-4" data-aos="fade-up" data-aos-delay="500">
                     <div class="feature-card">
                         <div class="feature-icon">
-                            <i class="fas fa-link"></i>
+                            <i class="fas fa-bell"></i>
                         </div>
-                        <h4>Integração MK-Auth</h4>
-                        <p class="text-muted">Conecta direto com seu MK-Auth. Dados de clientes, faturas e conexões sincronizados.</p>
+                        <h4>Notificações Push</h4>
+                        <p class="text-muted">Alertas instantâneos para novos chamados, faturas vencidas e atualizações de status.</p>
                     </div>
                 </div>
                 
                 <div class="col-md-4" data-aos="fade-up" data-aos-delay="600">
                     <div class="feature-card">
                         <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h4>Dashboard Completo</h4>
+                        <p class="text-muted">Visualização de faturas pendentes/pagas, histórico de tickets e métricas de atendimento.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="700">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-link"></i>
+                        </div>
+                        <h4>Integração MK-Auth</h4>
+                        <p class="text-muted">Conecta direto com seu MK-Auth. Dados de clientes, faturas e conexões sincronizados em tempo real.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="800">
+                    <div class="feature-card">
+                        <div class="feature-icon">
                             <i class="fas fa-comments"></i>
                         </div>
-                        <h4>Chat Integrado</h4>
-                        <p class="text-muted">Comunicação direta entre equipe e clientes. Histórico completo de mensagens.</p>
+                        <h4>WhatsApp Automático</h4>
+                        <p class="text-muted">Integração Z-API para envio de notificações de faturas e atualizações via WhatsApp.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="900">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <h4>Segurança JWT</h4>
+                        <p class="text-muted">Autenticação segura com tokens JWT e multi-tenant para isolamento total de dados.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Screenshots Section -->
+    <section class="screenshots">
+        <div class="container">
+            <div class="text-center mb-5" data-aos="fade-up">
+                <h2 class="display-4 fw-bold mb-3">Veja o App em Ação</h2>
+                <p class="lead text-muted">Interface moderna e intuitiva para técnicos e clientes</p>
+            </div>
+            
+            <div class="screenshots-grid" id="screenshotsInitial">
+                <div class="screenshot-item" data-aos="zoom-in" data-aos-delay="100">
+                    <img src="/images/screenshots/screenshot1.jpeg" alt="Screenshot 1">
+                    <h5>Tela Inicial</h5>
+                </div>
+                <div class="screenshot-item" data-aos="zoom-in" data-aos-delay="200">
+                    <img src="/images/screenshots/screenshot2.jpeg" alt="Screenshot 2">
+                    <h5>Dashboard</h5>
+                </div>
+                <div class="screenshot-item" data-aos="zoom-in" data-aos-delay="300">
+                    <img src="/images/screenshots/screenshot3.jpeg" alt="Screenshot 3">
+                    <h5>Faturas</h5>
+                </div>
+                <div class="screenshot-item" data-aos="zoom-in" data-aos-delay="400">
+                    <img src="/images/screenshots/screenshot4.jpeg" alt="Screenshot 4">
+                    <h5>Pagamento</h5>
+                </div>
+            </div>
+            
+            <div class="screenshots-grid screenshots-hidden" id="screenshotsMore">
+                <div class="screenshot-item">
+                    <img src="/images/screenshots/screenshot5.jpeg" alt="Screenshot 5">
+                    <h5>Chamados</h5>
+                </div>
+                <div class="screenshot-item">
+                    <img src="/images/screenshots/screenshot6.jpeg" alt="Screenshot 6">
+                    <h5>Abrir Ticket</h5>
+                </div>
+                <div class="screenshot-item">
+                    <img src="/images/screenshots/screenshot7.jpeg" alt="Screenshot 7">
+                    <h5>Mapa de CTOs</h5>
+                </div>
+                <div class="screenshot-item">
+                    <img src="/images/screenshots/screenshot8.jpeg" alt="Screenshot 8">
+                    <h5>Notificações</h5>
+                </div>
+                <div class="screenshot-item">
+                    <img src="/images/screenshots/screenshot9.jpeg" alt="Screenshot 9">
+                    <h5>Perfil</h5>
+                </div>
+                <div class="screenshot-item">
+                    <img src="/images/screenshots/screenshot10.jpeg" alt="Screenshot 10">
+                    <h5>Configurações</h5>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button class="btn btn-show-more" id="btnShowMore" onclick="toggleScreenshots()">
+                    <i class="fas fa-images me-2"></i>Ver Mais Screenshots
+                </button>
+            </div>
+            
+            <div class="text-center mt-5" data-aos="fade-up">
+                <p class="text-muted">
+                    <i class="fas fa-mobile-alt me-2"></i>
+                    Interface moderna e intuitiva para Android e iOS
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Section -->
+    <section class="video-section">
+        <div class="container">
+            <div class="text-center mb-5" data-aos="fade-up">
+                <h2 class="display-4 fw-bold mb-3">Demonstração Completa</h2>
+                <p class="lead text-muted">Veja todas as funcionalidades em detalhes</p>
+            </div>
+            
+            <div class="row justify-content-center">
+                <div class="col-lg-10" data-aos="zoom-in">
+                    <div class="video-container">
+                        <video controls style="width:100%; height:100%; border-radius:20px; background:#000;">
+                            <source src="/videos/demo.mp4" type="video/mp4">
+                            Seu navegador não suporta a reprodução de vídeos.
+                        </video>
+                    </div>
+                    <div class="text-center mt-4">
+                        <p class="text-muted">
+                            <i class="fas fa-film me-2"></i>
+                            Demonstração completa do aplicativo MK-Edge em ação
+                        </p>
                     </div>
                 </div>
             </div>
@@ -423,11 +631,16 @@
                             <li><i class="fas fa-check"></i> <strong>Técnicos ilimitados</strong></li>
                             <li><i class="fas fa-check"></i> <strong>Chamados ilimitados</strong></li>
                             <li><i class="fas fa-check"></i> App mobile iOS e Android</li>
-                            <li><i class="fas fa-check"></i> Geolocalização em tempo real</li>
+                            <li><i class="fas fa-check"></i> Pagamento PIX com QR Code</li>
+                            <li><i class="fas fa-check"></i> Boletos em PDF automático</li>
+                            <li><i class="fas fa-check"></i> Abertura de tickets pelo app</li>
+                            <li><i class="fas fa-check"></i> Mapa de CTOs com capacidade</li>
+                            <li><i class="fas fa-check"></i> Dashboard de faturas completo</li>
                             <li><i class="fas fa-check"></i> Notificações push ilimitadas</li>
                             <li><i class="fas fa-check"></i> Integração com MK-Auth</li>
                             <li><i class="fas fa-check"></i> Relatórios e dashboards</li>
                             <li><i class="fas fa-check"></i> WhatsApp automático (Z-API)</li>
+                            <li><i class="fas fa-check"></i> Multi-tenant com isolamento</li>
                             <li><i class="fas fa-check"></i> Suporte técnico prioritário</li>
                             <li><i class="fas fa-check"></i> Atualizações automáticas</li>
                         </ul>
@@ -662,6 +875,22 @@
                 submitBtn.innerHTML = originalText;
             }
         });
+    </script>
+    
+    <script>
+        // Toggle screenshots
+        function toggleScreenshots() {
+            const moreSection = document.getElementById('screenshotsMore');
+            const btn = document.getElementById('btnShowMore');
+            
+            if (moreSection.classList.contains('show')) {
+                moreSection.classList.remove('show');
+                btn.innerHTML = '<i class="fas fa-images me-2"></i>Ver Mais Screenshots';
+            } else {
+                moreSection.classList.add('show');
+                btn.innerHTML = '<i class="fas fa-chevron-up me-2"></i>Ver Menos Screenshots';
+            }
+        }
     </script>
 </body>
 </html>

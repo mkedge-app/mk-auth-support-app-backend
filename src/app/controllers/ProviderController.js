@@ -25,6 +25,7 @@ class ProviderController {
         responsavel: tenant.responsavel,
         contato: tenant.contato,
         status: tenant.status || 'inativo',
+        cortesia: tenant.cortesia || false,
         provedor: {
           nome: tenant.provedor.nome,
           sis_provedor: tenant.provedor.sis_provedor || tenant.provedor.nome,

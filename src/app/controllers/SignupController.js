@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import Tenant from '../schemas/Tenant';
 import Subscription from '../schemas/Subscription';
 import Plan from '../schemas/Plan';
+import NotificationService from '../services/NotificationService';
 
 class SignupController {
   async store(req, res) {
@@ -61,6 +62,7 @@ class SignupController {
         contato,
         email,
         senha: senhaHash,
+        cortesia: false, // Clientes com cortesia=true não precisam de assinatura/pagamento
         provedor: {
           nome: empresa,
           sis_provedor: empresa
@@ -87,7 +89,7 @@ class SignupController {
         },
         status: 'trial',
         notificacoes: {
-          whatsapp_enabled: false,
+          whatsapp_enabled: true,  // Habilitado por padrão para receber notificações
           email_enabled: true
         }
       });
@@ -111,6 +113,13 @@ class SignupController {
 
       console.log(`✅ Nova conta criada: ${empresa} (${cnpj})`);
       console.log(`📅 Trial até: ${dataFimTrial.toLocaleDateString('pt-BR')}`);
+
+      // Enviar mensagem de boas-vindas (assíncrono, não bloqueia resposta)
+      if (contato) {
+        NotificationService.sendWelcome(tenant).catch(err => {
+          console.error('❌ Erro ao enviar boas-vindas:', err);
+        });
+      }
 
       return res.status(201).json({
         success: true,

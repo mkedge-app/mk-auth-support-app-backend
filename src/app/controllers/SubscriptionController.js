@@ -1,388 +1,217 @@
-import { format, addMonths, addDays, differenceInDays, isPast } from 'date-fns';
-import { v4 as uuidv4 } from 'uuid';
-import Tenant from '../schemas/Tenant';
 import Subscription from '../schemas/Subscription';
-import Invoice from '../schemas/Invoice';
-import EfiService from '../helpers/EfiService';
-import ZApiService from '../helpers/ZApiService';
-import integrationsConfig from '../../config/integrations';
-import logger from '../../logger';
+import Tenant from '../schemas/Tenant';
+import EfiSubscriptionService from '../services/EfiSubscriptionService';
 
 class SubscriptionController {
   /**
-   * Lista todas as assinaturas
-   */
-  async index(req, res) {
-    try {
-      const { status, page = 1, limit = 20 } = req.query;
-      
-      const filter = {};
-      if (status) {
-        filter.status = status;
-      }
-
-      const subscriptions = await Subscription.find(filter)
-        .populate('tenant_id', 'cnpj responsavel contato provedor')
-        .limit(limit * 1)
-        .skip((page - 1) * limit)
-        .sort({ createdAt: -1 });
-
-      const total = await Subscription.countDocuments(filter);
-
-      return res.json({
-        subscriptions,
-        totalPages: Math.ceil(total / limit),
-        currentPage: page,
-        total,
-      });
-    } catch (error) {
-      logger.error('Erro ao listar assinaturas:', error);
-      return res.status(500).json({ error: 'Erro ao listar assinaturas' });
-    }
-  }
-
-  /**
-   * Detalhes de uma assinatura específica
-   */
-  async show(req, res) {
-    try {
-      const { id } = req.params;
-
-      const subscription = await Subscription.findById(id)
-        .populate('tenant_id');
-
-      if (!subscription) {
-        return res.status(404).json({ error: 'Assinatura não encontrada' });
-      }
-
-      // Buscar faturas relacionadas
-      const invoices = await Invoice.find({ subscription_id: id })
-        .sort({ data_vencimento: -1 });
-
-      return res.json({
-        subscription,
-        invoices,
-      });
-    } catch (error) {
-      logger.error('Erro ao buscar assinatura:', error);
-      return res.status(500).json({ error: 'Erro ao buscar assinatura' });
-    }
-  }
-
-  /**
-   * Cria nova assinatura para um tenant
+   * Criar nova assinatura
+   * POST /subscription/create
    */
   async create(req, res) {
     try {
       const {
         tenant_id,
-        plano,
-        valor,
-        dia_vencimento,
-        trial_days = 0,
-        metodo_pagamento,
+        plan_id,
+        customer_name,
+        customer_email,
+        customer_cpf,
+        customer_phone,
+        customer_birth,
+        customer_address,
+        payment_method, // 'banking_billet' ou 'pix'
       } = req.body;
 
+      console.log('📝 Criando assinatura para:', customer_email);
+
+      // Buscar tenant
       const tenant = await Tenant.findById(tenant_id);
       if (!tenant) {
-        return res.status(404).json({ error: 'Tenant não encontrado' });
+        return res.status(404).json({ error: 'Provedor não encontrado' });
       }
 
-      // Verifica se já existe assinatura ativa
-      const existingSubscription = await Subscription.findOne({
-        tenant_id,
-        status: { $in: ['trial', 'active'] },
-      });
-
-      if (existingSubscription) {
-        return res.status(400).json({
-          error: 'Tenant já possui assinatura ativa',
+      // Clientes em cortesia não precisam de assinatura
+      if (tenant.cortesia) {
+        console.log('ℹ️ Cliente em cortesia - assinatura não necessária:', tenant_id);
+        return res.status(200).json({
+          message: 'Cliente em cortesia - serviço já ativo',
+          tenant_id,
+          cortesia: true,
+          status: 'active',
         });
       }
 
-      // Calcula datas
-      const now = new Date();
-      let proximo_vencimento = new Date();
-      let trial_ends_at = null;
-
-      if (trial_days > 0) {
-        trial_ends_at = addDays(now, trial_days);
-        proximo_vencimento = addDays(trial_ends_at, 1);
-      } else {
-        proximo_vencimento.setDate(dia_vencimento);
-        if (proximo_vencimento < now) {
-          proximo_vencimento = addMonths(proximo_vencimento, 1);
-        }
-      }
-
-      // Cria assinatura
-      const subscription = await Subscription.create({
-        tenant_id,
-        status: trial_days > 0 ? 'trial' : 'active',
-        plano,
-        valor,
-        dia_vencimento,
-        proximo_vencimento,
-        trial_ends_at,
-        metodo_pagamento,
+      // Criar cobrança na EFI
+      const charge = await EfiSubscriptionService.createCharge({
+        item_name: `Assinatura MK-Edge - ${tenant.responsavel}`,
+        value: 100.00, // R$ 100,00
+        custom_id: tenant_id,
+        notification_url: `${process.env.APP_URL || 'https://mk-edge.com.br'}/webhook/efi`,
       });
 
-      // Atualiza tenant
-      tenant.assinatura.status = subscription.status;
-      tenant.assinatura.ativa = true;
-      tenant.assinatura.plano = plano;
-      tenant.assinatura.valor = valor;
-      tenant.assinatura.dia_vencimento = dia_vencimento.toString();
-      tenant.assinatura.proximo_pagamento = proximo_vencimento;
-      tenant.assinatura.trial_ends_at = trial_ends_at;
-      tenant.assinatura.metodo_pagamento = metodo_pagamento;
-      await tenant.save();
+      const charge_id = charge.data.charge_id;
 
-      // Envia mensagem de boas-vindas
-      if (integrationsConfig.zapi.instance && integrationsConfig.notifications.whatsapp_enabled) {
-        try {
-          const zapi = new ZApiService({
-            instance: integrationsConfig.zapi.instance,
-            token: integrationsConfig.zapi.token,
-            client_token: integrationsConfig.zapi.client_token,
-          });
+      let payment_data = null;
 
-          await zapi.sendText(
-            tenant.contato,
-            zapi.templates.boasVindas(tenant.responsavel, plano)
-          );
-        } catch (error) {
-          logger.error('Erro ao enviar WhatsApp de boas-vindas:', error);
-        }
+      // Gerar boleto ou PIX
+      if (payment_method === 'banking_billet') {
+        const boleto = await EfiSubscriptionService.generateBankingBillet(charge_id, {
+          expire_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 dias
+          customer: {
+            name: customer_name,
+            email: customer_email,
+            cpf: customer_cpf,
+            phone: customer_phone,
+            birth: customer_birth,
+            address: customer_address,
+          },
+        });
+
+        payment_data = {
+          barcode: boleto.data.barcode,
+          link: boleto.data.link,
+          pdf_link: boleto.data.pdf.charge,
+        };
+      } else if (payment_method === 'pix') {
+        const pix = await EfiSubscriptionService.generatePixCharge({
+          value: 100.00,
+          customer: {
+            name: customer_name,
+            cpf: customer_cpf,
+          },
+          custom_id: tenant_id,
+          description: `Assinatura MK-Edge - ${tenant.responsavel}`,
+        });
+
+        // Gerar QR Code
+        const qrcode = await EfiSubscriptionService.generatePixQRCode(pix.loc.id);
+
+        payment_data = {
+          txid: pix.txid,
+          qrcode: pix.pixCopiaECola,
+          qrcode_image: qrcode.imagemQrcode,
+        };
       }
 
-      return res.status(201).json(subscription);
+      // Salvar assinatura no MongoDB
+      const subscription = await Subscription.create({
+        tenant_id,
+        plan: plan_id || 'monthly',
+        amount: 100.00,
+        status: 'pending',
+        payment_method,
+        efi_charge_id: charge_id,
+        payment_data,
+        customer: {
+          name: customer_name,
+          email: customer_email,
+          cpf: customer_cpf,
+          phone: customer_phone,
+        },
+        next_billing_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 dias
+      });
+
+      console.log('✅ Assinatura criada:', subscription._id);
+
+      return res.json({
+        success: true,
+        subscription: {
+          id: subscription._id,
+          status: subscription.status,
+          amount: subscription.amount,
+          payment_method: subscription.payment_method,
+          payment_data: subscription.payment_data,
+        },
+      });
     } catch (error) {
-      logger.error('Erro ao criar assinatura:', error);
-      return res.status(500).json({ error: 'Erro ao criar assinatura' });
+      console.error('❌ Erro ao criar assinatura:', error);
+      return res.status(500).json({
+        error: 'Erro ao criar assinatura',
+        details: error.message,
+      });
     }
   }
 
   /**
-   * Gera uma nova fatura para a assinatura
+   * Consultar assinatura
+   * GET /subscription/:id
    */
-  async generateInvoice(req, res) {
+  async show(req, res) {
     try {
-      const { subscription_id } = req.params;
-      const { metodo_pagamento = 'pix' } = req.body;
+      const { id } = req.params;
 
-      const subscription = await Subscription.findById(subscription_id)
-        .populate('tenant_id');
+      const subscription = await Subscription.findById(id).populate('tenant_id');
 
       if (!subscription) {
         return res.status(404).json({ error: 'Assinatura não encontrada' });
       }
 
-      const tenant = subscription.tenant_id;
-
-      // Gera número da fatura
-      const numero_fatura = `INV-${Date.now()}-${uuidv4().substring(0, 8)}`;
-
-      // Cria fatura
-      const invoice = await Invoice.create({
-        tenant_id: tenant._id,
-        subscription_id: subscription._id,
-        numero_fatura,
-        valor: subscription.valor,
-        data_vencimento: subscription.proximo_vencimento,
-        metodo_pagamento,
-        status: 'pending',
-      });
-
-      // Gera cobrança na EFI
-      if (integrationsConfig.efi.client_id && metodo_pagamento === 'pix') {
-        try {
-          const efi = new EfiService({
-            client_id: integrationsConfig.efi.client_id,
-            client_secret: integrationsConfig.efi.client_secret,
-            certificate: integrationsConfig.efi.certificate,
-            sandbox: integrationsConfig.efi.sandbox,
-          });
-
-          const txid = uuidv4().replace(/-/g, '');
-          const pixCharge = await efi.createPixCharge({
-            txid,
-            valor: subscription.valor,
-            devedor: {
-              cnpj: tenant.cnpj,
-              nome: tenant.responsavel,
-            },
-            expiracao: 86400, // 24 horas
-            descricao: `Assinatura ${subscription.plano} - ${format(new Date(), 'MM/yyyy')}`,
-          });
-
-          // Atualiza fatura com dados do Pix
-          invoice.efi_txid = pixCharge.txid;
-          invoice.efi_pix_qrcode = pixCharge.pixCopiaECola;
-          invoice.efi_pix_qrcode_image = pixCharge.qrcodeImage;
-          await invoice.save();
-
-          // Envia Pix por WhatsApp
-          if (integrationsConfig.zapi.instance && integrationsConfig.notifications.whatsapp_enabled) {
-            try {
-              const zapi = new ZApiService({
-                instance: integrationsConfig.zapi.instance,
-                token: integrationsConfig.zapi.token,
-                client_token: integrationsConfig.zapi.client_token,
-              });
-
-              await zapi.sendText(
-                tenant.contato,
-                zapi.templates.pixGerado(
-                  tenant.responsavel,
-                  subscription.valor,
-                  pixCharge.pixCopiaECola
-                )
-              );
-
-              // Envia imagem do QR Code
-              if (pixCharge.qrcodeImage) {
-                await zapi.sendImage(
-                  tenant.contato,
-                  pixCharge.qrcodeImage,
-                  'Escaneie o QR Code para pagar'
-                );
-              }
-            } catch (error) {
-              logger.error('Erro ao enviar Pix por WhatsApp:', error);
-            }
-          }
-        } catch (error) {
-          logger.error('Erro ao gerar Pix na EFI:', error);
-        }
-      }
-
-      return res.status(201).json(invoice);
+      return res.json(subscription);
     } catch (error) {
-      logger.error('Erro ao gerar fatura:', error);
-      return res.status(500).json({ error: 'Erro ao gerar fatura' });
+      console.error('❌ Erro ao consultar assinatura:', error);
+      return res.status(500).json({
+        error: 'Erro ao consultar assinatura',
+        details: error.message,
+      });
     }
   }
 
   /**
-   * Cancela assinatura
+   * Listar assinaturas do tenant
+   * GET /subscription/tenant/:tenant_id
+   */
+  async listByTenant(req, res) {
+    try {
+      const { tenant_id } = req.params;
+
+      const subscriptions = await Subscription.find({ tenant_id }).sort({ createdAt: -1 });
+
+      return res.json(subscriptions);
+    } catch (error) {
+      console.error('❌ Erro ao listar assinaturas:', error);
+      return res.status(500).json({
+        error: 'Erro ao listar assinaturas',
+        details: error.message,
+      });
+    }
+  }
+
+  /**
+   * Cancelar assinatura
+   * POST /subscription/:id/cancel
    */
   async cancel(req, res) {
     try {
       const { id } = req.params;
-      const { motivo } = req.body;
 
-      const subscription = await Subscription.findById(id)
-        .populate('tenant_id');
+      const subscription = await Subscription.findById(id);
 
       if (!subscription) {
         return res.status(404).json({ error: 'Assinatura não encontrada' });
       }
 
+      // Cancelar na EFI se houver subscription_id
+      if (subscription.efi_subscription_id) {
+        await EfiSubscriptionService.cancelSubscription(subscription.efi_subscription_id);
+      }
+
+      // Atualizar status
       subscription.status = 'cancelled';
-      subscription.data_fim = new Date();
-      subscription.notas = motivo || 'Cancelamento solicitado';
+      subscription.cancelled_at = new Date();
       await subscription.save();
 
-      // Atualiza tenant
-      const tenant = subscription.tenant_id;
-      tenant.assinatura.status = 'cancelled';
-      tenant.assinatura.ativa = false;
-      await tenant.save();
+      console.log('✅ Assinatura cancelada:', id);
 
       return res.json({
+        success: true,
         message: 'Assinatura cancelada com sucesso',
         subscription,
       });
     } catch (error) {
-      logger.error('Erro ao cancelar assinatura:', error);
-      return res.status(500).json({ error: 'Erro ao cancelar assinatura' });
-    }
-  }
-
-  /**
-   * Suspende assinatura por falta de pagamento
-   */
-  async suspend(req, res) {
-    try {
-      const { id } = req.params;
-
-      const subscription = await Subscription.findById(id)
-        .populate('tenant_id');
-
-      if (!subscription) {
-        return res.status(404).json({ error: 'Assinatura não encontrada' });
-      }
-
-      subscription.status = 'suspended';
-      await subscription.save();
-
-      // Atualiza tenant
-      const tenant = subscription.tenant_id;
-      tenant.assinatura.status = 'suspended';
-      tenant.assinatura.ativa = false;
-      await tenant.save();
-
-      // Envia notificação de suspensão
-      if (integrationsConfig.zapi.instance && integrationsConfig.notifications.whatsapp_enabled) {
-        try {
-          const zapi = new ZApiService({
-            instance: integrationsConfig.zapi.instance,
-            token: integrationsConfig.zapi.token,
-            client_token: integrationsConfig.zapi.client_token,
-          });
-
-          await zapi.sendText(
-            tenant.contato,
-            zapi.templates.servicoSuspenso(tenant.responsavel)
-          );
-        } catch (error) {
-          logger.error('Erro ao enviar notificação de suspensão:', error);
-        }
-      }
-
-      return res.json({
-        message: 'Assinatura suspensa',
-        subscription,
+      console.error('❌ Erro ao cancelar assinatura:', error);
+      return res.status(500).json({
+        error: 'Erro ao cancelar assinatura',
+        details: error.message,
       });
-    } catch (error) {
-      logger.error('Erro ao suspender assinatura:', error);
-      return res.status(500).json({ error: 'Erro ao suspender assinatura' });
-    }
-  }
-
-  /**
-   * Reativa assinatura suspensa
-   */
-  async reactivate(req, res) {
-    try {
-      const { id } = req.params;
-
-      const subscription = await Subscription.findById(id)
-        .populate('tenant_id');
-
-      if (!subscription) {
-        return res.status(404).json({ error: 'Assinatura não encontrada' });
-      }
-
-      subscription.status = 'active';
-      subscription.tentativas_falhas = 0;
-      await subscription.save();
-
-      // Atualiza tenant
-      const tenant = subscription.tenant_id;
-      tenant.assinatura.status = 'active';
-      tenant.assinatura.ativa = true;
-      tenant.assinatura.tentativas_falhas = 0;
-      await tenant.save();
-
-      return res.json({
-        message: 'Assinatura reativada com sucesso',
-        subscription,
-      });
-    } catch (error) {
-      logger.error('Erro ao reativar assinatura:', error);
-      return res.status(500).json({ error: 'Erro ao reativar assinatura' });
     }
   }
 }

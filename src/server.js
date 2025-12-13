@@ -2,6 +2,9 @@ import ip from 'ip';
 import app from './app';
 import logger from './logger';
 import appConfig from './config/app';
+import ReminderJob from './app/jobs/ReminderJob';
+import TrialExpirationJob from './app/jobs/TrialExpirationJob';
+import AutoReconnectJob from './app/jobs/AutoReconnectJob';
 
 logger.info(
   `This is internal URL of the application: ${ip.address()}:${
@@ -10,6 +13,12 @@ logger.info(
 );
 
 const server = app.listen(appConfig.app_port);
+
+// Iniciar jobs agendados
+ReminderJob.start();
+TrialExpirationJob.start();
+AutoReconnectJob.start();
+logger.info('📅 Jobs de notificações, trial e reconexão automática iniciados');
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
