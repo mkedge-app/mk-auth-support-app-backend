@@ -283,11 +283,14 @@ class InvoiceController {
         titulo, 
         uuid_lanc,
         data_pagamento,
+        data, // Aceitar também "data" 
         formapag = 'dinheiro',
         acrescimo = 0,
         multa_mora = 0,
         desconto = 0,
         valor_pago,
+        valor, // Aceitar também "valor"
+        observacao,
         cartao_bandeira,
         cartao_numero,
         cheque_banco,
@@ -298,7 +301,7 @@ class InvoiceController {
       } = req.body;
       
       console.log('💰 InvoiceController.payInvoice - Dando baixa na fatura');
-      console.log('📦 Payload:', { invoice_id, titulo, uuid_lanc, formapag, acrescimo, multa_mora, desconto });
+      console.log('📦 Payload completo:', req.body);
 
       // Identificar fatura (aceita id, titulo ou uuid_lanc)
       const invoiceIdentifier = invoice_id || titulo || uuid_lanc;
@@ -341,12 +344,24 @@ class InvoiceController {
       const valorAcrescimo = parseFloat(acrescimo) || 0;
       const valorMultaMora = parseFloat(multa_mora) || 0;
       const valorDesconto = parseFloat(desconto) || 0;
-      const valorFinal = valorOriginal + valorAcrescimo + valorMultaMora - valorDesconto;
+      
+      // Aceitar valor_pago ou valor do payload
+      const valorPago = valor_pago || valor;
+      const valorFinal = valorPago ? parseFloat(valorPago) : (valorOriginal + valorAcrescimo + valorMultaMora - valorDesconto);
 
-      console.log('💵 Cálculo:', { valorOriginal, valorAcrescimo, valorMultaMora, valorDesconto, valorFinal });
+      console.log('💵 Cálculo:', { 
+        valorOriginal, 
+        valorAcrescimo, 
+        valorMultaMora, 
+        valorDesconto, 
+        valorPago: valorPago || 'não informado',
+        valorFinal 
+      });
 
       // Atualizar status e dados de pagamento
-      const dataPagamento = data_pagamento ? new Date(data_pagamento) : new Date();
+      // Aceitar data_pagamento ou data
+      const dataFinal = data_pagamento || data;
+      const dataPagamento = dataFinal ? new Date(dataFinal) : new Date();
       
       // Pegar o login do usuário autenticado (funcionário que está dando baixa)
       let coletorLogin = 'api';
@@ -363,12 +378,26 @@ class InvoiceController {
       invoice.datapag = dataPagamento;
       invoice.coletor = coletorLogin;
       invoice.formapag = formapag || 'dinheiro';
+      
+      // Adicionar observação se fornecida
+      if (observacao) {
+        invoice.obs = observacao;
+      }
+      
+      console.log('✅ Dados salvos:', {
+        status: invoice.status,
+        datapag: invoice.datapag,
+        coletor: invoice.coletor,
+        formapag: invoice.formapag,
+        valorFinal,
+        obs: invoice.obs
+      });
+      
       // NOTA: Campos abaixo comentados até executar migrations
-      // invoice.formapag = formapag;
       // invoice.acrescimo = valorAcrescimo;
       // invoice.multa_mora = valorMultaMora;
       // invoice.desconto = valorDesconto;
-      // invoice.valor_pago = valor_pago ? parseFloat(valor_pago) : valorFinal;
+      // invoice.valor_pago = valorFinal;
 
       // Salvar dados específicos de pagamento (quando migrations forem executadas)
       // if (formapag === 'cartao' || formapag === 'Cartao') {
