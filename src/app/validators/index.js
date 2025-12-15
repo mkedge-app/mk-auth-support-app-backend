@@ -171,13 +171,14 @@ export const sessionValidations = {
  */
 export const adminSessionValidations = {
   store: [
-    body('email')
+    body('username')
       .notEmpty()
-      .withMessage('Email é obrigatório')
-      .isEmail()
-      .withMessage('Email inválido')
-      .normalizeEmail(),
-    
+      .withMessage('Usuário é obrigatório')
+      .isString()
+      .trim()
+      .isLength({ min: 3, max: 100 })
+      .withMessage('Usuário deve ter entre 3 e 100 caracteres'),
+
     body('password')
       .notEmpty()
       .withMessage('Senha é obrigatória')
