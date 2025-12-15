@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { resolveDbConnection } from '../middlewares/connectionResolver';
 
 const TenantSchema = new mongoose.Schema(
   {

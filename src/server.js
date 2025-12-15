@@ -39,11 +39,9 @@ process.on('SIGINT', () => {
 
 // Tratamento de erros não capturados
 process.on('uncaughtException', (error) => {
-  logger.error('Uncaught Exception:', error);
-  // Não encerra o processo, apenas loga
+  logger.error({ err: error, stack: error?.stack }, 'Uncaught Exception');
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  // Não encerra o processo, apenas loga
+  logger.error({ err: reason, promise }, 'Unhandled Rejection');
 });

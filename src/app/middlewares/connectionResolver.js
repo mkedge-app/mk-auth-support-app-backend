@@ -2,7 +2,7 @@
 /* eslint-disable no-underscore-dangle */
 import Sequelize from 'sequelize';
 
-import Tenant from '../schemas/Tenant';
+import logger from '../../logger';
 
 import CTO from '../models/CTO';
 import User from '../models/User';
@@ -41,28 +41,45 @@ const models = [
 ];
 
 const tenantDatabaseConnections = {};
+let TenantModel;
+
+async function getTenantModel() {
+  if (!TenantModel) {
+    const module = await import('../schemas/Tenant.js');
+    TenantModel = module.default;
+  }
+  return TenantModel;
+}
 
 async function loadTenantConnections() {
-  const providers = await Tenant.find({
-    assinatura: { ativa: true }
-  });
+  try {
+    const Tenant = await getTenantModel();
+    const providers = (await Tenant.find({ 'assinatura.ativa': true })) || [];
 
-  providers.map(async tenant => {
-    try {
-      await connectNewTenantsDB(tenant);
-      console.log('Successfuly connected to', tenant.nome, "database");
-    } catch (error) {
-      console.log(tenant.nome, error);
+    for (const tenant of providers) {
+      if (!tenant?.assinatura?.ativa) continue;
+      try {
+        await connectNewTenantsDB(tenant);
+        logger.info({ tenant: tenant.nome }, 'Successfuly connected to tenant database');
+      } catch (error) {
+        logger.warn({ tenant: tenant.nome, err: error }, 'Failed to connect tenant database');
+      }
     }
-  });
+  } catch (error) {
+    logger.error({ err: error }, 'Failed to load tenant connections');
+  }
 }
 
 function connectNewTenantsDB(tenant) {
   return new Promise(async (resolve, reject) => {
     const { id } = tenant;
 
-    if (!tenant.assinatura.ativa) {
-      reject('Tenant is not active');
+    if (!tenant?.assinatura?.ativa) {
+      return reject(new Error('Tenant is not active'));
+    }
+
+    if (!tenant?.database) {
+      return reject(new Error('Tenant database config missing'));
     }
 
     try {
@@ -83,8 +100,8 @@ function connectNewTenantsDB(tenant) {
       tenantDatabaseConnections[id] = connection;
       resolve();
     } catch (error) {
-      console.log('Erro ao conectar tenant DB:', error.message);
-      reject('Database params are invalid or mysql2 not installed');
+      logger.warn({ tenant: tenant.nome, err: error }, 'Erro ao conectar tenant DB');
+      reject(new Error('Database params are invalid or mysql2 not installed'));
     }
   })
 }
@@ -93,6 +110,7 @@ function connectNewTenantsDB(tenant) {
 loadTenantConnections();
 
 async function ConnectionResolver(req, res, next) {
+  const Tenant = await getTenantModel();
   let { tenant_id } = req.query;
 
   // Se não tiver tenant_id, usa o Updata como padrão (para compatibilidade com painel Angular antigo)

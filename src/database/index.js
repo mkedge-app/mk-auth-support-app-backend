@@ -10,13 +10,7 @@ class Database {
   async mongo() {
     // Conexao com o mongo
     try {
-      this.mongoConnection = await mongoose.connect(
-        databaseConfig.mongodb_url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true,
-        }
-      );
+      this.mongoConnection = await mongoose.connect(databaseConfig.mongodb_url);
 
       logger.info(`Successfull connection: ${databaseConfig.mongodb_url}`);
     } catch (error) {

@@ -9,7 +9,7 @@ const PlanSchema = new mongoose.Schema(
     slug: {
       type: String,
       required: true,
-      unique: true,
+      unique: true, // já gera índice único; evita duplicar manualmente abaixo
     },
     descricao: {
       type: String,
@@ -63,8 +63,7 @@ const PlanSchema = new mongoose.Schema(
   }
 );
 
-// Índices
-PlanSchema.index({ slug: 1 });
+// Índices adicionais
 PlanSchema.index({ ativo: 1, ordem: 1 });
 
 export default mongoose.model('Plan', PlanSchema);
