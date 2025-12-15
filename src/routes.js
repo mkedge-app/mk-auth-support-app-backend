@@ -52,6 +52,15 @@ const routes = new Router();
 
 // ===== ROTAS PÚBLICAS (Sem autenticação, sem ConnectionResolver) =====
 
+// Health check (para Docker/K8s)
+routes.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // Webhooks (EFI e Z-API)
 routes.post('/webhook/efi/pix', WebhookController.efiPix);
 routes.post('/webhook/efi/boleto', WebhookController.efiBoleto);

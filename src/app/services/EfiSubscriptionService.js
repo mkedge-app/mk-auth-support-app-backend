@@ -4,18 +4,22 @@ import fs from 'fs';
 
 class EfiSubscriptionService {
   constructor() {
+    const certPath = process.env.EFI_CERTIFICATE_PATH || process.env.EFI_CERT_PATH || './cert/producao.p12';
+    
     this.options = {
       client_id: process.env.EFI_CLIENT_ID,
       client_secret: process.env.EFI_CLIENT_SECRET,
-      certificate: path.resolve(__dirname, '..', '..', '..', process.env.EFI_CERTIFICATE_PATH),
+      certificate: certPath ? path.resolve(__dirname, '..', '..', '..', certPath) : null,
       sandbox: process.env.EFI_SANDBOX === 'true',
     };
 
     // Verificar se o certificado existe
-    if (!fs.existsSync(this.options.certificate)) {
+    if (this.options.certificate && !fs.existsSync(this.options.certificate)) {
       console.error('❌ Certificado EFI não encontrado:', this.options.certificate);
-    } else {
+    } else if (this.options.certificate) {
       console.log('✅ Certificado EFI carregado:', this.options.certificate);
+    } else {
+      console.warn('⚠️ EFI rodando sem certificado (apenas para desenvolvimento)');
     }
   }
 

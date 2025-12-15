@@ -1,0 +1,79 @@
+services:
+  # Backend API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mk-edge-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      APP_PORT: 3333
+      
+      # MongoDB
+      MONGODB_URL: ${MONGODB_URL:-mongodb://mongo:27017/mkedgetenants}
+      MONGODB_USER: ${MONGODB_USER:-root}
+      MONGODB_PASSWORD: ${MONGODB_PASSWORD}
+      
+      # MySQL (multi-tenant - conexões dinâmicas)
+      # Configurado via tenant no MongoDB
+      
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-change-this-super-secret-key-min-32-chars}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      
+      # EFI/Gerencianet
+      EFI_CLIENT_ID: ${EFI_CLIENT_ID:-}
+      EFI_CLIENT_SECRET: ${EFI_CLIENT_SECRET:-}
+      EFI_SANDBOX: ${EFI_SANDBOX:-true}
+      EFI_CERT_PATH: ${EFI_CERT_PATH:-./cert/producao.p12}
+      
+      # Z-API (WhatsApp)
+      ZAPI_URL: ${ZAPI_URL:-https://api.z-api.io}
+      ZAPI_TOKEN: ${ZAPI_TOKEN:-}
+      ZAPI_INSTANCE: ${ZAPI_INSTANCE:-}
+    
+    volumes:
+      - mk-edge-logs:/app/logs
+    
+    depends_on:
+      - mongo
+    
+    networks:
+      - internal_network
+    
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3333/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # MongoDB
+  mongo:
+    image: mongo:6-jammy
+    container_name: mk-edge-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      MONGO_INITDB_DATABASE: mkedgetenants
+    volumes:
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
+    networks:
+      - internal_network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  internal_network:
+    external: true
+
+volumes:
+  mongo-data:
+  mongo-config:
+  mk-edge-logs:

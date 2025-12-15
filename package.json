@@ -7,15 +7,12 @@
     "dev": "nodemon src/server.js | pino-pretty -c -i time",
     "dev:debug": "nodemon --inspect src/server.js | pino-pretty",
     "build": "sucrase ./src -d ./dist --transforms imports",
-    "start": "node dist/server.js",
-    "queue": "nodemon src/queue.js"
+    "start": "node dist/server.js"
   },
   "dependencies": {
-    "@rodrigogs/mysql-events": "^0.6.0",
     "axios": "^1.13.2",
     "bcrypt": "^5.1.0",
     "bcryptjs": "^3.0.3",
-    "bee-queue": "^1.2.3",
     "cors": "^2.8.5",
     "date-fns": "^2.10.0",
     "dotenv": "^8.2.0",
