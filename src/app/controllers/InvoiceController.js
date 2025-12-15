@@ -345,23 +345,30 @@ class InvoiceController {
       const valorMultaMora = parseFloat(multa_mora) || 0;
       const valorDesconto = parseFloat(desconto) || 0;
       
-      // Aceitar valor_pago ou valor do payload
-      const valorPago = valor_pago || valor;
-      const valorFinal = valorPago ? parseFloat(valorPago) : (valorOriginal + valorAcrescimo + valorMultaMora - valorDesconto);
+      // Aceitar valor_pago ou valor do payload (converter string para float)
+      const valorPagoRaw = valor_pago || valor;
+      const valorFinal = valorPagoRaw ? parseFloat(valorPagoRaw) : (valorOriginal + valorAcrescimo + valorMultaMora - valorDesconto);
 
       console.log('💵 Cálculo:', { 
         valorOriginal, 
         valorAcrescimo, 
         valorMultaMora, 
         valorDesconto, 
-        valorPago: valorPago || 'não informado',
+        valorPago: valorPagoRaw || 'não informado',
         valorFinal 
       });
 
       // Atualizar status e dados de pagamento
-      // Aceitar data_pagamento ou data
+      // Aceitar data_pagamento ou data (formato: "2025-12-11 14:30" ou "2025-12-11")
       const dataFinal = data_pagamento || data;
-      const dataPagamento = dataFinal ? new Date(dataFinal) : new Date();
+      let dataPagamento;
+      if (dataFinal) {
+        // Tratar formato "2025-12-11 14:30" substituindo espaço por T para ISO
+        const dataISO = dataFinal.includes(' ') ? dataFinal.replace(' ', 'T') : dataFinal;
+        dataPagamento = new Date(dataISO);
+      } else {
+        dataPagamento = new Date();
+      }
       
       // Pegar o login do usuário autenticado (funcionário que está dando baixa)
       let coletorLogin = 'api';
@@ -373,11 +380,15 @@ class InvoiceController {
       }
       
       console.log('👤 Coletor (usuário autenticado):', coletorLogin);
+      console.log('📌 Outros dados:', { insnext, excluir_efipay });
       
       invoice.status = 'pago';
       invoice.datapag = dataPagamento;
       invoice.coletor = coletorLogin;
       invoice.formapag = formapag || 'dinheiro';
+      
+      // Atualizar o valor pago com o valor final calculado
+      invoice.valorpag = valorFinal.toFixed(2);
       
       // Adicionar observação se fornecida
       if (observacao) {
@@ -390,7 +401,9 @@ class InvoiceController {
         coletor: invoice.coletor,
         formapag: invoice.formapag,
         valorFinal,
-        obs: invoice.obs
+        obs: invoice.obs,
+        insnext,
+        excluir_efipay
       });
       
       // NOTA: Campos abaixo comentados até executar migrations

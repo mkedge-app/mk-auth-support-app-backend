@@ -14,6 +14,8 @@ import CTO from '../models/CTO';
 import Client from '../models/Client';
 import Radacct from '../models/Radacct';
 import StaticMapHelper from '../helpers/StaticMapHelper';
+import logger from '../../logger';
+import logger from '../../logger';
 
 class ClientController {
   async show(req, res) {

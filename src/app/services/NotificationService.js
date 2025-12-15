@@ -1,6 +1,7 @@
 import axios from 'axios';
 import NotificationLog from '../schemas/NotificationLog';
 import MessageTemplate from '../schemas/MessageTemplate';
+import logger from '../../logger';
 
 class NotificationService {
   constructor() {
@@ -51,9 +52,7 @@ class NotificationService {
   async sendEmail(email, subject, message) {
     try {
       // TODO: Implementar envio de email via SMTP
-      console.log('Email enviado para:', email);
-      console.log('Assunto:', subject);
-      console.log('Mensagem:', message);
+      logger.info({ email, subject }, 'Email enviado (mock)');
       
       return {
         success: true,
@@ -61,7 +60,7 @@ class NotificationService {
       };
       
     } catch (error) {
-      console.error('Erro ao enviar email:', error.message);
+      logger.error({ err: error }, 'Erro ao enviar email');
       return {
         success: false,
         error: error.message

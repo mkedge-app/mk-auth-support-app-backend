@@ -51,7 +51,7 @@ class User extends Model {
     } catch (error) {
       // Log apenas em desenvolvimento
       if (process.env.NODE_ENV === 'development') {
-        console.error('Erro na verificação de senha:', error);
+        logger.error({ err: error }, 'Erro na verificação de senha');
       }
       return false;
     }

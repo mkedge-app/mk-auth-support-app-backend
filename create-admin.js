@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+require('dotenv').config();
 
-const mongoUrl = 'mongodb://root:Falcon2931@localhost:27017/mkedgetenants?authSource=admin';
+const mongoUrl = process.env.MONGODB_URL || 'mongodb://localhost:27017/mkedgetenants';
 
 // Definir schema diretamente
 const AdminUserSchema = new mongoose.Schema({
@@ -33,9 +34,9 @@ async function createAdmin() {
       process.exit(0);
     }
 
-    // Hash da senha
+    const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD || Math.random().toString(36).slice(-12) + 'A1!';
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash('F@lcon31', salt);
+    const hashedPassword = await bcrypt.hash(defaultPassword, salt);
 
     // Criar admin padrão
     const admin = await AdminUser.create({
@@ -51,7 +52,7 @@ async function createAdmin() {
     console.log('');
     console.log('📋 Credenciais de acesso:');
     console.log('   Username: admin');
-    console.log('   Password: F@lcon31');
+    console.log('   Password:', defaultPassword);
     console.log('');
     console.log('⚠️  IMPORTANTE: Altere a senha após o primeiro login!');
 

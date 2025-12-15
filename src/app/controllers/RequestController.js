@@ -24,7 +24,10 @@ class RequestController {
     try {
       const { date, tecnico: tecnico_id, isAdmin, summaryOnly } = req.body;
 
-    console.log('📋 RequestController.index - Params:', { date, tecnico_id, isAdmin, summaryOnly });
+    // Evita logar dados sensíveis em produção
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('📋 RequestController.index - Params:', { date, tecnico_id, isAdmin, summaryOnly });
+    }
 
     // Se summaryOnly=true, retorna apenas contadores por status
     if (summaryOnly) {
@@ -66,7 +69,9 @@ class RequestController {
         })
       ]);
 
-      console.log('📊 Summary counts:', { todayCount, overdueCount, ongoingCount, completedCount });
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('📊 Summary counts:', { todayCount, overdueCount, ongoingCount, completedCount });
+      }
 
       return res.json({
         today: todayCount,

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { promisify } from 'util';
-
+import logger from '../../logger';
 import authConfig from '../../config/auth';
 
 export default async (req, res, next) => {
@@ -10,13 +10,20 @@ export default async (req, res, next) => {
     return res.status(401).json({ error: 'Token not provided' });
   }
 
-  const [, token] = authHeader.split(' ');
+  const [scheme, token] = authHeader.split(' ');
+
+  if (!/^Bearer$/i.test(scheme) || !token) {
+    return res.status(401).json({ error: 'Malformed authorization header' });
+  }
 
   try {
     const decoded = await promisify(jwt.verify)(token, authConfig.secret);
     req.idacesso = decoded.idacesso;
     return next();
   } catch (err) {
-    return res.status(401).json({ error: 'Invalid token ' });
+    if (process.env.NODE_ENV !== 'production') {
+      logger.warn({ err }, 'Invalid token');
+    }
+    return res.status(401).json({ error: 'Invalid or expired token' });
   }
 };

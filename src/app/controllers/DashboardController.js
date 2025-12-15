@@ -1,5 +1,6 @@
 import { Op, literal } from 'sequelize';
 import { startOfMonth, endOfMonth } from 'date-fns';
+import logger from '../../logger';
 import Client from '../models/Client';
 import Invoice from '../models/Invoice';
 import SupportRequest from '../models/SupportRequest';
@@ -8,12 +9,12 @@ import ConnectedUsers from '../models/ConnectedUsers';
 class DashboardController {
   async stats(req, res) {
     try {
-      console.log('📊 DashboardController.stats - Início');
+      logger.debug('📊 DashboardController.stats - Início');
       const now = new Date();
       const startMonth = startOfMonth(now);
       const endMonth = endOfMonth(now);
 
-      console.log('📊 Buscando estatísticas...');
+      logger.debug('📊 Buscando estatísticas...');
       // Queries em paralelo para melhor performance
       const [
         totalClients,
@@ -37,15 +38,13 @@ class DashboardController {
           },
         }),
 
-        // 2. Clientes cadastrados no mês atual
+        // 2. Clientes cadastrados no mês atual (uso de intervalo para aproveitar índice)
         Client.count({
           where: {
             cli_ativado: 's',
-            [Op.or]: [
-              literal(`YEAR(cadastro) = ${now.getFullYear()} AND MONTH(cadastro) = ${now.getMonth() + 1}`),
-              literal(`cadastro LIKE '${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}%'`),
-              literal(`cadastro LIKE '%/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}%'`),
-            ],
+            cadastro: {
+              [Op.between]: [startMonth, endMonth],
+            },
           },
         }),
 

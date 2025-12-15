@@ -1,9 +1,8 @@
-const mongoUrl =
-  'mongodb://root:Falcon2931@localhost:27017/mkedgetenants?authSource=admin&authMechanism=SCRAM-SHA-256&readPreference=primary&appname=MongoDB%20Compass&ssl=false';
+import 'dotenv/config';
 
 export default {
   mongodb_auth_source: 'admin',
-  mongodb_url: mongoUrl,
-  mongodb_user: 'root',
-  mongodb_password: 'Falcon2931',
+  mongodb_url: process.env.MONGODB_URL,
+  mongodb_user: process.env.MONGODB_USER,
+  mongodb_password: process.env.MONGODB_PASSWORD,
 }

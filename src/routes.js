@@ -1,4 +1,11 @@
 import { Router } from 'express';
+import { sanitizeInput, validate } from './app/middlewares/validator';
+import {
+  clientValidations,
+  requestValidations,
+  sessionValidations,
+  adminSessionValidations,
+} from './app/validators';
 
 import CTOController from './app/controllers/CTOController';
 import ClientController from './app/controllers/ClientController';
@@ -33,6 +40,13 @@ import { ConnectionResolver } from './app/middlewares/connectionResolver';
 import ConnectController from './app/controllers/ConnectController';
 import ProviderStatusController from './app/controllers/ProviderStatusController';
 import PaymentController from './app/controllers/PaymentController';
+import { sanitizeInput, validate } from './app/middlewares/validator';
+import {
+  clientValidations,
+  requestValidations,
+  sessionValidations,
+  adminSessionValidations,
+} from './app/validators';
 
 const routes = new Router();
 
@@ -50,17 +64,17 @@ routes.post('/assinatura', ProviderStatusController.update);
 routes.post('/payment', PaymentController.index);
 
 // Cadastro público de novos clientes
-routes.post('/signup', SignupController.store);
+routes.post('/signup', sanitizeInput, SignupController.store);
 
 // Criação de assinatura pública (para processo de signup)
-routes.post('/subscription/create', SubscriptionController.create);
+routes.post('/subscription/create', sanitizeInput, SubscriptionController.create);
 routes.get('/subscription/:id', SubscriptionController.show);
 
 // ===== ADMIN - AUTENTICAÇÃO =====
-routes.post('/admin/login', AdminSessionController.store);
+routes.post('/admin/login', adminSessionValidations.store, validate, AdminSessionController.store);
 
 // ===== PORTAL DO CLIENTE - AUTENTICAÇÃO =====
-routes.post('/portal/login', SessionController.storePortal);
+routes.post('/portal/login', sessionValidations.store, validate, SessionController.storePortal);
 
 // ===== ADMIN - ROTAS PROTEGIDAS =====
 // Todas as rotas admin requerem autenticação
@@ -157,7 +171,7 @@ routes.get('/plan/:id', PlanController.show);
 routes.use(ConnectionResolver);
 
 // Sessão/Login (não requer autenticação, mas requer tenant)
-routes.post('/sessions', SessionController.store);
+routes.post('/sessions', sessionValidations.store, validate, SessionController.store);
 routes.get('/app/structure', AppStructureController.index);
 
 // Rotas autenticadas (requer token JWT)
@@ -169,7 +183,7 @@ routes.get('/provedor', ProviderController.show); // Alias em português
 
 // Chamados
 routes.post('/requests', RequestController.index);
-routes.post('/request', RequestController.store); // Criar novo chamado
+routes.post('/request', sanitizeInput, requestValidations.store, validate, RequestController.store); // Criar novo chamado
 routes.get('/request/form/:client_id', RequestController.getFormData); // Dados para formulário de abertura
 routes.get('/request/:id/:request_type', RequestController.show);
 routes.get('/chamados/stats', RequestController.stats);
@@ -217,10 +231,10 @@ routes.get('/dashboard/stats', DashboardController.stats);
 // Rotas com permissões especiais
 routes.use(permissionMiddleware);
 
-routes.post('/request/:id', RequestController.update);
+routes.post('/request/:id', sanitizeInput, requestValidations.update, validate, RequestController.update);
 routes.post('/messages', MessageController.store);
-routes.post('/client/:id', ClientController.update);
-routes.put('/client/:id', ClientController.update); // Método PUT também
-routes.put('/cliente/:id', ClientController.update); // Alias em português com PUT
+routes.post('/client/:id', sanitizeInput, clientValidations.update, validate, ClientController.update);
+routes.put('/client/:id', sanitizeInput, clientValidations.update, validate, ClientController.update); // Método PUT também
+routes.put('/cliente/:id', sanitizeInput, clientValidations.update, validate, ClientController.update); // Alias em português com PUT
 
 export default routes;

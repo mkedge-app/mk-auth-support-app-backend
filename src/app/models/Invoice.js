@@ -20,6 +20,7 @@ class Invoice extends Model {
         linhadig: Sequelize.STRING,
         coletor: Sequelize.STRING,
         formapag: Sequelize.STRING,
+        valorpag: Sequelize.STRING, // Valor efetivamente pago
         // Campos novos - comentados até rodar migrations
         // formapag_extra: Sequelize.STRING,
         // acrescimo: Sequelize.DECIMAL(10, 2),

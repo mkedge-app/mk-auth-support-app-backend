@@ -100,7 +100,7 @@ class NotificationController {
     try {
       const notifications = await Notification.findAll({
         order: [['created_at', 'DESC']],
-        limit: 100
+        limit: Math.min(parseInt(req.query.limit || 100, 10), 100)
       });
 
       return res.json(notifications);
