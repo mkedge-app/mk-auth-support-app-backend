@@ -180,7 +180,7 @@ routes.get('/plan/:id', PlanController.show);
 routes.use(ConnectionResolver);
 
 // Sessão/Login (não requer autenticação, mas requer tenant)
-routes.post('/sessions', sessionValidations.store, validate, SessionController.store);
+routes.post('/sessions', SessionController.store);
 routes.get('/app/structure', AppStructureController.index);
 
 // Rotas autenticadas (requer token JWT)
