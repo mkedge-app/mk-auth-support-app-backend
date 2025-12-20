@@ -112,8 +112,8 @@ export const requestValidations = {
       .withMessage('Descrição é obrigatória')
       .isString()
       .trim()
-      .isLength({ min: 10, max: 5000 })
-      .withMessage('Descrição deve ter entre 10 e 5000 caracteres'),
+      .isLength({ min: 1, max: 5000 })
+      .withMessage('Descrição deve ter entre 1 e 5000 caracteres'),
     
     body('tipo')
       .optional()
