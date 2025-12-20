@@ -886,6 +886,7 @@ class RequestController {
         client_id,
         id_cliente,
         uuid_cliente,
+        login,
         assunto,
         mensagem,
         msg,
@@ -907,14 +908,13 @@ class RequestController {
         return res.status(400).json({ error: 'O assunto é obrigatório' });
       }
 
-      // Determinar o login do cliente (aceita diferentes formatos)
-      const clientLogin = client_id || id_cliente || uuid_cliente;
-      if (!clientLogin) {
-        return res.status(400).json({ error: 'ID do cliente é obrigatório (client_id, id_cliente ou uuid_cliente)' });
+      // Validar que o login foi fornecido
+      if (!login) {
+        return res.status(400).json({ error: 'Login do cliente é obrigatório' });
       }
 
-      // Buscar dados do cliente
-      const client = await Client.findOne({ where: { login: clientLogin } });
+      // Buscar dados do cliente pelo login
+      const client = await Client.findOne({ where: { login } });
       if (!client) {
         return res.status(404).json({ error: 'Cliente não encontrado' });
       }
