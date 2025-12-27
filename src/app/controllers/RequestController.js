@@ -890,6 +890,7 @@ class RequestController {
         assunto,
         mensagem,
         msg,
+        descricao,
         tecnico,
         employee_id,
         prioridade,
@@ -1008,12 +1009,12 @@ class RequestController {
       console.log('✅ Chamado criado:', newRequest.id);
 
       // Criar mensagem inicial se fornecida
-      const messageText = msg || mensagem;
+      const messageText = msg || mensagem || req.body.descricao;
       if (messageText && messageText.trim()) {
         await Mensagem.create({
           chamado: chamadoNumber,
           msg: messageText.trim(),
-          atendente: atendente || ramal || 'Sistema',
+          atendente: atendenteNome || 'Sistema',
           msg_data: now,
           login: client.login,
           tipo: 'T', // Tipo técnico
