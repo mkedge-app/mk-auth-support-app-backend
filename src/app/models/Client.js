@@ -36,6 +36,10 @@ class Client extends Model {
         rem_obs: Sequelize.DATE,
         cpf_cnpj: Sequelize.STRING,
         status_corte: Sequelize.STRING,
+        cadastro: Sequelize.DATE,
+        data_ins: Sequelize.DATE,
+        tit_abertos: Sequelize.INTEGER,
+        tit_vencidos: Sequelize.INTEGER,
       },
       {
         sequelize,
