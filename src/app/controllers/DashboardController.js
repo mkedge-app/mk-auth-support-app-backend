@@ -38,12 +38,12 @@ class DashboardController {
           },
         }),
 
-        // 2. Clientes cadastrados no mês atual (uso de intervalo para aproveitar índice)
+        // 2. Clientes cadastrados no mês atual (cadastro é STRING no formato dd/MM/yyyy)
         Client.count({
           where: {
             cli_ativado: 's',
             cadastro: {
-              [Op.between]: [startMonth, endMonth],
+              [Op.like]: `%${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}%`,
             },
           },
         }),
